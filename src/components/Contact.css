@@ -1,0 +1,106 @@
+.contact {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+}
+
+.contact__layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 4rem;
+  align-items: start;
+}
+
+/* Left column */
+.contact__intro {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 1.25rem;
+  max-width: 560px;
+}
+
+.contact__email-btn {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--accent-teal);
+  border: 1px solid var(--accent-teal);
+  padding: 0.75rem 1.5rem;
+  border-radius: 3px;
+  margin: 1rem 0 1.75rem;
+  transition: background var(--transition);
+  text-decoration: none;
+}
+.contact__email-btn:hover {
+  background: rgba(45, 212, 191, 0.08);
+  color: var(--accent-teal);
+}
+
+.contact__links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.contact__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+.contact__link:hover { color: var(--accent-teal); }
+
+/* Right cards */
+.contact__right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contact__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+}
+
+.contact__card-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.contact__card-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.contact__card-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.contact__resume-link {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent-teal);
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+.contact__resume-link:hover { opacity: 0.8; color: var(--accent-teal); }
+
+/* ─── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .contact__layout {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}

@@ -1,0 +1,131 @@
+.experience {
+  background: var(--bg-primary);
+}
+
+.exp__layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 2rem;
+}
+
+/* Tab list */
+.exp__tabs {
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid var(--border);
+  position: sticky;
+  top: 80px;
+  align-self: start;
+}
+
+.exp__tab {
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  margin-left: -2px;
+  padding: 0.7rem 1.2rem;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.exp__tab:hover {
+  color: var(--accent-teal);
+  background: rgba(45, 212, 191, 0.05);
+}
+.exp__tab--active {
+  color: var(--accent-teal);
+  border-left-color: var(--accent-teal);
+  background: rgba(45, 212, 191, 0.06);
+}
+
+/* Panel */
+.exp__panel-header {
+  margin-bottom: 1.5rem;
+}
+
+.exp__role {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.3rem;
+}
+
+.exp__company {
+  color: var(--accent-teal);
+  font-weight: 400;
+}
+
+.exp__meta {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp__sep { color: var(--border-bright); }
+
+.exp__bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.exp__bullet {
+  display: flex;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.exp__bullet-icon {
+  color: var(--accent-teal);
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .exp__layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .exp__tabs {
+    flex-direction: row;
+    border-left: none;
+    border-bottom: 2px solid var(--border);
+    overflow-x: auto;
+    position: static;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .exp__tabs::-webkit-scrollbar { display: none; }
+
+  .exp__tab {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    margin-left: 0;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    padding: 0.6rem 1rem;
+  }
+  .exp__tab--active {
+    border-bottom-color: var(--accent-teal);
+    border-left: none;
+  }
+
+  .exp__panel {
+    padding-top: 1.5rem;
+  }
+}
