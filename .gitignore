@@ -24,16 +24,6 @@ dist/
 *.log
 npm-debug.log*
 
-# Local setup files (private)
-claude.md
-CLAUDE.md
-setup-photos.sh
-PHOTO-SETUP.md
-rodrigo-portrait-shoot-2025-filenames.txt
-
-# Claude Code settings (local only)
-.claude/
-
-# Unused thumbnail directory
+# Thumbnails (large, regeneratable)
 images/thumbnails/
 public/images/thumbnails/
