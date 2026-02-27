@@ -21,7 +21,7 @@ export default function Contact() {
   return (
     <section id="contact" className="section contact">
       <div className="container">
-        <p className="section-label" data-reveal>05. Contact</p>
+        <p className="section-label" data-reveal>06. Contact</p>
         <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Get In Touch</h2>
         <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 

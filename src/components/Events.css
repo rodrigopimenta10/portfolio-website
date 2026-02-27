@@ -1,0 +1,130 @@
+.events {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.events__card {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 760px;
+  transition: border-color var(--transition);
+}
+.events__card:hover { border-color: var(--border-bright); }
+
+/* Photo */
+.events__photo-wrap {
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.events__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  filter: contrast(1.02);
+}
+
+/* Body */
+.events__body {
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.events__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.events__type {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent-orange);
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-radius: 2px;
+  padding: 0.15rem 0.45rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.events__year {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.events__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.events__desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 340px;
+}
+
+.events__meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.events__location {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.events__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .events__card {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+  .events__photo-wrap {
+    max-height: 260px;
+  }
+  .events__photo {
+    height: 260px;
+    object-fit: contain;
+    object-position: center top;
+  }
+  .events__body {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .events__photo-wrap {
+    max-height: 200px;
+  }
+  .events__photo {
+    height: 200px;
+  }
+}

@@ -20,8 +20,8 @@ const jobs = [
   },
   {
     id: 'navy',
-    company: 'U.S. Navy',
-    title: 'Mass Communication Specialist',
+    company: 'U.S. Navy Reserve',
+    title: 'Mass Communication Specialist (Active Duty)',
     range: '2020 – 2021',
     location: 'Active Duty',
     bullets: [
@@ -59,7 +59,7 @@ const jobs = [
     company: 'Paradyme Management',
     title: 'Software Development Intern',
     range: '2016 – 2018',
-    location: 'Rockville, MD',
+    location: 'Greenbelt, MD',
     bullets: [
       'Built CRM features and a resume parsing application using Python.',
       'Contributed to internal tooling that improved operational workflows.',
@@ -74,7 +74,7 @@ export default function Experience() {
   return (
     <section id="experience" className="section experience">
       <div className="container">
-        <p className="section-label" data-reveal>02. Experience</p>
+        <p className="section-label" data-reveal>03. Experience</p>
         <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Where I&apos;ve Worked</h2>
         <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 

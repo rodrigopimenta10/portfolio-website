@@ -32,7 +32,7 @@ export default function Skills() {
   return (
     <section id="skills" className="section skills">
       <div className="container">
-        <p className="section-label" data-reveal>04. Skills</p>
+        <p className="section-label" data-reveal>05. Skills</p>
         <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Tech Stack</h2>
         <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 

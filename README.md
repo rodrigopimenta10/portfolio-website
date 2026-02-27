@@ -1,124 +1,62 @@
-# Rodrigo Pimenta — Portfolio Website
+# Rodrigo Pimenta — Portfolio
 
-Personal portfolio built with **Vite + React**, deployed to **GitHub Pages**.
+Personal portfolio built with Vite + React, deployed to GitHub Pages.
+
+**Live site:** https://rodrigopimenta10.github.io/portfolio-website/
 
 ---
 
 ## Setup
 
-### Prerequisites
-- Node.js 18+ and npm
-
-### Install dependencies
+Requires Node.js 18+.
 
 ```bash
 npm install
-```
-
-### Development server
-
-```bash
 npm run dev
 ```
 
-Visit [http://localhost:5173/portfolio-website/](http://localhost:5173/portfolio-website/)
+Visit http://localhost:5173/portfolio-website/
 
 ---
 
 ## Build
 
 ```bash
-npm run build
+npm run build    # outputs to dist/
+npm run preview  # preview the build locally
 ```
-
-Output is in `dist/`. Preview locally:
-
-```bash
-npm run preview
-```
-
----
-
-## Adding Your Resume
-
-1. Copy your resume PDF to `public/`:
-   ```bash
-   cp /path/to/rodrigo_pimenta_resume.pdf public/
-   ```
-2. The download link in the Nav and Contact section will work automatically.
-
-The resume is referenced at `/portfolio-website/rodrigo_pimenta_resume.pdf`.
-
----
-
-## Photos
-
-Photos live in `images/` at the project root and are served as static assets.
-
-| File | Used in |
-|------|---------|
-| `images/headshot.png` | Hero section |
-| `images/about-1.jpg` | About section |
-| `images/about-2.jpg` through `about-5.jpg` | Optional gallery |
-
-Run `./setup-photos.sh` (local only, not pushed) to copy from your Cursor/iCloud assets.
 
 ---
 
 ## Deploy to GitHub Pages
 
-### 1. Create the GitHub repo
-
-Create an empty repo named `portfolio-website` on GitHub (no README, no .gitignore).
-
-### 2. Initialize and push
-
-```bash
-git init
-git add .
-git status   # Verify CLAUDE.md / claude.md is NOT staged
-git commit -m "Initial commit: portfolio website"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/portfolio-website.git
-git push -u origin main
-```
-
-### 3. Enable GitHub Pages
-
-Option A — gh-pages branch (recommended):
-
-```bash
-npm install --save-dev gh-pages
-```
-
-Add to `package.json` scripts:
-```json
-"predeploy": "npm run build",
-"deploy": "gh-pages -d dist"
-```
-
-Then deploy:
 ```bash
 npm run deploy
 ```
 
-In your GitHub repo → Settings → Pages → Source: `gh-pages` branch → `/root`.
+This builds the site and pushes `dist/` to the `gh-pages` branch.
 
-Option B — GitHub Actions (auto-deploys on push):
-
-See [Vite's GitHub Pages guide](https://vitejs.dev/guide/static-deploy.html#github-pages).
+In repo Settings → Pages, set Source to `gh-pages` branch, root folder.
 
 ---
 
-## Tech Stack
+## Adding Assets
 
-- **Vite** — build tool
-- **React 18** — UI
-- **Plain CSS** — no CSS framework (fast, no bloat)
-- **Space Mono + Inter** — typography via Google Fonts
+**Resume PDF:** copy to `public/rodrigo_pimenta_resume.pdf` — the nav and contact section link to it automatically.
+
+**Photos:**
+
+| File | Where it shows |
+|------|----------------|
+| `public/images/headshot.png` | Hero |
+| `public/images/about-1.jpg` | About |
+| `public/images/ansible-fest-2025.jpeg` | Events |
 
 ---
 
-## License
+## Stack
 
-Personal portfolio — not licensed for redistribution.
+- Vite + React 18
+- Plain CSS (no framework)
+- Space Mono + Inter via Google Fonts
+- gh-pages for deployment

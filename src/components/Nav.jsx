@@ -5,6 +5,7 @@ const BASE = import.meta.env.BASE_URL
 
 const links = [
   { href: '#about',      label: 'About' },
+  { href: '#events',     label: 'Events' },
   { href: '#experience', label: 'Experience' },
   { href: '#projects',   label: 'Projects' },
   { href: '#skills',     label: 'Skills' },

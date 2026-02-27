@@ -32,12 +32,18 @@
 }
 .footer__link:hover { color: var(--accent-teal); }
 
-.footer__built {
+.footer__source {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-muted);
-  opacity: 0.6;
+  opacity: 0.55;
+  text-decoration: none;
+  transition: opacity var(--transition);
 }
+.footer__source:hover { opacity: 1; color: var(--text-muted); }
 
 @media (max-width: 480px) {
   .footer__inner { flex-direction: column; align-items: flex-start; }

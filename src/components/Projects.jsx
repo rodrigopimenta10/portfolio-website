@@ -57,7 +57,7 @@ export default function Projects() {
   return (
     <section id="projects" className="section projects">
       <div className="container">
-        <p className="section-label" data-reveal>03. Projects</p>
+        <p className="section-label" data-reveal>04. Projects</p>
         <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Things I&apos;ve Built</h2>
         <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 
