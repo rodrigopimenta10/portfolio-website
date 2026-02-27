@@ -14,8 +14,8 @@ const jobs = [
       'Built Grafana & Tableau dashboards correlating satellite performance data from PostgreSQL and BigQuery for 800K+ subscribers, enabling data-driven anomaly detection.',
       'Conducted BigQuery root cause analysis for OVT satellite failures, correlating installer vs beam diagnostics to drive data-driven remediation.',
       'Built CI/CD pipelines in Jenkins and authored operational runbooks adopted as a reusable framework across engineering teams.',
-      'Built SHU automation tool (Python, pandas, uv); refactored from monolith to modular pipeline with config-driven thresholds and pytest coverage.',
-      'Tier 3 on-call engineer for satellite ground systems spanning North America, Latin America, and Brazil.',
+      'Built Brazil SHU (Super Heavy User) automation tool (Python, pandas, uv); refactored from monolith to modular pipeline with config-driven thresholds and pytest coverage.',
+      'Tier 3 on-call engineer for satellite ground systems spanning North America and Latin America.',
     ],
   },
   {
@@ -25,9 +25,7 @@ const jobs = [
     range: '2020 – 2021',
     location: 'Active Duty',
     bullets: [
-      'Honorably discharged; operated in a 24/7, mission-critical communications environment directly analogous to satellite ground operations.',
-      'Executed Tier 1 incident response for global communications systems — real-time decision-making, escalation procedures, and recovery under operational pressure.',
-      'Developed the discipline and communication clarity that now informs how I handle on-call infrastructure incidents at scale.',
+      'Completed basic training and the Defense Information School (DINFOS) at Fort Meade, MD; honorably discharged.',
     ],
   },
   {
@@ -37,7 +35,7 @@ const jobs = [
     range: '2018 – 2019',
     location: 'Charlotte, NC',
     bullets: [
-      'Developed PowerShell and Python automation scripts that reduced manual operational overhead across banking infrastructure.',
+      'Developed PowerShell and Python automation scripts that reduced manual operational overhead in ATM banking infrastructure.',
       'Implemented CI/CD pipelines and ATM validation workflows, improving deployment reliability.',
       'Collaborated with cross-functional teams to maintain and improve enterprise-scale systems.',
     ],
