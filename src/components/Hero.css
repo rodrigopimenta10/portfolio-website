@@ -260,6 +260,7 @@
 }
 
 @media (max-width: 480px) {
-  .hero__visual { display: none; }
+  .hero__headshot-wrap { width: 120px; }
+  .hero__orbit { display: none; }
   .hero__scroll { display: none; }
 }

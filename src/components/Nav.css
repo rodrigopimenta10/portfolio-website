@@ -60,6 +60,14 @@
   margin-right: 0.1em;
 }
 
+.nav__icon-link {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  transition: color var(--transition);
+}
+.nav__icon-link:hover { color: var(--accent-teal); }
+
 .nav__resume {
   font-family: var(--font-mono);
   font-size: 0.8rem;
