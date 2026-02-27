@@ -6,7 +6,7 @@ export default function Events() {
   return (
     <section id="events" className="section events">
       <div className="container">
-        <p className="section-label" data-reveal>02. Community</p>
+        <p className="section-label" data-reveal>02. Events</p>
         <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Out in the World</h2>
         <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 
