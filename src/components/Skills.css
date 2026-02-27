@@ -9,6 +9,18 @@
   margin-bottom: 3rem;
 }
 
+/* 5th group (Infrastructure & Ops) spans full row */
+.skills__group:last-child {
+  grid-column: 1 / -1;
+}
+
+/* Stack last group's skill list horizontally on wide rows */
+.skills__group:last-child .skills__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.55rem 1.5rem;
+}
+
 .skills__group {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -102,9 +114,16 @@
 }
 
 /* ─── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .skills__grid {
     grid-template-columns: 1fr;
+  }
+  .skills__group:last-child {
+    grid-column: auto;
+  }
+  .skills__group:last-child .skills__list {
+    display: flex;
+    flex-direction: column;
   }
   .skills__edu {
     flex-direction: column;

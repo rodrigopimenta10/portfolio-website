@@ -23,11 +23,11 @@ const jobs = [
     company: 'U.S. Navy',
     title: 'Mass Communication Specialist',
     range: '2020 – 2021',
-    location: 'Remote / Active Duty',
+    location: 'Active Duty',
     bullets: [
-      'Honorably discharged Mass Communication Specialist.',
-      'Operated under high-pressure, mission-critical environments requiring precision and clear communication.',
-      'Developed adaptability and operational discipline transferable to large-scale infrastructure operations.',
+      'Honorably discharged; operated in a 24/7, mission-critical communications environment directly analogous to satellite ground operations.',
+      'Executed Tier 1 incident response for global communications systems — real-time decision-making, escalation procedures, and recovery under operational pressure.',
+      'Developed the discipline and communication clarity that now informs how I handle on-call infrastructure incidents at scale.',
     ],
   },
   {
@@ -49,9 +49,9 @@ const jobs = [
     range: '2018',
     location: 'Remote',
     bullets: [
-      'Implemented canary deployment strategy for cloud-native fintech platform.',
-      'Pismo was later acquired by Visa for $1B, validating the platform\'s architectural quality.',
-      'Gained hands-on experience with microservices and modern deployment patterns.',
+      'Implemented canary deployment strategy for a cloud-native fintech platform.',
+      'Pismo was later acquired by Visa for $1B — the platform\'s architecture held up under that scrutiny.',
+      'Gained hands-on experience with microservices, modern deployment patterns, and production-grade reliability requirements.',
     ],
   },
   {
@@ -70,16 +70,15 @@ const jobs = [
 
 export default function Experience() {
   const [active, setActive] = useState(0)
-  const job = jobs[active]
 
   return (
     <section id="experience" className="section experience">
       <div className="container">
-        <p className="section-label">02. Experience</p>
-        <h2 className="section-title">Where I&apos;ve Worked</h2>
-        <div className="section-divider" />
+        <p className="section-label" data-reveal>02. Experience</p>
+        <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Where I&apos;ve Worked</h2>
+        <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 
-        <div className="exp__layout">
+        <div className="exp__layout" data-reveal style={{ '--reveal-delay': '180ms' }}>
           {/* Tab list */}
           <div className="exp__tabs" role="tablist" aria-label="Companies">
             {jobs.map((j, i) => (
@@ -97,33 +96,37 @@ export default function Experience() {
             ))}
           </div>
 
-          {/* Panel */}
-          <div
-            className="exp__panel"
-            role="tabpanel"
-            id={`panel-${job.id}`}
-            aria-labelledby={`tab-${job.id}`}
-          >
-            <div className="exp__panel-header">
-              <h3 className="exp__role">
-                {job.title}{' '}
-                <span className="exp__company">@ {job.company}</span>
-              </h3>
-              <p className="exp__meta">
-                <span className="exp__range">{job.range}</span>
-                <span className="exp__sep">·</span>
-                <span className="exp__location">{job.location}</span>
-              </p>
+          {/* Panels — render all, show only active (screen reader friendly) */}
+          {jobs.map((job, i) => (
+            <div
+              key={job.id}
+              className={`exp__panel${i === active ? ' exp__panel--active' : ''}`}
+              role="tabpanel"
+              id={`panel-${job.id}`}
+              aria-labelledby={`tab-${job.id}`}
+              hidden={i !== active}
+            >
+              <div className="exp__panel-header">
+                <h3 className="exp__role">
+                  {job.title}{' '}
+                  <span className="exp__company">@ {job.company}</span>
+                </h3>
+                <p className="exp__meta">
+                  <span className="exp__range">{job.range}</span>
+                  <span className="exp__sep">·</span>
+                  <span className="exp__location">{job.location}</span>
+                </p>
+              </div>
+              <ul className="exp__bullets">
+                {job.bullets.map((b, idx) => (
+                  <li key={idx} className="exp__bullet">
+                    <span className="exp__bullet-icon" aria-hidden="true">▸</span>
+                    {b}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="exp__bullets">
-              {job.bullets.map((b, i) => (
-                <li key={i} className="exp__bullet">
-                  <span className="exp__bullet-icon" aria-hidden="true">▸</span>
-                  {b}
-                </li>
-              ))}
-            </ul>
-          </div>
+          ))}
         </div>
       </div>
     </section>

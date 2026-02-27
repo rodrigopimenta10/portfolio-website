@@ -1,5 +1,7 @@
 import './Hero.css'
 
+const BASE = import.meta.env.BASE_URL
+
 export default function Hero() {
   return (
     <section id="hero" className="hero" aria-label="Introduction">
@@ -41,7 +43,7 @@ export default function Hero() {
         <div className="hero__visual" aria-hidden="true">
           <div className="hero__headshot-wrap">
             <img
-              src="/portfolio-website/images/headshot.png"
+              src={`${BASE}images/headshot.png`}
               alt="Rodrigo Pimenta"
               className="hero__headshot"
               loading="eager"

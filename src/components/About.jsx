@@ -1,30 +1,31 @@
 import './About.css'
 
+const BASE = import.meta.env.BASE_URL
+
 export default function About() {
   return (
     <section id="about" className="section about">
       <div className="container">
-        <p className="section-label">01. About</p>
-        <h2 className="section-title">Who I Am</h2>
-        <div className="section-divider" />
+        <p className="section-label" data-reveal>01. About</p>
+        <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Who I Am</h2>
+        <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 
-        <div className="about__grid">
+        <div className="about__grid" data-reveal style={{ '--reveal-delay': '160ms' }}>
           <div className="about__text">
             <p>
-              I&apos;m a Systems Engineer with 4+ years at{' '}
-              <strong>Hughes Network Systems</strong> building automation and
-              infrastructure tooling for one of the world&apos;s largest satellite
-              internet providers. My work spans self-healing infrastructure,
-              real-time observability dashboards, and CI/CD pipelines that keep
-              ground station operations running 24/7.
+              I&apos;m a Systems Engineer specializing in self-healing infrastructure
+              and operational automation for one of the world&apos;s largest satellite
+              internet providers. At <strong>Hughes Network Systems</strong>, I built
+              systems that stopped hours-long outages affecting 30K+ users per site —
+              and the dashboards that catch problems before they cascade.
             </p>
             <p>
               Before Hughes, I was a <strong>Mass Communication Specialist in
-              the U.S. Navy</strong> — where I learned to perform under pressure
-              and communicate complex information clearly. Prior to that I built
-              software at Bank of America, contributed to a fintech startup
-              (later acquired by Visa for $1B), and started my engineering
-              career in automation at Paradyme Management.
+              the U.S. Navy</strong> — operating in a 24/7, mission-critical
+              environment that directly mirrors satellite ground ops. Prior to that
+              I built software at Bank of America, contributed to a fintech startup
+              (later acquired by Visa for $1B), and started my career in automation
+              at Paradyme Management.
             </p>
             <p>
               I hold a <strong>B.S. in Computer Engineering</strong> from the
@@ -62,8 +63,8 @@ export default function About() {
           <div className="about__photo-col">
             <div className="about__photo-wrap">
               <img
-                src="/portfolio-website/images/about-1.jpg"
-                alt="Rodrigo Pimenta"
+                src={`${BASE}images/about-1.jpg`}
+                alt="Rodrigo Pimenta, Systems Engineer at Hughes Network Systems"
                 className="about__photo"
                 loading="lazy"
               />

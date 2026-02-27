@@ -52,6 +52,7 @@
   transition: color var(--transition);
 }
 .nav__link:hover { color: var(--accent-teal); }
+.nav__link--active { color: var(--accent-teal); }
 
 .nav__link-num {
   font-family: var(--font-mono);

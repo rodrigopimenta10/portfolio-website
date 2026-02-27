@@ -37,6 +37,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* offset for fixed nav */
   font-size: 16px;
 }
 
@@ -58,6 +59,13 @@ a:hover { color: #5eead4; }
 img {
   max-width: 100%;
   display: block;
+}
+
+/* ─── Focus visible (keyboard nav / WCAG AA) ────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent-teal);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
@@ -123,4 +131,27 @@ img {
   color: var(--accent-orange);
   background: rgba(249, 115, 22, 0.08);
   border-color: rgba(249, 115, 22, 0.2);
+}
+
+/* ─── Scroll reveal ─────────────────────────────────────────────────────────── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.55s ease var(--reveal-delay, 0ms),
+    transform 0.55s ease var(--reveal-delay, 0ms);
+}
+
+[data-reveal].revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

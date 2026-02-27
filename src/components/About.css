@@ -145,7 +145,11 @@
   .about__facts {
     grid-template-columns: 1fr 1fr;
   }
+  .about__photo-col {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .about__photo-wrap {
-    width: 140px;
+    width: 130px;
   }
 }

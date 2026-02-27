@@ -1,22 +1,41 @@
 import { useState, useEffect } from 'react'
 import './Nav.css'
 
+const BASE = import.meta.env.BASE_URL
+
 const links = [
-  { href: '#about', label: 'About' },
+  { href: '#about',      label: 'About' },
   { href: '#experience', label: 'Experience' },
-  { href: '#projects', label: 'Projects' },
-  { href: '#skills', label: 'Skills' },
-  { href: '#contact', label: 'Contact' },
+  { href: '#projects',   label: 'Projects' },
+  { href: '#skills',     label: 'Skills' },
+  { href: '#contact',    label: 'Contact' },
 ]
 
 export default function Nav() {
-  const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled]         = useState(false)
+  const [menuOpen, setMenuOpen]         = useState(false)
+  const [activeSection, setActiveSection] = useState('')
 
+  // Scrolled state for backdrop blur
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Active section via IntersectionObserver
+  useEffect(() => {
+    const sections = document.querySelectorAll('section[id]')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id)
+        })
+      },
+      { rootMargin: '-30% 0px -65% 0px' }
+    )
+    sections.forEach(s => observer.observe(s))
+    return () => observer.disconnect()
   }, [])
 
   const close = () => setMenuOpen(false)
@@ -24,7 +43,7 @@ export default function Nav() {
   return (
     <header className={`nav${scrolled ? ' nav--scrolled' : ''}`} role="banner">
       <div className="nav__inner container">
-        <a href="#hero" className="nav__logo" aria-label="Home">
+        <a href="#hero" className="nav__logo" aria-label="Rodrigo Pimenta — Back to top">
           <span className="nav__logo-bracket">[</span>
           RP
           <span className="nav__logo-bracket">]</span>
@@ -32,11 +51,18 @@ export default function Nav() {
 
         {/* Desktop links */}
         <nav className="nav__links" aria-label="Primary navigation">
-          {links.map(({ href, label }, i) => (
-            <a key={href} href={href} className="nav__link">
-              <span className="nav__link-num">0{i + 1}.</span> {label}
-            </a>
-          ))}
+          {links.map(({ href, label }, i) => {
+            const sectionId = href.slice(1)
+            return (
+              <a
+                key={href}
+                href={href}
+                className={`nav__link${activeSection === sectionId ? ' nav__link--active' : ''}`}
+              >
+                <span className="nav__link-num">0{i + 1}.</span> {label}
+              </a>
+            )
+          })}
           <a
             href="https://github.com/rodrigopimenta10"
             className="nav__icon-link"
@@ -49,7 +75,7 @@ export default function Nav() {
             </svg>
           </a>
           <a
-            href="/portfolio-website/rodrigo_pimenta_resume.pdf"
+            href={`${BASE}rodrigo_pimenta_resume.pdf`}
             className="nav__resume"
             target="_blank"
             rel="noopener noreferrer"
@@ -78,7 +104,7 @@ export default function Nav() {
             </a>
           ))}
           <a
-            href="/portfolio-website/rodrigo_pimenta_resume.pdf"
+            href={`${BASE}rodrigo_pimenta_resume.pdf`}
             className="nav__resume nav__resume--mobile"
             target="_blank"
             rel="noopener noreferrer"

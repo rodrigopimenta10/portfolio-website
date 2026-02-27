@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .footer__text {
@@ -17,6 +17,20 @@
   font-size: 0.78rem;
   color: var(--text-muted);
 }
+
+.footer__links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.footer__link {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  transition: color var(--transition);
+}
+.footer__link:hover { color: var(--accent-teal); }
 
 .footer__built {
   font-family: var(--font-mono);

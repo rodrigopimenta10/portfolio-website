@@ -1,14 +1,31 @@
+import { useState } from 'react'
 import './Contact.css'
 
+const BASE = import.meta.env.BASE_URL
+const EMAIL = 'RodrigoPimenta102@gmail.com'
+
 export default function Contact() {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(EMAIL)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // fallback: open mail client
+      window.location.href = `mailto:${EMAIL}`
+    }
+  }
+
   return (
     <section id="contact" className="section contact">
       <div className="container">
-        <p className="section-label">05. Contact</p>
-        <h2 className="section-title">Get In Touch</h2>
-        <div className="section-divider" />
+        <p className="section-label" data-reveal>05. Contact</p>
+        <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Get In Touch</h2>
+        <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 
-        <div className="contact__layout">
+        <div className="contact__layout" data-reveal style={{ '--reveal-delay': '180ms' }}>
           <div className="contact__left">
             <p className="contact__intro">
               Whether it&apos;s about satellite systems, infrastructure automation,
@@ -18,12 +35,28 @@ export default function Contact() {
               Best way to reach me is email. I respond promptly.
             </p>
 
-            <a
-              href="mailto:RodrigoPimenta102@gmail.com"
-              className="contact__email-btn"
-            >
-              RodrigoPimenta102@gmail.com
-            </a>
+            <div className="contact__email-row">
+              <a href={`mailto:${EMAIL}`} className="contact__email-btn">
+                {EMAIL}
+              </a>
+              <button
+                className={`contact__copy-btn${copied ? ' contact__copy-btn--copied' : ''}`}
+                onClick={handleCopy}
+                aria-label="Copy email address to clipboard"
+                title={copied ? 'Copied!' : 'Copy email'}
+              >
+                {copied ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                  </svg>
+                )}
+                <span>{copied ? 'Copied!' : 'Copy'}</span>
+              </button>
+            </div>
 
             <div className="contact__links">
               <a
@@ -76,7 +109,7 @@ export default function Contact() {
             <div className="contact__card">
               <div className="contact__card-label">Resume</div>
               <a
-                href="/portfolio-website/rodrigo_pimenta_resume.pdf"
+                href={`${BASE}rodrigo_pimenta_resume.pdf`}
                 className="contact__resume-link"
                 target="_blank"
                 rel="noopener noreferrer"
