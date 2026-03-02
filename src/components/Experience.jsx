@@ -21,9 +21,9 @@ const jobs = [
   {
     id: 'navy',
     company: 'U.S. Navy Reserve',
-    title: 'Mass Communication Specialist (Active Duty)',
+    title: 'Mass Communication Specialist, E-3 (Active Duty)',
     range: '2020 – 2021',
-    location: 'Active Duty',
+    location: 'Great Lakes, IL / Fort Meade, MD',
     bullets: [
       'Completed basic training and the Defense Information School (DINFOS) at Fort Meade, MD; honorably discharged.',
     ],
