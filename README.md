@@ -1,8 +1,17 @@
 # Rodrigo Pimenta — Portfolio
 
-Personal portfolio built with Vite + React, deployed to GitHub Pages.
+Personal portfolio built with Vite + React.
 
-**Live site:** https://rodrigopimenta10.github.io/portfolio-website/
+**Live site:** https://rodrigopimenta.com
+**Mirror:** https://rodrigopimenta10.github.io/portfolio-website/
+
+Both hosts are intentionally kept alive. Resume PDFs already sent to recruiters
+have the `github.io` URL baked into the header and cannot be updated, so that
+host has to keep serving indefinitely.
+
+Because the two hosts serve from different roots, the asset base is configurable:
+Cloudflare uses the default `/`, and the GitHub Pages workflow sets
+`VITE_BASE=/portfolio-website/`. Hardcoding either one blanks the other host.
 
 ---
 
