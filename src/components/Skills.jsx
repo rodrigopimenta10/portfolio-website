@@ -19,7 +19,7 @@ const skillGroups = [
   {
     category: 'Monitoring & Data',
     icon: '▦',
-    skills: ['Grafana', 'PostgreSQL', 'BigQuery', 'Pandas', 'Jupyter', 'Tableau'],
+    skills: ['Grafana', 'PostgreSQL', 'BigQuery', 'Pandas', 'Jupyter'],
   },
   {
     category: 'Infrastructure & Ops',
