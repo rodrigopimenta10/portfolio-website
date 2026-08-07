@@ -72,7 +72,7 @@ export default function Experience() {
   return (
     <section id="experience" className="section experience">
       <div className="container">
-        <p className="section-label" data-reveal>03. Experience</p>
+        <p className="section-label" data-reveal>02. Experience</p>
         <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Where I&apos;ve Worked</h2>
         <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 
