@@ -64,7 +64,7 @@ export default function Skills() {
         <div className="skills__edu" data-reveal style={{ '--reveal-delay': '200ms' }}>
           <div className="skills__edu-label">Education</div>
           <div className="skills__edu-body">
-            <p className="skills__edu-school">University of Maryland — A. James Clark School of Engineering</p>
+            <p className="skills__edu-school">University of Maryland</p>
             <p className="skills__edu-degree">B.S. Computer Engineering · College Park Scholars · 2014 – 2018</p>
           </div>
         </div>
