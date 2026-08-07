@@ -28,8 +28,11 @@ export default function Contact() {
         <div className="contact__layout" data-reveal style={{ '--reveal-delay': '180ms' }}>
           <div className="contact__left">
             <p className="contact__intro">
-              Whether it&apos;s about satellite systems, infrastructure automation,
-              or something interesting you&apos;re working on — feel free to reach out.
+              I&apos;m looking for platform, infrastructure, backend, or SRE
+              engineering roles in San Francisco, New York City, or the
+              DC–Baltimore metro. Whether it&apos;s about a role, distributed
+              systems, or something interesting you&apos;re working on — feel
+              free to reach out.
             </p>
             <p className="contact__intro">
               Best way to reach me is email. I respond promptly.
@@ -100,6 +103,7 @@ export default function Contact() {
             <div className="contact__card">
               <div className="contact__card-label">Location</div>
               <div className="contact__card-value">Rockville, MD</div>
+              <div className="contact__card-sub">Open to SF · NYC · DC–Baltimore</div>
             </div>
             <div className="contact__card">
               <div className="contact__card-label">Current Role</div>

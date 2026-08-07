@@ -13,13 +13,15 @@ export default function Hero() {
           <p className="hero__greeting">Hi, I&apos;m</p>
           <h1 className="hero__name">Rodrigo Pimenta.</h1>
           <h2 className="hero__tagline">
-            I keep satellite networks running<br />
-            <span className="hero__tagline-accent">at scale, automatically.</span>
+            I write software that keeps<br />
+            <span className="hero__tagline-accent">distributed systems alive.</span>
           </h2>
           <p className="hero__desc">
             Systems Engineer III at Hughes Network Systems — 4+ years building
-            self-healing infrastructure, automation pipelines, and dashboards for
-            satellite ground systems serving 800K+ subscribers.
+            self-healing infrastructure, asyncio automation, and observability
+            for a consumer satellite broadband network. Looking for platform,
+            infrastructure, backend, or SRE roles in San Francisco, New York,
+            or the DC–Baltimore area.
           </p>
 
           <div className="hero__cta">
@@ -33,10 +35,10 @@ export default function Hero() {
 
           <div className="hero__badges">
             <span className="tag">Python</span>
-            <span className="tag">Satellite Systems</span>
-            <span className="tag">Automation</span>
+            <span className="tag">Distributed Systems</span>
+            <span className="tag">Self-Healing Automation</span>
+            <span className="tag">CI/CD</span>
             <span className="tag">Grafana</span>
-            <span className="tag">Jenkins</span>
           </div>
         </div>
 

@@ -19,12 +19,12 @@ const skillGroups = [
   {
     category: 'Monitoring & Data',
     icon: '▦',
-    skills: ['Grafana', 'Tableau', 'PostgreSQL', 'BigQuery', 'Pandas', 'Jupyter', 'SL1 / ScienceLogic'],
+    skills: ['Grafana', 'PostgreSQL', 'BigQuery', 'Pandas', 'Jupyter', 'Tableau'],
   },
   {
     category: 'Infrastructure & Ops',
     icon: '◈',
-    skills: ['Linux / RHEL', 'VMware', 'Docker', 'Ansible', 'Satellite Ground Systems', 'On-Call Incident Response', 'Delinea / Thycotic'],
+    skills: ['Linux / RHEL', 'asyncio', 'Cloudflare Workers', 'VMware', 'Ansible', 'Satellite Ground Systems', 'On-Call Incident Response', 'Delinea / Thycotic'],
   },
 ]
 
