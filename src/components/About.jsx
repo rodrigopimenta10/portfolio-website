@@ -13,11 +13,17 @@ export default function About() {
         <div className="about__grid" data-reveal style={{ '--reveal-delay': '160ms' }}>
           <div className="about__text">
             <p>
-              I&apos;m a Systems Engineer specializing in self-healing infrastructure
-              and operational automation for one of the world&apos;s largest satellite
-              internet providers. At <strong>Hughes Network Systems</strong>, I built
-              systems that stopped hours-long outages affecting 30K+ users per site —
-              and the dashboards that catch problems before they cascade.
+              I write software that keeps distributed systems alive: self-healing
+              infrastructure, fleet automation, and the observability to prove
+              it&apos;s working. At <strong>Hughes Network Systems</strong> I build
+              that software for one of the world&apos;s largest satellite internet
+              providers — systems that stop hours-long outages before customers
+              feel them, and dashboards that catch problems before they cascade.
+            </p>
+            <p>
+              I&apos;m targeting <strong>platform, infrastructure, backend, and
+              SRE engineering</strong> roles in San Francisco, New York City, or
+              the DC–Baltimore metro.
             </p>
             <p>
               Before Hughes, I was a <strong>Mass Communication Specialist in
@@ -36,19 +42,19 @@ export default function About() {
             <div className="about__facts">
               <div className="about__fact">
                 <span className="about__fact-num">4+</span>
-                <span className="about__fact-label">Years in satellite systems</span>
+                <span className="about__fact-label">Years building production infrastructure software</span>
               </div>
               <div className="about__fact">
-                <span className="about__fact-num">800K+</span>
-                <span className="about__fact-label">Subscribers on monitored infrastructure</span>
+                <span className="about__fact-num">10K+</span>
+                <span className="about__fact-label">Lines of sole-authored self-healing code in production</span>
               </div>
               <div className="about__fact">
-                <span className="about__fact-num">30K+</span>
-                <span className="about__fact-label">Users protected per self-healing site</span>
+                <span className="about__fact-num">24</span>
+                <span className="about__fact-label">Storage nodes monitored across 8 clusters</span>
               </div>
               <div className="about__fact">
-                <span className="about__fact-num">20</span>
-                <span className="about__fact-label">Sites covered by RF automation</span>
+                <span className="about__fact-num">~25 GB</span>
+                <span className="about__fact-label">Production storage reclaimed by logging redesign</span>
               </div>
             </div>
 
