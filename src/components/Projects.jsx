@@ -1,57 +1,114 @@
 import './Projects.css'
 
-const projects = [
+const liveProjects = [
   {
-    id: 'ceph',
+    id: 'orbital-watch',
     num: '01',
-    title: 'Ceph Storage Self-Healing Suite',
-    desc: 'Developed a monitoring and self-healing suite for Ceph storage nodes that stopped hours-long outages affecting 30K+ users per site. Built Grafana dashboards, webhook alerts to SL1, and latency/memory remediation logic.',
-    tech: ['Python', 'Fabric', 'PostgreSQL', 'Grafana', 'SL1'],
-    highlight: true,
-    impact: '30K+ users protected',
+    title: 'Orbital Watch',
+    desc: 'A satellite situational-awareness site built on one thesis: the page reports its own data freshness rather than assuming it. Every upstream source is isolated and degrades independently — live fetch, then cache, then committed snapshot — and each is classified fresh, stale, or failed on the page with its reasoning shown. A build cannot fail, and it cannot silently publish stale data as current.',
+    tech: ['Python', 'Cloudflare Workers', 'CI/CD', 'pytest'],
+    impact: '150 tests · offline-deterministic builds · cron rebuilds with a dead-man check',
+    live: 'https://orbital.rodrigopimenta.com',
+    source: 'https://github.com/rodrigopimenta10/orbital-watch',
   },
   {
-    id: 'rf',
+    id: 'this-site',
     num: '02',
-    title: 'RF Gateway Self-Healing System',
-    desc: 'Zero-touch Python self-healing system for satellite ground infrastructure. Detects RF gateway failovers across 20 sites and automatically resets 12 modems in under 60 seconds, eliminating ~1-hour outages per event.',
-    tech: ['Python', 'Satellite Systems', 'Automation'],
-    highlight: true,
-    impact: '20 sites · <60s recovery',
-  },
-  {
-    id: 'dashboards',
-    num: '03',
-    title: 'Grafana & Tableau Dashboards',
-    desc: 'Production dashboards correlating satellite performance data from PostgreSQL and BigQuery, enabling data-driven anomaly detection and QA benchmarking across a massive subscriber base.',
-    tech: ['Grafana', 'Tableau', 'PostgreSQL', 'BigQuery'],
-    impact: '800K+ subscribers monitored',
-  },
-  {
-    id: 'ovt',
-    num: '04',
-    title: 'OVT Root Cause Analysis',
-    desc: 'BigQuery-based root cause analysis for satellite OVT failures. Correlated installer vs beam diagnostics to drive data-driven remediation and reduce forced sign-off incidents.',
-    tech: ['BigQuery', 'SQL', 'Data Analysis'],
-    impact: 'Reduced forced sign-off incidents',
-  },
-  {
-    id: 'cicd',
-    num: '05',
-    title: 'CI/CD Pipelines & Runbooks',
-    desc: 'Built Jenkins CI/CD pipelines and authored operational runbooks for automation deployment. Created a reusable framework now adopted by other engineering teams at Hughes.',
-    tech: ['Jenkins', 'CI/CD', 'Runbooks', 'Git'],
-    impact: 'Adopted org-wide',
-  },
-  {
-    id: 'shu',
-    num: '06',
-    title: 'Brazil SHU Automation Tool',
-    desc: 'Built a Super Heavy User automation tool from scratch and refactored it from a monolith to a modular pipeline with config-driven thresholds and full pytest coverage.',
-    tech: ['Python', 'pandas', 'uv', 'pytest'],
-    impact: 'Full test coverage',
+    title: 'This Site',
+    desc: 'The site you\'re reading — Vite + React with vanilla CSS, no UI framework, no router. One build is served from two hosts (Cloudflare Pages on the apex domain, GitHub Pages on a subpath) with a configurable asset base and deploy verification that asserts content-type, not just status codes.',
+    tech: ['React', 'Vite', 'CSS', 'GitHub Actions'],
+    impact: 'Dual-host deploy from a single build',
+    live: 'https://rodrigopimenta.com',
+    source: 'https://github.com/rodrigopimenta10/portfolio-website',
   },
 ]
+
+const workProjects = [
+  {
+    id: 'ceph',
+    num: '03',
+    title: 'Ceph Self-Healing Monitor',
+    desc: 'Sole author — 6,586 lines, 77 of 79 commits. Watches 24 nodes across 8 clusters on a 3-minute cycle. Automated metadata-server failover is gated on a standby-capacity assessment, so it never promotes a node that can\'t carry the load; every outcome is verified against the cluster log to distinguish a real failover from a same-node reclaim.',
+    tech: ['Python', 'Ceph', 'PostgreSQL', 'Grafana', 'pytest'],
+    impact: '7 PostgreSQL tables · 19-panel Grafana dashboard · pytest in CI',
+  },
+  {
+    id: 'config-selfheal',
+    num: '04',
+    title: 'Config Integrity Self-Heal',
+    desc: 'Sole author — 3,594 lines. Detects configuration drift and corruption across a gateway fleet over SFTP and restarts the affected service. Modernized a blocking-I/O workload onto asyncio with semaphore-bounded fan-out rather than process pools.',
+    tech: ['Python', 'asyncio', 'SFTP', 'pytest'],
+    impact: 'Fleet-wide drift detection and automated recovery',
+  },
+  {
+    id: 'logging',
+    num: '05',
+    title: 'Platform-Wide Logging Redesign',
+    desc: 'Root-caused a defect that was silently discarding log records, then redesigned the logging: 19.68 GB down to 58 MB for one service, ~25 GB reclaimed in production. Built audit tooling that swept all 146 scheduled jobs for the same pattern.',
+    tech: ['Python', 'Linux', 'Log Management'],
+    impact: '19.68 GB → 58 MB · 146 jobs audited',
+  },
+  {
+    id: 'rca',
+    num: '06',
+    title: 'Production Root Cause Analysis',
+    desc: 'A 738 MB core dump traced with gdb to an unguarded deserialization path in a vendor component; a 177-process leak traced to a library deadlock at interpreter teardown. Both delivered as actionable defect reports.',
+    tech: ['gdb', 'Python', 'Linux Internals'],
+    impact: 'Vendor defects pinpointed from raw core dumps',
+  },
+]
+
+function ProjectCard({ p, i, live }) {
+  return (
+    <article
+      data-reveal
+      style={{ '--reveal-delay': `${i * 75}ms` }}
+      className={`proj__card${live ? ' proj__card--live' : ''}`}
+    >
+      <div className="proj__card-top">
+        <span className="proj__num" aria-hidden="true">{p.num}</span>
+        {live && <span className="proj__live-badge">● Live</span>}
+      </div>
+
+      <h3 className="proj__title">{p.title}</h3>
+      <p className="proj__desc">{p.desc}</p>
+
+      {p.impact && (
+        <div className="proj__impact">
+          <span className="proj__impact-dot" aria-hidden="true" />
+          {p.impact}
+        </div>
+      )}
+
+      {live && (
+        <div className="proj__links">
+          <a
+            href={p.live}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="proj__link proj__link--primary"
+          >
+            Visit site ↗
+          </a>
+          <a
+            href={p.source}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="proj__link"
+          >
+            Source ↗
+          </a>
+        </div>
+      )}
+
+      <div className="proj__tech">
+        {p.tech.map(t => (
+          <span key={t} className="tag">{t}</span>
+        ))}
+      </div>
+    </article>
+  )
+}
 
 export default function Projects() {
   return (
@@ -61,37 +118,21 @@ export default function Projects() {
         <h2 className="section-title" data-reveal style={{ '--reveal-delay': '80ms' }}>Things I&apos;ve Built</h2>
         <div className="section-divider" data-reveal style={{ '--reveal-delay': '120ms' }} />
 
+        <h3 className="proj__group-title" data-reveal>
+          Live projects <span className="proj__group-hint">— click through and check for yourself</span>
+        </h3>
+        <div className="proj__grid proj__grid--live">
+          {liveProjects.map((p, i) => (
+            <ProjectCard key={p.id} p={p} i={i} live />
+          ))}
+        </div>
+
+        <h3 className="proj__group-title" data-reveal>
+          Systems built at work <span className="proj__group-hint">— production infrastructure at Hughes</span>
+        </h3>
         <div className="proj__grid">
-          {projects.map((p, i) => (
-            <article
-              key={p.id}
-              data-reveal
-              style={{ '--reveal-delay': `${i * 75}ms` }}
-              className={`proj__card${p.highlight ? ' proj__card--featured' : ''}`}
-            >
-              <div className="proj__card-top">
-                <span className="proj__num" aria-hidden="true">{p.num}</span>
-                {p.highlight && (
-                  <span className="proj__featured-badge">Featured</span>
-                )}
-              </div>
-
-              <h3 className="proj__title">{p.title}</h3>
-              <p className="proj__desc">{p.desc}</p>
-
-              {p.impact && (
-                <div className="proj__impact">
-                  <span className="proj__impact-dot" aria-hidden="true" />
-                  {p.impact}
-                </div>
-              )}
-
-              <div className="proj__tech">
-                {p.tech.map(t => (
-                  <span key={t} className="tag">{t}</span>
-                ))}
-              </div>
-            </article>
+          {workProjects.map((p, i) => (
+            <ProjectCard key={p.id} p={p} i={i} />
           ))}
         </div>
       </div>
