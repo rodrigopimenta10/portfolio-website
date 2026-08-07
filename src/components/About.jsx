@@ -22,21 +22,20 @@ export default function About() {
             </p>
             <p>
               I&apos;m targeting <strong>platform, infrastructure, backend, and
-              SRE engineering</strong> roles in San Francisco, New York City, or
-              the DC–Baltimore metro.
+              SRE engineering</strong> roles — remote, or the San Francisco Bay
+              Area, New York City, and DC–Baltimore metros.
             </p>
             <p>
-              Before Hughes, I was a <strong>Mass Communication Specialist in
-              the U.S. Navy</strong> — operating in a 24/7, mission-critical
-              environment that directly mirrors satellite ground ops. Prior to that
-              I built software at Bank of America, contributed to a fintech startup
-              (later acquired by Visa for $1B), and started my career in automation
-              at Paradyme Management.
+              Before Hughes I built automation and CI/CD at <strong>Bank of
+              America</strong>, shipped a canary-deployment feature at a
+              cloud-native fintech <strong>later acquired by Visa for $1B</strong>,
+              and started out writing internal tools in Python at Paradyme
+              Management. I also served in the <strong>U.S. Navy</strong> and was
+              honorably discharged.
             </p>
             <p>
               I hold a <strong>B.S. in Computer Engineering</strong> from the
-              University of Maryland (Clark School), where I was a College Park
-              Scholar.
+              University of Maryland, where I was a College Park Scholar.
             </p>
 
             <div className="about__facts">
