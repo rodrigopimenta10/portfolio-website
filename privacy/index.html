@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#070b14" />
+    <meta name="robots" content="noindex, follow" />
+    <title>Privacy Policy — Rodrigo Pimenta</title>
+    <!-- Standalone static page. Deliberately self-contained with inline CSS and no
+         asset references, so it renders identically from either host root
+         (rodrigopimenta.com/privacy and .../portfolio-website/privacy) without
+         depending on Vite's base path. Exists to satisfy the Google OAuth consent
+         screen requirement for a published privacy policy URL. -->
+    <style>
+      :root {
+        --bg: #070b14;
+        --panel: #0d1526;
+        --border: #1e2d45;
+        --text: #e8edf5;
+        --muted: #8899b4;
+        --accent: #2dd4bf;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover, a:focus-visible { text-decoration: underline; }
+      .back {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 2.5rem;
+      }
+      .back:hover, .back:focus-visible { color: var(--accent); }
+      h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1.2; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
+      .updated { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin: 0 0 2.5rem; }
+      h2 {
+        font-size: 1.05rem;
+        margin: 2.5rem 0 0.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        letter-spacing: -0.005em;
+      }
+      p, li { color: #cdd7e6; }
+      ul { padding-left: 1.25rem; }
+      li { margin-bottom: 0.5rem; }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        margin: 1.5rem 0;
+      }
+      .panel p:first-child { margin-top: 0; }
+      .panel p:last-child { margin-bottom: 0; }
+      strong { color: var(--text); }
+      code {
+        font-family: var(--mono);
+        font-size: 0.875em;
+        background: #111827;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.1em 0.4em;
+      }
+      footer {
+        margin-top: 3.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="/">&larr; rodrigopimenta.com</a>
+
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: September 25, 2026</p>
+
+      <p>
+        This policy covers the personal software tools I run for my own job search under the
+        Google Cloud project named <strong>Rodrigo Personal Job Search Tools</strong>. These are
+        command-line tools that run on my own computer. They are not a product, not a service,
+        and have no users other than me.
+      </p>
+
+      <div class="panel">
+        <p>
+          <strong>Summary:</strong> these tools request access to my own Google account only.
+          Data stays on my own machine. Nothing is transmitted to a server I operate, sold,
+          shared, or used for advertising. There is no other user whose data could be collected.
+        </p>
+      </div>
+
+      <h2>Who this applies to</h2>
+      <p>
+        Only me, Rodrigo Pimenta. The tools authenticate against a single Google account —
+        my own — and are not distributed, hosted, or made available to anyone else. If you have
+        arrived here from an OAuth consent screen, it is because I am authorizing my own
+        software to read my own mailbox and calendar.
+      </p>
+
+      <h2>What data is accessed</h2>
+      <ul>
+        <li>
+          <strong>Gmail</strong> — read access to messages, used to identify job-application
+          status signals such as recruiter replies, interview invitations, and rejections. Also
+          used to apply labels for organizing my own inbox.
+        </li>
+        <li>
+          <strong>Google Calendar</strong> — read access to events, used to detect upcoming
+          interviews.
+        </li>
+      </ul>
+      <p>
+        No other Google services are accessed. No contact lists are harvested and no messages
+        are sent on my behalf without my explicit action.
+      </p>
+
+      <h2>How data is stored</h2>
+      <p>
+        OAuth tokens and any cached data are written to local files on my personal computer, in
+        directories excluded from version control. Nothing is uploaded to a database, analytics
+        platform, or third-party service.
+      </p>
+
+      <h2>How data is used</h2>
+      <p>
+        Solely to organize my own job search — tracking which applications have received
+        replies and when interviews are scheduled. The data is never used for advertising,
+        profiling, resale, or model training, and is never shared with a third party.
+      </p>
+
+      <h2>Retention and deletion</h2>
+      <p>
+        Local data persists only as long as it is useful to me and can be deleted at any time by
+        removing the local files. Account access can be revoked independently at
+        <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer">Google Account permissions</a>,
+        which immediately invalidates the tokens.
+      </p>
+
+      <h2>Limited Use disclosure</h2>
+      <p>
+        Use and transfer of information received from Google APIs adheres to the
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener noreferrer">Google API Services User Data Policy</a>,
+        including the Limited Use requirements. Specifically: the data is used only to provide
+        the functionality described above, is not transferred to others except as required for
+        that functionality, is not used for advertising, and is not read by any human other than
+        me, the account owner.
+      </p>
+
+      <h2>Third parties</h2>
+      <p>
+        There are none. The tools run locally and communicate only with Google's APIs and public
+        job-board endpoints. No data is passed to any analytics, advertising, or data-broker
+        service.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about this policy:
+        <a href="mailto:RodrigoPimenta102@gmail.com">RodrigoPimenta102@gmail.com</a>
+      </p>
+
+      <footer>
+        Rodrigo Pimenta &middot;
+        <a href="/">rodrigopimenta.com</a>
+      </footer>
+    </main>
+  </body>
+</html>
