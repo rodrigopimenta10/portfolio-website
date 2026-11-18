@@ -35,8 +35,10 @@ from portfolio_status.sources.site import ThisSite
 log = logging.getLogger("portfolio_status")
 
 USER_AGENT = f"portfolio-status/{__version__} (+https://rodrigopimenta.com/how-this-site-runs)"
-# Each outbound call: 2 s to connect, 4 s for the whole answer.
-TIMEOUT = httpx.Timeout(4.0, connect=2.0)
+# Each outbound call: 2 s to connect, 4 s for each later step of the answer.
+CALL_TIMEOUT_SECONDS = 4.0
+CONNECT_TIMEOUT_SECONDS = 2.0
+TIMEOUT = httpx.Timeout(CALL_TIMEOUT_SECONDS, connect=CONNECT_TIMEOUT_SECONDS)
 
 
 def create_app(
@@ -87,6 +89,8 @@ def create_app(
                 client,
                 now=clock,
                 recorded=recorded,
+                call_timeout_seconds=CALL_TIMEOUT_SECONDS,
+                connect_timeout_seconds=CONNECT_TIMEOUT_SECONDS,
             )
             yield
 

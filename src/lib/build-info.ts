@@ -13,5 +13,7 @@ function commit(): string | null {
 
 export const buildInfo = {
   commit: commit(),
+  /** True when built by CI from a pushed commit, so the commit can be linked to on GitHub. */
+  commitIsPublic: Boolean(process.env['GITHUB_SHA']),
   builtAt: new Date().toISOString(),
 };

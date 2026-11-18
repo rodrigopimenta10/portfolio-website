@@ -173,4 +173,5 @@ def test_a_slow_source_is_cut_off_and_does_not_hold_up_the_others():
     snapshot = run([slow, OrbitalWatch()], calls, script)
 
     assert [system.state for system in snapshot.systems] == ["unknown", "up"]
-    assert snapshot.systems[0].reason.startswith("No answer within")
+    # The whole-source budget (shortened to 0.05 s for this test) is what ran out.
+    assert snapshot.systems[0].reason == "No answer within 0 seconds."

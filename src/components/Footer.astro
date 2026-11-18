@@ -25,7 +25,8 @@ const built = buildInfo.builtAt.slice(0, 16).replace('T', ' ');
       <p>
         {buildInfo.commit ? (
           <>
-            Built {built} UTC from commit <a href={`${site.repo}/commit/${buildInfo.commit}`}>{buildInfo.commit}</a>.
+            Built {built} UTC from commit{' '}
+            {buildInfo.commitIsPublic ? <a href={`${site.repo}/commit/${buildInfo.commit}`}>{buildInfo.commit}</a> : buildInfo.commit}.
           </>
         ) : (
           <>Built {built} UTC.</>

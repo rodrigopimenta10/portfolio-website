@@ -56,7 +56,7 @@ def test_one_source_timing_out_becomes_could_not_check_and_the_rest_still_answer
     assert response.status_code == 200
     systems = by_id(response.json())
     assert systems["sightline"]["state"] == "unknown"
-    assert systems["sightline"]["reason"].startswith("No answer within")
+    assert systems["sightline"]["reason"] == "No answer within 4 seconds."
     assert "fact" not in systems["sightline"]
     assert [systems[name]["state"] for name in ("orbital-watch", "aws-platform", "this-site")] == ["up"] * 3
     # An answer with a failed check in it is held for less time, so recovery shows sooner.
@@ -163,3 +163,15 @@ def test_no_generated_docs_are_served(client_for):
 
     assert client.get("/docs").status_code == 404
     assert client.get("/openapi.json").status_code == 404
+
+
+def test_a_connection_that_never_opens_says_so_with_its_own_limit():
+    def stalled(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectTimeout("connect timed out", request=request)
+
+    with TestClient(
+        create_app(transport=httpx.MockTransport(stalled), now=lambda: RECORDED_AT, environ={})
+    ) as client:
+        systems = by_id(client.get("/api/status").json())
+
+    assert systems["sightline"]["reason"] == "Could not connect within 2 seconds."

@@ -44,12 +44,17 @@ class StatusService:
         now: Callable[[], datetime] = utc_now,
         monotonic: Callable[[], float] = time.monotonic,
         recorded: bool = False,
+        call_timeout_seconds: float = 4.0,
+        connect_timeout_seconds: float = 2.0,
     ) -> None:
         self._sources = list(sources)
         self._client = client
         self._now = now
         self._monotonic = monotonic
         self._recorded = recorded
+        # The client's own limits, repeated here only to word the reason a visitor reads.
+        self._call_timeout = call_timeout_seconds
+        self._connect_timeout = connect_timeout_seconds
         self._entries: dict[str, _Entry] = {}
         self._last_good: dict[str, SystemStatus] = {}
         # One lock per source: when the cache expires under load, one request checks and the rest wait.
@@ -98,8 +103,14 @@ class StatusService:
             if error.retry_after is not None:
                 ttl = min(max(error.retry_after, FAILURE_TTL_SECONDS), LONGEST_BACKOFF_SECONDS)
             return self._unknown(source, error.reason + ".", self._elapsed_ms(started)), ttl
-        except (TimeoutError, httpx.TimeoutException):
-            reason = f"No answer within {self._elapsed_ms(started) / 1000:.0f} seconds."
+        except httpx.ConnectTimeout:
+            reason = f"Could not connect within {self._connect_timeout:.0f} seconds."
+            return self._unknown(source, reason, self._elapsed_ms(started)), FAILURE_TTL_SECONDS
+        except httpx.TimeoutException:
+            reason = f"No answer within {self._call_timeout:.0f} seconds."
+            return self._unknown(source, reason, self._elapsed_ms(started)), FAILURE_TTL_SECONDS
+        except TimeoutError:
+            reason = f"No answer within {CHECK_BUDGET_SECONDS:.0f} seconds."
             return self._unknown(source, reason, self._elapsed_ms(started)), FAILURE_TTL_SECONDS
         except httpx.HTTPError as error:
             reason = f"Could not connect ({type(error).__name__})."
