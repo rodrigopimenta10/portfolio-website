@@ -69,7 +69,7 @@ async function settle(page) {
   await page.waitForTimeout(700);
 }
 
-const shot = (page, name, fullPage = true) => page.screenshot({ path: path.join(out, `${name}.jpg`), type: 'jpeg', quality: 84, fullPage });
+const shot = (page, name, fullPage = true) => page.screenshot({ path: path.join(out, `${name}.jpg`), type: 'jpeg', quality: 74, fullPage });
 
 for (const [name, url] of pages) {
   if (only && only !== name) continue;
