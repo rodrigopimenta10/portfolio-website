@@ -21,7 +21,7 @@ export const site = {
    * Whether the hosting described on "How this site runs" is live. While false, that page and the
    * footer say plainly that it is built and tested but not deployed. Flip it on the day it goes live.
    */
-  hosting: { live: false, asOf: '2026-11-18' },
+  hosting: { live: true, asOf: '2026-11-18' },
 } as const;
 
 export const nav = [
