@@ -1,0 +1,94 @@
+---
+import { nav, site } from '../data/site';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  path: string;
+}
+
+const { path } = Astro.props;
+const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`);
+---
+
+<header class="site-header wrap">
+  <a class="site-name" href="/" aria-current={path === '/' ? 'page' : undefined}>{site.name}</a>
+  <nav aria-label="Main">
+    <ul>
+      {
+        nav.map((item) => (
+          <li>
+            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined} title={'title' in item ? item.title : undefined}>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <ThemeToggle />
+</header>
+
+<style>
+  .site-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'name toggle' 'nav nav';
+    align-items: center;
+    gap: var(--space-2) var(--space-5);
+    padding-block: var(--space-4);
+  }
+
+  .site-name {
+    grid-area: name;
+    font-size: var(--text-lg);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  nav {
+    grid-area: nav;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin-inline: calc(-1 * var(--space-1));
+  }
+
+  nav a {
+    display: inline-block;
+    padding: var(--space-2) var(--space-1);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    color: var(--ink-soft);
+    border-bottom: 1px solid transparent;
+  }
+
+  nav a:hover {
+    color: var(--ink);
+  }
+
+  nav a[aria-current='page'] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  :global(.theme-toggle) {
+    grid-area: toggle;
+  }
+
+  @media (min-width: 46rem) {
+    .site-header {
+      grid-template-columns: 1fr auto auto;
+      grid-template-areas: 'name nav toggle';
+      padding-block: var(--space-5);
+    }
+
+    ul {
+      gap: var(--space-5);
+    }
+  }
+</style>

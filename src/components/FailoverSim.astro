@@ -1,0 +1,387 @@
+---
+// A small failover simulation. The first picture is rendered here, at build time, from the same
+// starting state the script uses, so it is on the page without JavaScript. The script is loaded
+// only when the section first scrolls into view, and stops its timer whenever it is off screen.
+import { CYCLE_MS, initialState, loadOf } from '../lib/failover/engine';
+
+const state = initialState();
+---
+
+<section class="sim" data-failover aria-labelledby="sim-title">
+  <header class="sim-head">
+    <p class="eyebrow">Simulation · made-up clusters, not a real system</p>
+    <h2 id="sim-title">A monitor that refuses to make things worse</h2>
+    <p class="measure">
+      Press a node to fail it. Nothing happens at first: the monitor only looks every
+      {CYCLE_MS / 1000} seconds. On its next check it finds the failure, asks whether a standby has
+      room for the work, and moves it. If no standby has room it refuses, because overloading a
+      healthy node turns one failure into two. Try <strong>c1</strong>: its only standby is busy.
+    </p>
+  </header>
+
+  <div class="sim-bar">
+    <p class="mono timer">
+      <span data-timer-text>Monitor checks every {CYCLE_MS / 1000} s</span>
+      <svg class="timer-bar" viewBox="0 0 100 2" preserveAspectRatio="none" aria-hidden="true">
+        <rect class="track" width="100" height="2"></rect>
+        <rect class="fill" data-timer-fill width="0" height="2"></rect>
+      </svg>
+    </p>
+    <p class="mono latest" data-latest aria-hidden="true">Press a node to fail it.</p>
+    <div class="controls">
+      <button class="button quiet" type="button" data-pause aria-pressed="false" disabled>Pause</button>
+      <button class="button quiet" type="button" data-reset disabled>Reset</button>
+    </div>
+  </div>
+
+  <div class="sim-grid">
+    <div class="clusters">
+      {
+        state.clusters.map((cluster) => (
+          <section class="cluster" data-cluster={cluster.id} data-serving="true" aria-label={cluster.name}>
+            <header>
+              <h3>{cluster.name}</h3>
+              <p class="mono cluster-state" data-cluster-state>
+                serving
+              </p>
+            </header>
+            <p class="mono soft need">Its work needs {cluster.demand}% of one node.</p>
+            <ul>
+              {cluster.nodes.map((node) => (
+                <li>
+                  <button
+                    class="node"
+                    type="button"
+                    data-node={node.id}
+                    data-role={node.role}
+                    data-healthy="true"
+                    aria-pressed="false"
+                    aria-label={`${node.id}, ${node.role}, ${loadOf(cluster, node)}% in use. Press to fail it.`}
+                    disabled
+                  >
+                    <span class="node-id">{node.id}</span>
+                    <span class="node-role" data-node-role>
+                      {node.role}
+                    </span>
+                    <svg class="node-bar" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true">
+                      <rect class="track" width="100" height="6" />
+                      <rect class="fill" data-node-fill width={loadOf(cluster, node)} height="6" />
+                    </svg>
+                    <span class="node-load" data-node-load>
+                      {loadOf(cluster, node)}% in use
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+
+    <div class="log-wrap">
+      <h3 class="eyebrow" id="sim-log-title">Monitor log</h3>
+      <ol class="log mono" data-log role="log" aria-labelledby="sim-log-title" tabindex="0">
+        <li class="placeholder">The monitor starts when this section is on screen.</li>
+      </ol>
+      <noscript><p class="mono soft">The simulation needs JavaScript; this is its starting picture.</p></noscript>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Load the simulation's code the first time the section comes into view, and not before.
+  const sections = document.querySelectorAll<HTMLElement>('[data-failover]');
+  if (sections.length > 0 && 'IntersectionObserver' in window) {
+    const starter = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          starter.unobserve(entry.target);
+          void import('../scripts/failover-ui').then((module) => module.mount(entry.target as HTMLElement));
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    for (const section of sections) starter.observe(section);
+  }
+</script>
+
+<style>
+  .sim-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .sim-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    margin-top: var(--space-6);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--rule);
+  }
+
+  .timer {
+    flex: 1 1 14rem;
+    display: grid;
+    gap: var(--space-2);
+    max-width: 24rem;
+  }
+
+  .timer-bar {
+    width: 100%;
+    height: 3px;
+  }
+
+  .track {
+    fill: var(--rule);
+  }
+
+  .timer-bar .fill {
+    fill: var(--accent);
+  }
+
+  /* The newest log line, beside the timer: on a phone the full log is below the clusters. */
+  .latest {
+    flex: 1 1 16rem;
+    order: 3;
+    min-height: 2.6em;
+    color: var(--ink-soft);
+    line-height: 1.3;
+  }
+
+  .controls {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .controls .button[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .button:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  .sim-grid {
+    display: grid;
+    gap: var(--space-6);
+    margin-top: var(--space-5);
+  }
+
+  .clusters {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  .cluster {
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+  }
+
+  .cluster header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .cluster h3 {
+    font-size: var(--text-base);
+    font-weight: 600;
+  }
+
+  .cluster-state {
+    font-weight: 500;
+    color: var(--state-up);
+  }
+
+  .cluster[data-serving='false'] {
+    border-color: var(--state-down);
+  }
+
+  .cluster[data-serving='false'] .cluster-state {
+    color: var(--state-down);
+  }
+
+  .need {
+    margin-top: var(--space-1);
+  }
+
+  .cluster ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr));
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  .node {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-1) var(--space-2);
+    align-items: baseline;
+    width: 100%;
+    min-height: 4.5rem;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .node:disabled {
+    cursor: default;
+  }
+
+  .node:not(:disabled):hover {
+    border-color: var(--ink);
+  }
+
+  .node-id {
+    font-weight: 500;
+    font-size: var(--text-base);
+  }
+
+  .node-role {
+    justify-self: end;
+    color: var(--ink-soft);
+  }
+
+  .node-bar {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .node-bar .fill {
+    fill: var(--ink-soft);
+    transition: width 400ms ease;
+  }
+
+  .node-load {
+    grid-column: 1 / -1;
+    color: var(--ink-soft);
+    font-size: var(--text-xs);
+  }
+
+  .node[data-role='active'] {
+    border-color: var(--accent);
+    background: var(--accent-wash);
+  }
+
+  .node[data-role='active'] .node-role {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .node[data-role='active'] .node-bar .fill {
+    fill: var(--accent);
+  }
+
+  .node[data-healthy='false'] {
+    border-style: dashed;
+    border-color: var(--state-down);
+    background: var(--wash-down);
+  }
+
+  .node[data-healthy='false'] .node-role,
+  .node[data-healthy='false'] .node-load {
+    color: var(--state-down);
+  }
+
+  .log-wrap {
+    min-width: 0;
+  }
+
+  .log {
+    margin-top: var(--space-3);
+    height: 22rem;
+    overflow-y: auto;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-sunk);
+    line-height: 1.55;
+    overscroll-behavior: contain;
+  }
+
+  .log :global(li) {
+    display: grid;
+    grid-template-columns: 4.6rem 1fr;
+    gap: var(--space-2);
+    padding-block: 0.2rem;
+  }
+
+  .log :global(li.placeholder) {
+    display: block;
+    color: var(--ink-soft);
+  }
+
+  .log :global(.at) {
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .log :global([data-kind='manual'] .text) {
+    color: var(--ink-soft);
+  }
+
+  .log :global([data-kind='quiet'] .text) {
+    color: var(--ink-soft);
+  }
+
+  .log :global([data-kind='act'] .text),
+  .log :global([data-kind='verify'] .text),
+  .log :global([data-kind='recover'] .text) {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .log :global([data-kind='detect'] .text) {
+    color: var(--state-degraded);
+    font-weight: 500;
+  }
+
+  .log :global([data-kind='refuse'] .text) {
+    color: var(--state-down);
+    font-weight: 500;
+  }
+
+  @media (min-width: 60rem) {
+    .latest {
+      display: none;
+    }
+
+    .sim-grid {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      gap: var(--space-7);
+    }
+
+    .log {
+      height: 100%;
+      min-height: 24rem;
+      max-height: 31rem;
+    }
+
+    .log-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+</style>

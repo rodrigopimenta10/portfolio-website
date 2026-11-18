@@ -1,0 +1,213 @@
+---
+import { getCollection } from 'astro:content';
+import resume from '../data/resume.json';
+import Base from '../layouts/Base.astro';
+import { allProjects, isWork, resumeWords } from '../lib/projects';
+
+// Roles in the order the resume lists them (newest first).
+const order = resume.experience.map((role) => role.id);
+const roles = (await getCollection('experience')).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+const systems = (await allProjects()).filter(isWork);
+---
+
+<Base title="Experience" path="/experience" description="Systems Engineer III at Hughes Network Systems since 2021: self-healing automation, production root-cause analysis and 24/7 on-call against a 99.9% availability SLA.">
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">Experience</p>
+      <h1>Six-plus years of keeping systems running</h1>
+      <p class="lede">{resume.summary}</p>
+    </header>
+
+    <ol class="roles">
+      {
+        roles.map((role) => (
+          <li>
+            <article class="role">
+              <header>
+                <p class="mono soft dates">{role.data.dates}</p>
+                <h2>{role.data.role}</h2>
+                <p class="org">
+                  {role.data.org}
+                  <span class="soft"> · {role.data.location}</span>
+                </p>
+              </header>
+              <div class="body">
+                {role.data.summary && <p>{role.data.summary[0]?.toUpperCase() + role.data.summary.slice(1)}.</p>}
+                {role.data.bullets.length > 0 && (
+                  <ul class="bullets">
+                    {role.data.bullets.map((bullet) => (
+                      <li>{bullet}</li>
+                    ))}
+                  </ul>
+                )}
+                {role.id === 'hughes-network-systems' && (
+                  <div class="systems">
+                    <p class="eyebrow">Systems I built there</p>
+                    <ul>
+                      {systems.map((system) => {
+                        const words = resumeWords(system);
+                        return (
+                          <li>
+                            <h3>
+                              <a href={`/projects/${system.id}`}>{system.data.title}</a>
+                            </h3>
+                            <p>{words.sentences.join(' ')}</p>
+                            <p class="mono soft">{words.stack.join(' · ')}</p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p class="mono soft">
+                      The failover idea, as a simulation with made-up clusters: <a href="/#sim-title">on the home page</a>.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </article>
+          </li>
+        ))
+      }
+    </ol>
+
+    <section class="section two" aria-labelledby="education-title">
+      <div>
+        <h2 id="education-title">Education</h2>
+        {
+          resume.education.map((entry) => (
+            <div class="edu">
+              <p>{entry.school}</p>
+              <p class="soft">{entry.degree.replace(' | ', ' · ')}</p>
+              <p class="mono soft">
+                {entry.dates} · {entry.location}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+      <div>
+        <h2>Skills</h2>
+        <dl class="skills">
+          {
+            resume.skills.map((group) => (
+              <div>
+                <dt class="eyebrow">{group.label}</dt>
+                <dd>{group.items}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </section>
+
+    <p class="after">
+      <a class="button" href="/resume">Read the resume</a>
+    </p>
+  </div>
+</Base>
+
+<style>
+  .roles {
+    display: grid;
+  }
+
+  .role {
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--rule);
+  }
+
+  .role header {
+    display: grid;
+    gap: var(--space-1);
+    align-content: start;
+  }
+
+  .org {
+    font-size: var(--text-lg);
+  }
+
+  .body {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 46rem;
+  }
+
+  .bullets {
+    display: grid;
+    gap: var(--space-3);
+    padding-left: 1.2em;
+  }
+
+  .bullets li {
+    position: relative;
+  }
+
+  .bullets li::before {
+    content: '';
+    position: absolute;
+    left: -1.05em;
+    top: 0.68em;
+    width: 0.38em;
+    height: 1px;
+    background: var(--ink-soft);
+  }
+
+  .systems {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+    padding: var(--space-5);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+  }
+
+  .systems ul {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .systems li {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .two {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  .two h2 {
+    margin-bottom: var(--space-4);
+  }
+
+  .edu {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .skills {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .skills dd {
+    margin: var(--space-1) 0 0;
+  }
+
+  .after {
+    padding-top: var(--space-2);
+  }
+
+  @media (min-width: 56rem) {
+    .role {
+      grid-template-columns: 18rem minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+
+    .two {
+      grid-template-columns: 18rem minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,234 @@
+---
+// The resume as a page. Every word comes from src/data/resume.json, which is imported from the
+// LaTeX source (scripts/resume-from-tex.mjs); the PDF is that same source, typeset.
+import resume from '../data/resume.json';
+import { site } from '../data/site';
+import Base from '../layouts/Base.astro';
+
+const { contact } = resume;
+const short = (url: string) => url.replace(/^https?:\/\//, '');
+---
+
+<Base title="Resume" path="/resume" description="Resume of Rodrigo Pimenta, backend and platform software engineer: experience, systems built, education and skills.">
+  <div class="wrap resume">
+    <header class="page-head">
+      <p class="eyebrow">Resume</p>
+      <h1>{contact.name}</h1>
+      <ul class="contact mono">
+        <li>{contact.location}</li>
+        <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>
+        <li><a href={`tel:+1${contact.phone.replace(/\D/g, '')}`}>{contact.phone}</a></li>
+        <li><a href={contact.linkedin}>{short(contact.linkedin)}</a></li>
+        <li><a href={contact.github}>{short(contact.github)}</a></li>
+      </ul>
+      <p class="no-print">
+        <a class="button" href={site.resumePdf}>Download the PDF</a>
+      </p>
+    </header>
+
+    <section aria-labelledby="summary-title">
+      <h2 id="summary-title" class="eyebrow">Summary</h2>
+      <p class="lede measure-wide">{resume.summary}</p>
+    </section>
+
+    <section aria-labelledby="experience-title">
+      <h2 id="experience-title" class="eyebrow">Experience</h2>
+      {
+        resume.experience.map((role) => (
+          <article class="entry">
+            <header>
+              <h3>{role.role}</h3>
+              <p class="mono soft">{role.dates}</p>
+              <p class="org">
+                {role.org}
+                {'summary' in role && role.summary ? ` (${role.location.toLowerCase()}): ${role.summary}` : <span class="soft"> · {role.location}</span>}
+              </p>
+            </header>
+            {role.bullets.length > 0 && (
+              <ul class="bullets">
+                {role.bullets.map((bullet) => (
+                  <li>{bullet}</li>
+                ))}
+              </ul>
+            )}
+          </article>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="systems-title">
+      <h2 id="systems-title" class="eyebrow">Systems built</h2>
+      {
+        resume.systems.map((system) => (
+          <article class="entry">
+            <header>
+              <h3>{system.name}</h3>
+              <p class="mono soft">{system.stack.join(', ')}</p>
+              {'link' in system && system.link && (
+                <p class="mono">
+                  <a href={system.link.href}>{system.link.text}</a>
+                </p>
+              )}
+            </header>
+            {'note' in system && system.note && <p class="note">{system.note[0]?.toUpperCase() + system.note.slice(1)}.</p>}
+            {system.bullets.length > 0 && (
+              <ul class="bullets">
+                {system.bullets.map((bullet) => (
+                  <li>{bullet}</li>
+                ))}
+              </ul>
+            )}
+          </article>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="education-title">
+      <h2 id="education-title" class="eyebrow">Education</h2>
+      {
+        resume.education.map((entry) => (
+          <article class="entry">
+            <header>
+              <h3>{entry.school}</h3>
+              <p class="mono soft">{entry.dates}</p>
+              <p class="org">
+                {entry.degree.replace(' | ', ' · ')}
+                <span class="soft"> · {entry.location}</span>
+              </p>
+            </header>
+          </article>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="skills-title">
+      <h2 id="skills-title" class="eyebrow">Technical skills</h2>
+      <dl class="skills">
+        {
+          resume.skills.map((group) => (
+            <div>
+              <dt>{group.label}</dt>
+              <dd>{group.items}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <p class="mono soft source no-print">
+      This page and <a href={site.resumePdf}>the PDF</a> are made from the same LaTeX source.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .resume section {
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--rule);
+  }
+
+  .resume section > h2 {
+    margin-bottom: var(--space-4);
+    letter-spacing: 0.08em;
+  }
+
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-5);
+  }
+
+  .contact a {
+    display: inline-block;
+    padding-block: var(--space-1);
+    overflow-wrap: anywhere;
+  }
+
+  .measure-wide {
+    max-width: 50rem;
+  }
+
+  .entry + .entry {
+    margin-top: var(--space-6);
+  }
+
+  .entry header {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .entry h3 {
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+
+  .org,
+  .note {
+    max-width: 50rem;
+  }
+
+  .note {
+    margin-top: var(--space-2);
+  }
+
+  .bullets {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding-left: 1.2em;
+    max-width: 50rem;
+  }
+
+  .bullets li {
+    position: relative;
+  }
+
+  .bullets li::before {
+    content: '';
+    position: absolute;
+    left: -1.05em;
+    top: 0.68em;
+    width: 0.38em;
+    height: 1px;
+    background: var(--ink-soft);
+  }
+
+  .skills {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 50rem;
+  }
+
+  .skills dt {
+    font-weight: 600;
+  }
+
+  .skills dd {
+    margin: 0;
+  }
+
+  .source {
+    padding-block: var(--space-5);
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (min-width: 44rem) {
+    .entry header {
+      grid-template-columns: 1fr auto;
+      column-gap: var(--space-5);
+      align-items: baseline;
+    }
+
+    .entry header .org,
+    .entry header p:nth-child(4) {
+      grid-column: 1 / -1;
+    }
+
+    .skills > div {
+      display: grid;
+      grid-template-columns: 15rem 1fr;
+      gap: var(--space-4);
+    }
+  }
+</style>

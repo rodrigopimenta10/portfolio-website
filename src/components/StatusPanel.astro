@@ -1,0 +1,288 @@
+---
+// "Everything I run, right now." The rows are in the HTML from the start, in a "checking" state,
+// so the panel has its final size before any data arrives. The script fills them from /api/status
+// after the page has painted, and says so plainly when the service is slow or does not answer.
+import { SYSTEMS, type SystemId } from '../lib/status/types';
+
+interface Props {
+  /** Show only this system's row (used on a project's own page). */
+  only?: SystemId;
+  heading?: string;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { only, heading = 'Everything I run, right now', headingLevel: Heading = 'h2' } = Astro.props;
+const rows = only ? SYSTEMS.filter((system) => system.id === only) : SYSTEMS;
+---
+
+<section class:list={['status', { single: Boolean(only) }]} data-status-panel aria-labelledby="status-title">
+  <header class="status-head">
+    <Heading id="status-title">{heading}</Heading>
+    <p class="status-summary mono" data-status-summary role="status">Checking…</p>
+  </header>
+
+  <ul class="rows">
+    {
+      rows.map((system) => (
+        <li class="row" data-system={system.id} data-state="loading">
+          <span class="glyph" aria-hidden="true" />
+          <div class="body">
+            <p class="top">
+              <a class="name" href={system.url}>
+                {system.name}
+              </a>
+              <span class="state mono" data-state-label>
+                checking
+              </span>
+            </p>
+            <p class="fact" data-fact>
+              <span class="skeleton" aria-hidden="true" />
+            </p>
+            <p class="meta mono" data-meta />
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="note mono" data-status-note hidden>
+    <p data-status-note-text></p>
+    <button class="retry" type="button" data-status-retry hidden>Try again</button>
+  </div>
+
+  <footer class="status-foot mono">
+    <noscript>This panel needs JavaScript. Each name above links to the system itself.</noscript>
+    <p>
+      Read from <code>/api/status</code> after the page loads. <a href="/how-this-site-runs#status">How it works</a>
+    </p>
+  </footer>
+</section>
+
+<script>
+  import '../scripts/status-panel';
+</script>
+
+<style>
+  .status {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+    box-shadow: var(--shadow);
+  }
+
+  .status-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .status-head :is(h2, h3) {
+    font-size: var(--text-lg);
+    font-weight: 500;
+  }
+
+  .status-summary {
+    color: var(--ink-soft);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    color: var(--state-unknown);
+  }
+
+  .row + .row {
+    border-top: 1px solid var(--rule);
+  }
+
+  .row[data-state='up'] {
+    color: var(--state-up);
+  }
+
+  .row[data-state='degraded'] {
+    color: var(--state-degraded);
+  }
+
+  .row[data-state='down'] {
+    color: var(--state-down);
+  }
+
+  /* Each state has its own shape as well as its own colour. */
+  .glyph {
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-top: 0.55rem;
+    background: currentColor;
+    border-radius: 50%;
+  }
+
+  .row[data-state='degraded'] .glyph {
+    border-radius: 0;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  .row[data-state='down'] .glyph {
+    border-radius: 1px;
+  }
+
+  .row[data-state='unknown'] .glyph,
+  .row[data-state='loading'] .glyph {
+    background: transparent;
+    border: 1.5px dashed currentColor;
+  }
+
+  .row[data-state='loading'] .glyph {
+    border-style: solid;
+    border-right-color: transparent;
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0 var(--space-4);
+  }
+
+  .state {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .body {
+    min-width: 0;
+    color: var(--ink);
+  }
+
+  .state {
+    color: var(--state-unknown);
+  }
+
+  .row[data-state='up'] .state {
+    color: var(--state-up);
+  }
+
+  .row[data-state='degraded'] .state {
+    color: var(--state-degraded);
+  }
+
+  .row[data-state='down'] .state {
+    color: var(--state-down);
+  }
+
+  .name {
+    font-size: var(--text-lg);
+    font-weight: 500;
+    line-height: 1.75rem;
+    text-decoration-color: var(--rule-strong);
+  }
+
+  .name:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .fact {
+    margin-top: 0.1rem;
+    min-height: 1.55em;
+    overflow-wrap: anywhere;
+  }
+
+  .fact :global(.reason) {
+    display: block;
+    color: var(--ink-soft);
+  }
+
+  .meta {
+    margin-top: 0.15rem;
+    min-height: 1.3rem;
+    color: var(--ink-soft);
+  }
+
+  .skeleton {
+    display: inline-block;
+    width: min(18rem, 80%);
+    height: 0.7em;
+    border-radius: 999px;
+    background: var(--paper-sunk);
+    animation: breathe 1.4s ease-in-out infinite alternate;
+  }
+
+  @keyframes breathe {
+    from {
+      opacity: 0.55;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--rule);
+    line-height: 1.6;
+  }
+
+  .note[hidden] {
+    display: none;
+  }
+
+  .note[data-tone='failed'] {
+    background: var(--wash-down);
+    color: var(--ink);
+  }
+
+  .note[data-tone='waiting'],
+  .note[data-tone='recorded'] {
+    background: var(--wash-degraded);
+  }
+
+  .note p {
+    flex: 1 1 16rem;
+  }
+
+  .retry {
+    min-height: 2.75rem;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .retry:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .status-foot {
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--rule);
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .single .status-foot {
+    display: none;
+  }
+</style>
