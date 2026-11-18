@@ -19,8 +19,8 @@ code: https://github.com/shackleton-station/sightline
 statusId: sightline
 screenshot:
   src: ../../assets/screens/sightline.webp
-  alt: Sightline's front page. The Moon seen from above its south pole, half lit, with marked landing sites, a time bar set to 26 November 2026 and the Scout co-pilot open on the right.
-  caption: lunarsightline.com on 18 November 2026, after closing the welcome card. Taken with headless Chrome at 1440 by 900.
+  alt: Sightline's front page. The Moon seen from above its south pole, half lit, with marked landing sites, a time bar set to 27 November 2026 and the Scout co-pilot open on the right.
+  caption: lunarsightline.com on 18 November 2026, after closing the welcome card. Taken with headless Chrome at 1440 by 900, at twice the pixel density.
 diagram:
   name: sightline
   caption: Four Cloud Run services behind one load balancer. No service calls another to answer a visitor; the load balancer sends each path to the service that owns it.

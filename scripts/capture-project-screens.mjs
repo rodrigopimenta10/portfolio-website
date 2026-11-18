@@ -55,7 +55,9 @@ for (const shot of shots) {
   if (process.argv[3] && process.argv[3] !== shot.name) continue;
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
-    deviceScaleFactor: 1,
+    // Two device pixels for each CSS pixel, so the picture is 2880 by 1800 and stays sharp on a
+    // high-density display, where the page shows it up to 1184 CSS pixels wide.
+    deviceScaleFactor: 2,
     colorScheme: shot.colorScheme ?? 'dark',
   });
   const page = await context.newPage();
