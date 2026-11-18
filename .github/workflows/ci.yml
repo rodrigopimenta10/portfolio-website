@@ -1,0 +1,109 @@
+# Checks for every pull request. Nothing here deploys, signs in anywhere or needs a secret, and
+# no test reaches the network: the status service answers from recorded responses.
+name: ci
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  service:
+    name: Status service
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: status
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+          cache-dependency-glob: status/uv.lock
+
+      - name: Install
+        run: uv sync --frozen
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Tests (recorded responses, no network)
+        run: uv run pytest
+
+      - name: The container builds
+        run: docker build --tag portfolio-status:ci .
+
+  site:
+    name: Site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+          cache-dependency-glob: status/uv.lock
+
+      - name: Install
+        run: |
+          npm ci
+          uv sync --frozen --directory status
+
+      - name: Type check
+        run: npm run check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Nothing in the build that should not be public
+        run: node scripts/check-output.mjs
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      # Starts the status service on recorded sources and the built site in front of it
+      # (playwright.config.ts), then drives a browser at 1440 and 360 pixels wide.
+      - name: Smoke test in a browser
+        run: npm run test:e2e
+
+      - name: Lighthouse on the home page (floor 95 in all four categories)
+        run: |
+          (cd status && STATUS_RECORDED_DIR=tests/fixtures/scenarios/all-up \
+            uv run uvicorn portfolio_status.app:app --port 8080 --log-level warning) &
+          node scripts/serve.mjs --port 4321 --api http://127.0.0.1:8080 &
+          curl --silent --fail --retry 30 --retry-connrefused --retry-delay 1 --output /dev/null http://127.0.0.1:8080/api/healthz
+          curl --silent --fail --retry 30 --retry-connrefused --retry-delay 1 --output /dev/null http://127.0.0.1:4321/
+          status=0
+          npx lhci autorun || status=$?
+          node scripts/lighthouse-summary.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Keep the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            playwright-report/
+            .lighthouseci/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -81,9 +81,11 @@ const state = initialState();
 
     <div class="log-wrap">
       <h3 class="eyebrow" id="sim-log-title">Monitor log</h3>
-      <ol class="log mono" data-log role="log" aria-labelledby="sim-log-title" tabindex="0">
-        <li class="placeholder">The monitor starts when this section is on screen.</li>
-      </ol>
+      <div class="log mono" data-log-scroll role="log" aria-labelledby="sim-log-title" tabindex="0">
+        <ol data-log>
+          <li class="placeholder">The monitor starts when this section is on screen.</li>
+        </ol>
+      </div>
       <noscript><p class="mono soft">The simulation needs JavaScript; this is its starting picture.</p></noscript>
     </div>
   </div>

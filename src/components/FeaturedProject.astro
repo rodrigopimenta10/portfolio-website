@@ -32,7 +32,7 @@ const href = `/projects/${project.id}`;
       {data.facts.map((fact) => <li>{fact}</li>)}
     </ul>
     <p class="doors mono">
-      <a href={href}>Read more</a>
+      <a href={href}>About {data.title}</a>
       {data.live && <a href={data.live}>Live site</a>}
       <a href={data.code}>Code</a>
     </p>

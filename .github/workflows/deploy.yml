@@ -1,59 +1,150 @@
-name: Deploy portfolio to GitHub Pages
+# Deploys the site: the status service to Cloud Run, then the pages to Firebase Hosting.
+#
+#   push to main    -> production
+#   pull request    -> a preview channel on Firebase Hosting (pages only), which expires in 7 days
+#
+# It does nothing until the repository variables below exist: every job is skipped while
+# GCP_PROJECT_ID is empty. Set them only after the Terraform in portfolio-infra has been applied;
+# its outputs are the values.
+#
+#   GCP_PROJECT_ID                  e.g. portfolio-prod-0p1ht
+#   GCP_WORKLOAD_IDENTITY_PROVIDER  projects/<number>/locations/global/workloadIdentityPools/github/providers/portfolio-website
+#   GCP_DEPLOY_SERVICE_ACCOUNT      portfolio-deploy@<project>.iam.gserviceaccount.com
+#   GCP_PREVIEW_SERVICE_ACCOUNT     portfolio-preview@<project>.iam.gserviceaccount.com
+#   FIREBASE_HOSTING_SITE           e.g. rodrigopimenta-portfolio
+#
+# There are no keys. GitHub gives each run a short-lived token that says which repository and
+# workflow it is, and Google Cloud exchanges it for credentials (Workload Identity Federation).
+# The deploy service account can be used only by this workflow file on main; pull requests get a
+# second account that can do nothing but publish to Firebase Hosting.
+name: deploy
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Never run two Pages deployments at once.
-concurrency:
-  group: pages
-  cancel-in-progress: false
+env:
+  REGION: us-east4
+  SERVICE: portfolio-status
+  REPOSITORY: portfolio
+  FIREBASE_TOOLS: firebase-tools@15.36.0
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  production:
+    name: Production
+    if: ${{ vars.GCP_PROJECT_ID != '' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # One deploy at a time, in order; a second push waits for the first to finish.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      IMAGE: us-east4-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/portfolio/status:${{ github.sha }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: google-github-actions/auth@v3
         with:
-          node-version: '20'
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build and push the status service image
+        run: |
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker build --tag "$IMAGE" status
+          docker push "$IMAGE"
+
+      # The new revision gets no visitors until it has answered for itself.
+      - name: Deploy the new revision with no traffic
+        run: |
+          gcloud run deploy "$SERVICE" --project "$PROJECT" --region "$REGION" \
+            --image "$IMAGE" --no-traffic --tag candidate --quiet
+
+      - name: Check the new revision before visitors reach it
+        run: |
+          url=$(gcloud run services describe "$SERVICE" --project "$PROJECT" --region "$REGION" --format json \
+            | jq -r '.status.traffic[] | select(.tag == "candidate") | .url')
+          echo "candidate: $url"
+          curl --silent --show-error --fail --retry 5 --retry-delay 2 "$url/api/healthz" | jq -e '.ok == true'
+          curl --silent --show-error --fail --max-time 20 "$url/api/status" \
+            | jq -e '(.systems | length) == 4 and .recorded == false and (.systems[] | select(.id == "this-site") | .state) == "up"'
+
+      - name: Send visitors to the new revision
+        run: gcloud run services update-traffic "$SERVICE" --project "$PROJECT" --region "$REGION" --to-latest --quiet
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Build the pages
+        run: |
+          npm ci
+          npm run build
+          node scripts/check-output.mjs
 
-      # GitHub Pages serves this repo from a subpath, so assets must be
-      # prefixed. Cloudflare (rodrigopimenta.com) serves from root and uses
-      # the default base of "/".
-      - name: Build
-        run: npm run build
+      - name: Publish to Firebase Hosting
         env:
-          VITE_BASE: /portfolio-website/
+          SITE: ${{ vars.FIREBASE_HOSTING_SITE }}
+        run: |
+          npx --yes "$FIREBASE_TOOLS" target:apply hosting portfolio "$SITE" --project "$PROJECT"
+          npx --yes "$FIREBASE_TOOLS" deploy --only hosting:portfolio --project "$PROJECT" --non-interactive \
+            --message "$GITHUB_SHA"
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload build output
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  preview:
+    name: Preview channel
+    # Pull requests from this repository only: a fork's run is given no token to sign in with.
+    if: ${{ vars.GCP_PROJECT_ID != '' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: deploy-preview-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      SITE: ${{ vars.FIREBASE_HOSTING_SITE }}
+      CHANNEL: pr-${{ github.event.pull_request.number }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Build the pages
+        run: |
+          npm ci
+          npm run build
+          node scripts/check-output.mjs
+
+      - uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_PREVIEW_SERVICE_ACCOUNT }}
+
+      # The preview's /api/status is answered by the production status service.
+      - name: Publish to a preview channel
+        run: |
+          npx --yes "$FIREBASE_TOOLS" target:apply hosting portfolio "$SITE" --project "$PROJECT"
+          npx --yes "$FIREBASE_TOOLS" hosting:channel:deploy "$CHANNEL" --only portfolio --expires 7d \
+            --project "$PROJECT" --non-interactive --json > channel.json
+          url=$(jq -r '.result | to_entries[0].value.url' channel.json)
+          echo "Preview: $url" | tee -a "$GITHUB_STEP_SUMMARY"

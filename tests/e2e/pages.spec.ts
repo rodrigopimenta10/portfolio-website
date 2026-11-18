@@ -67,10 +67,11 @@ test('the resume PDF is at its old address and is a PDF', async ({ request }) =>
 
 test('fingerprinted assets are cached for a year', async ({ page, request }) => {
   await page.goto('/');
-  const stylesheet = await page.locator('link[rel="stylesheet"]').first().getAttribute('href');
-  expect(stylesheet).toMatch(/^\/_astro\//);
+  const font = await page.locator('link[rel="preload"][as="font"]').first().getAttribute('href');
+  expect(font).toMatch(/^\/_astro\/.+\.woff2$/);
 
-  const response = await request.get(stylesheet!);
+  const response = await request.get(font!);
+  expect(response.status()).toBe(200);
   expect(response.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
 });
 

@@ -28,6 +28,7 @@ export function mount(section: HTMLElement): void {
   const reset = section.querySelector<HTMLButtonElement>('[data-reset]');
   const log = section.querySelector<HTMLElement>('[data-log]');
   const latest = section.querySelector<HTMLElement>('[data-latest]');
+  const scroller = section.querySelector<HTMLElement>('[data-log-scroll]');
   if (!timerText || !timerFill || !pause || !reset || !log) return;
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -117,7 +118,7 @@ export function mount(section: HTMLElement): void {
       changed = true;
     });
     shownLog = keys;
-    if (changed) log!.scrollTop = log!.scrollHeight;
+    if (changed && scroller) scroller.scrollTop = scroller.scrollHeight;
     const last = state.log[state.log.length - 1];
     if (latest && last) latest.textContent = last.text;
   }

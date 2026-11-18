@@ -11,6 +11,8 @@ export default defineConfig({
     // /projects/sightline.html rather than /projects/sightline/index.html. Firebase Hosting's
     // cleanUrls then serves it at /projects/sightline, with no redirect to a trailing slash.
     format: 'file',
+    // All CSS is a few kilobytes: put it in the page, so nothing blocks the first paint but the HTML.
+    inlineStylesheets: 'always',
   },
   // Lossless whitespace removal, as before Astro 7 (the new default drops spaces between inline elements).
   compressHTML: true,
