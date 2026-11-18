@@ -2,8 +2,18 @@ import './Projects.css'
 
 const liveProjects = [
   {
-    id: 'orbital-watch',
+    id: 'sightline',
     num: '01',
+    title: 'Sightline',
+    desc: 'A lunar landing-site planner: when a site near the Moon\'s south pole has sunlight for power and Earth in view for radio, hour by hour, above the real terrain horizon. Led the six-person team (NASA Space Apps 2026), owned the architecture decisions and directed the AI coding agents that wrote most of the code. A Python pipeline on NASA SPICE and LOLA data feeds four Cloud Run services behind a load balancer, CDN and Cloud Armor, all in Terraform applied from GitHub Actions with no stored keys, with canary deploys and automatic rollback.',
+    tech: ['Python', 'TypeScript', 'React', 'Cloud Run', 'Terraform', 'Pub/Sub'],
+    impact: 'Within 0.0071° of JPL Horizons over 5,469,984 hourly checks · 2,020 tests in CI',
+    live: 'https://lunarsightline.com',
+    source: 'https://github.com/shackleton-station/sightline',
+  },
+  {
+    id: 'orbital-watch',
+    num: '02',
     title: 'Orbital Watch',
     desc: 'A satellite situational-awareness site built on one thesis: the page reports its own data freshness rather than assuming it. Every upstream source is isolated and degrades independently — live fetch, then cache, then committed snapshot — and each is classified fresh, stale, or failed on the page with its reasoning shown. A build cannot fail, and it cannot silently publish stale data as current.',
     tech: ['Python', 'Cloudflare Workers', 'CI/CD', 'pytest'],
@@ -13,7 +23,7 @@ const liveProjects = [
   },
   {
     id: 'this-site',
-    num: '02',
+    num: '03',
     title: 'This Site',
     desc: 'The site you\'re reading — Vite + React with vanilla CSS, no UI framework, no router. One build is served from two hosts (Cloudflare Pages on the apex domain, GitHub Pages on a subpath) with a configurable asset base and deploy verification that asserts content-type, not just status codes.',
     tech: ['React', 'Vite', 'CSS', 'GitHub Actions'],
@@ -26,7 +36,7 @@ const liveProjects = [
 const workProjects = [
   {
     id: 'ceph',
-    num: '03',
+    num: '04',
     title: 'Ceph Self-Healing Monitor',
     desc: 'Sole author — 6,586 lines, 77 of 79 commits. Watches 24 nodes across 8 clusters on a 3-minute cycle. Automated metadata-server failover is gated on a standby-capacity assessment, so it never promotes a node that can\'t carry the load; every outcome is verified against the cluster log to distinguish a real failover from a same-node reclaim.',
     tech: ['Python', 'Ceph', 'PostgreSQL', 'Grafana', 'pytest'],
@@ -34,7 +44,7 @@ const workProjects = [
   },
   {
     id: 'config-selfheal',
-    num: '04',
+    num: '05',
     title: 'Config Integrity Self-Heal',
     desc: 'Sole author — 3,594 lines. Detects configuration drift and corruption across a gateway fleet over SFTP and restarts the affected service. Modernized a blocking-I/O workload onto asyncio with semaphore-bounded fan-out rather than process pools.',
     tech: ['Python', 'asyncio', 'SFTP', 'pytest'],
@@ -42,7 +52,7 @@ const workProjects = [
   },
   {
     id: 'logging',
-    num: '05',
+    num: '06',
     title: 'Platform-Wide Logging Redesign',
     desc: 'Root-caused a defect that was silently discarding log records, then redesigned the logging: 19.68 GB down to 58 MB for one service, ~25 GB reclaimed in production. Built audit tooling that swept all 146 scheduled jobs for the same pattern.',
     tech: ['Python', 'Linux', 'Log Management'],
@@ -50,7 +60,7 @@ const workProjects = [
   },
   {
     id: 'rca',
-    num: '06',
+    num: '07',
     title: 'Production Root Cause Analysis',
     desc: 'A 738 MB core dump traced with gdb to an unguarded deserialization path in a vendor component; a 177-process leak traced to a library deadlock at interpreter teardown. Both delivered as actionable defect reports.',
     tech: ['gdb', 'Python', 'Linux Internals'],
