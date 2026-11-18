@@ -1,0 +1,66 @@
+---
+// How aws-platform-terraform is built and drilled, drawn from its README and live-drill workflow.
+---
+
+<svg class="diagram" viewBox="0 0 800 236" role="img" aria-labelledby="aws-diagram-title aws-diagram-desc">
+  <title id="aws-diagram-title">How aws-platform-terraform is built and drilled</title>
+  <desc id="aws-diagram-desc">
+    A scheduled Claude Code run builds the next roadmap item and pushes to main. CI runs offline:
+    format, validate, tflint, checkov and terraform test with mock providers and Moto. If it passes,
+    a live drill in GitHub Actions signs in to a real AWS account through OIDC with no stored keys.
+    In the account it applies the stack, records evidence, destroys it and checks nothing is left.
+    A drill report is committed to docs/live. Rodrigo reviews the work and the learning note.
+  </desc>
+  <defs>
+    <marker id="aws-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0 0 8 4 0 8z"></path>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="24" width="160" height="68" rx="4"></rect>
+  <text class="label" x="22" y="48">scheduled run</text>
+  <text class="sub" x="22" y="65">Claude Code builds the</text>
+  <text class="sub" x="22" y="80">next roadmap item</text>
+
+  <rect class="box" x="200" y="24" width="100" height="68" rx="4"></rect>
+  <text class="label" x="212" y="48">push</text>
+  <text class="sub" x="212" y="65">to main</text>
+
+  <rect class="box" x="330" y="24" width="180" height="68" rx="4"></rect>
+  <text class="label" x="342" y="48">CI, offline</text>
+  <text class="sub" x="342" y="65">fmt · validate · tflint</text>
+  <text class="sub" x="342" y="80">checkov · terraform test</text>
+
+  <rect class="box" x="540" y="24" width="110" height="68" rx="4"></rect>
+  <text class="label" x="552" y="48">live drill</text>
+  <text class="sub" x="552" y="65">GitHub Actions</text>
+
+  <rect class="box accent" x="680" y="24" width="110" height="68" rx="4"></rect>
+  <text class="label" x="692" y="48">AWS account</text>
+  <text class="sub" x="692" y="65">OIDC sign-in,</text>
+  <text class="sub" x="692" y="80">no stored keys</text>
+
+  <path class="wire" d="M170 58H199" marker-end="url(#aws-arrow)"></path>
+  <path class="wire" d="M300 58H329" marker-end="url(#aws-arrow)"></path>
+  <path class="wire" d="M510 58H539" marker-end="url(#aws-arrow)"></path>
+  <path class="wire" d="M650 58H679" marker-end="url(#aws-arrow)"></path>
+  <path class="wire" d="M735 92V143" marker-end="url(#aws-arrow)"></path>
+
+  <rect class="box accent" x="540" y="144" width="250" height="68" rx="4"></rect>
+  <text class="label" x="552" y="168">in the account</text>
+  <text class="sub" x="552" y="185">apply · record evidence · destroy</text>
+  <text class="sub" x="552" y="200">check that nothing is left</text>
+
+  <rect class="box" x="280" y="144" width="210" height="68" rx="4"></rect>
+  <text class="label" x="292" y="168">drill report</text>
+  <text class="sub" x="292" y="185">committed to docs/live/ with</text>
+  <text class="sub" x="292" y="200">redacted console screenshots</text>
+
+  <rect class="box ghost" x="10" y="144" width="220" height="68" rx="4"></rect>
+  <text class="label" x="22" y="168">review</text>
+  <text class="sub" x="22" y="185">I read what it built and the</text>
+  <text class="sub" x="22" y="200">learning note it wrote</text>
+
+  <path class="wire" d="M540 178H491" marker-end="url(#aws-arrow)"></path>
+  <path class="wire" d="M280 178H231" marker-end="url(#aws-arrow)"></path>
+</svg>

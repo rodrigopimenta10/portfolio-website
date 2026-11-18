@@ -1,0 +1,28 @@
+{
+  "limitsAndCache": "redis",
+  "redis": {
+    "state": "redis",
+    "readEndpoint": "none",
+    "connections": 1,
+    "fallbacks": 0
+  },
+  "plans": false,
+  "copilot": false,
+  "questionLog": false,
+  "tracing": true,
+  "voice": true,
+  "follow": {
+    "rooms": "redis",
+    "streams": 0
+  },
+  "signIn": "REDACTED.apps.googleusercontent.com",
+  "revision": "clps-web-00368-545",
+  "region": "us-east4",
+  "dataVersion": "1fcb90eed2287119",
+  "counts": true,
+  "copilotCodeVersion": null,
+  "elsewhere": {
+    "plans": "/api/plans/status",
+    "copilot": "/api/chat/status"
+  }
+}

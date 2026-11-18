@@ -1,0 +1,79 @@
+---
+// The page shell: head, header, main, footer. Every page uses it.
+import '../styles/global.css';
+import newsreader from '../assets/fonts/newsreader-latin-wght-normal.woff2?url';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { site } from '../data/site';
+
+interface Props {
+  /** Page title, without the site name. Omit on the home page. */
+  title?: string;
+  description?: string;
+  /** Path of this page, for the canonical link ("/projects"). */
+  path: string;
+  noindex?: boolean;
+}
+
+const { title, description = site.description, path, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · Backend and platform engineer`;
+const canonical = new URL(path, site.url).href;
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.name,
+  url: site.url,
+  jobTitle: 'Backend and platform software engineer',
+  worksFor: { '@type': 'Organization', name: 'Hughes Network Systems' },
+  image: new URL('/og.png', site.url).href,
+  email: `mailto:${site.email}`,
+  sameAs: [site.linkedin, site.github],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#131311" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" href={newsreader} as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL('/og.png', site.url).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Rodrigo Pimenta, backend and platform engineer. I build systems that keep themselves running and say so when they can’t." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
+    <script is:inline>
+      // Before first paint: apply a theme the visitor chose earlier. With no choice stored, the
+      // stylesheet follows the system setting by itself.
+      try {
+        var stored = localStorage.getItem('theme');
+        if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+      } catch (error) {}
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header path={path} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import '../scripts/page-view';
+    </script>
+  </body>
+</html>

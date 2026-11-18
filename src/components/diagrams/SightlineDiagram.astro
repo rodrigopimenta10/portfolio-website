@@ -1,0 +1,90 @@
+---
+// Sightline's hosting, drawn from docs/SYSTEM_DESIGN.md in its repository.
+---
+
+<svg class="diagram" viewBox="0 0 800 450" role="img" aria-labelledby="sightline-diagram-title sightline-diagram-desc">
+  <title id="sightline-diagram-title">How Sightline is hosted</title>
+  <desc id="sightline-diagram-desc">
+    A visitor reaches an edge firewall (Cloud Armor), then a load balancer with a CDN. The load
+    balancer sends plan paths to the plans service, which uses Firestore; chat paths to the co-pilot
+    service, which calls the Anthropic API and publishes to Pub/Sub, which feeds BigQuery and a
+    private events worker; and everything else to the web service, which reads Cloud Storage and
+    Text-to-Speech. All four services are Cloud Run. Redis holds rate limits and kept answers.
+    Everything is declared in Terraform and applied from GitHub Actions with no stored keys.
+  </desc>
+  <defs>
+    <marker id="sl-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0 0 8 4 0 8z"></path>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="180" width="80" height="44" rx="4"></rect>
+  <text class="label" x="50" y="206" text-anchor="middle">visitor</text>
+
+  <rect class="box" x="120" y="170" width="120" height="64" rx="4"></rect>
+  <text class="label" x="180" y="198" text-anchor="middle">edge firewall</text>
+  <text class="sub" x="180" y="215" text-anchor="middle">Cloud Armor</text>
+
+  <rect class="box" x="270" y="170" width="130" height="64" rx="4"></rect>
+  <text class="label" x="335" y="198" text-anchor="middle">load balancer</text>
+  <text class="sub" x="335" y="215" text-anchor="middle">CDN · HTTPS</text>
+
+  <path class="wire" d="M90 202H119" marker-end="url(#sl-arrow)"></path>
+  <path class="wire" d="M240 202H269" marker-end="url(#sl-arrow)"></path>
+  <path class="wire" d="M400 202H425V56H449" marker-end="url(#sl-arrow)"></path>
+  <path class="wire" d="M425 166H449" marker-end="url(#sl-arrow)"></path>
+  <path class="wire" d="M425 202V356H449" marker-end="url(#sl-arrow)"></path>
+
+  <text class="sub" x="450" y="22">/api/plans</text>
+  <rect class="box accent" x="450" y="30" width="140" height="52" rx="4"></rect>
+  <text class="label" x="520" y="52" text-anchor="middle">plans</text>
+  <text class="sub" x="520" y="69" text-anchor="middle">Cloud Run</text>
+
+  <text class="sub" x="450" y="132">/api/chat · /api/ask</text>
+  <rect class="box accent" x="450" y="140" width="140" height="52" rx="4"></rect>
+  <text class="label" x="520" y="162" text-anchor="middle">co-pilot</text>
+  <text class="sub" x="520" y="179" text-anchor="middle">Cloud Run</text>
+
+  <rect class="box accent" x="450" y="222" width="140" height="52" rx="4"></rect>
+  <text class="label" x="520" y="244" text-anchor="middle">events worker</text>
+  <text class="sub" x="520" y="261" text-anchor="middle">Cloud Run, private</text>
+
+  <text class="sub" x="450" y="322">everything else</text>
+  <rect class="box accent" x="450" y="330" width="140" height="52" rx="4"></rect>
+  <text class="label" x="520" y="352" text-anchor="middle">web</text>
+  <text class="sub" x="520" y="369" text-anchor="middle">Cloud Run</text>
+
+  <rect class="box" x="640" y="38" width="150" height="36" rx="4"></rect>
+  <text class="label" x="715" y="61" text-anchor="middle">Firestore</text>
+  <path class="wire" d="M590 56H639" marker-end="url(#sl-arrow)"></path>
+
+  <rect class="box" x="640" y="112" width="150" height="36" rx="4"></rect>
+  <text class="label" x="715" y="135" text-anchor="middle">Anthropic API</text>
+  <path class="wire" d="M590 158H614V130H639" marker-end="url(#sl-arrow)"></path>
+
+  <rect class="box" x="640" y="162" width="150" height="36" rx="4"></rect>
+  <text class="label" x="715" y="185" text-anchor="middle">Pub/Sub</text>
+  <path class="wire" d="M590 174H614V180H639" marker-end="url(#sl-arrow)"></path>
+  <path class="wire" d="M665 198V248H591" marker-end="url(#sl-arrow)"></path>
+
+  <rect class="box" x="690" y="222" width="100" height="36" rx="4"></rect>
+  <text class="label" x="740" y="245" text-anchor="middle">BigQuery</text>
+  <path class="wire" d="M745 198V221" marker-end="url(#sl-arrow)"></path>
+
+  <rect class="box" x="640" y="314" width="150" height="36" rx="4"></rect>
+  <text class="label" x="715" y="337" text-anchor="middle">Cloud Storage</text>
+  <path class="wire" d="M590 350H614V332H639" marker-end="url(#sl-arrow)"></path>
+
+  <rect class="box" x="640" y="362" width="150" height="36" rx="4"></rect>
+  <text class="label" x="715" y="385" text-anchor="middle">Text-to-Speech</text>
+  <path class="wire" d="M590 364H614V380H639" marker-end="url(#sl-arrow)"></path>
+
+  <rect class="box ghost" x="450" y="406" width="340" height="38" rx="4"></rect>
+  <text class="label" x="462" y="430">Redis</text>
+  <text class="sub" x="506" y="430">rate limits, kept answers, circuit breaker</text>
+
+  <rect class="box ghost" x="10" y="330" width="250" height="68" rx="4"></rect>
+  <text class="label" x="24" y="354">All of it in Terraform</text>
+  <text class="sub" x="24" y="372">applied from GitHub Actions,</text>
+  <text class="sub" x="24" y="387">with no stored keys</text>
+</svg>

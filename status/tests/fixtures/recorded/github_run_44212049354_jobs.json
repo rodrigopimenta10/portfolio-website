@@ -1,0 +1,50 @@
+{
+  "total_count": 5,
+  "jobs": [
+    {
+      "id": 134492588085,
+      "run_id": 44212049354,
+      "name": "Pick stacks",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-18T00:57:40Z",
+      "completed_at": "2026-11-18T00:57:47Z"
+    },
+    {
+      "id": 134492659881,
+      "run_id": 44212049354,
+      "name": "Drill m1",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-18T00:57:52Z",
+      "completed_at": "2026-11-18T01:16:20Z"
+    },
+    {
+      "id": 134492659968,
+      "run_id": 44212049354,
+      "name": "Drill m2",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-18T01:16:25Z",
+      "completed_at": "2026-11-18T01:19:39Z"
+    },
+    {
+      "id": 134492659975,
+      "run_id": 44212049354,
+      "name": "Drill vpc",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-18T01:19:43Z",
+      "completed_at": "2026-11-18T01:22:06Z"
+    },
+    {
+      "id": 134503393005,
+      "run_id": 44212049354,
+      "name": "Commit the drill reports",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-18T01:22:10Z",
+      "completed_at": "2026-11-18T01:24:27Z"
+    }
+  ]
+}

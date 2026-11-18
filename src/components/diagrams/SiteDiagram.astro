@@ -1,0 +1,70 @@
+---
+// How this site is served. Matches firebase.json, .github/workflows/ and the Terraform in portfolio-infra.
+---
+
+<svg class="diagram" viewBox="0 0 800 340" role="img" aria-labelledby="site-diagram-title site-diagram-desc">
+  <title id="site-diagram-title">How this site is served</title>
+  <desc id="site-diagram-desc">
+    A visitor's request reaches Firebase Hosting, a CDN. Pages, styles, scripts, images and the
+    resume PDF are static files. Requests under /api are passed to one Cloud Run service,
+    portfolio-status, in us-east4, which runs between zero and two instances and asks three public
+    sources: Sightline's status endpoint, Orbital Watch's health file and GitHub's API. GitHub
+    Actions deploys both the static files and the service, signing in to Google Cloud without
+    stored keys; each pull request gets a preview channel. Terraform declares all of it.
+  </desc>
+  <defs>
+    <marker id="site-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0 0 8 4 0 8z"></path>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="34" width="80" height="52" rx="4"></rect>
+  <text class="label" x="50" y="65" text-anchor="middle">visitor</text>
+
+  <rect class="box accent" x="130" y="24" width="200" height="72" rx="4"></rect>
+  <text class="label" x="142" y="48">Firebase Hosting</text>
+  <text class="sub" x="142" y="65">CDN · HTTPS</text>
+  <text class="sub" x="142" y="80">rodrigopimenta.com</text>
+
+  <rect class="box" x="390" y="24" width="190" height="72" rx="4"></rect>
+  <text class="label" x="402" y="48">static files</text>
+  <text class="sub" x="402" y="65">pages, styles, scripts,</text>
+  <text class="sub" x="402" y="80">images, the resume PDF</text>
+
+  <path class="wire" d="M90 60H129" marker-end="url(#site-arrow)"></path>
+  <path class="wire" d="M330 60H389" marker-end="url(#site-arrow)"></path>
+
+  <text class="sub" x="246" y="130">/api/**</text>
+  <path class="wire" d="M230 96V164H389" marker-end="url(#site-arrow)"></path>
+
+  <rect class="box accent" x="390" y="128" width="190" height="72" rx="4"></rect>
+  <text class="label" x="402" y="152">Cloud Run</text>
+  <text class="sub" x="402" y="169">portfolio-status, us-east4</text>
+  <text class="sub" x="402" y="184">0 to 2 instances</text>
+
+  <rect class="box" x="616" y="104" width="178" height="34" rx="4"></rect>
+  <text class="sub" x="626" y="125">Sightline /api/status</text>
+  <rect class="box" x="616" y="147" width="178" height="34" rx="4"></rect>
+  <text class="sub" x="626" y="168">Orbital Watch health.json</text>
+  <rect class="box" x="616" y="190" width="178" height="34" rx="4"></rect>
+  <text class="sub" x="626" y="211">GitHub API, last drill</text>
+
+  <path class="wire" d="M580 152H598V121H615" marker-end="url(#site-arrow)"></path>
+  <path class="wire" d="M580 164H615" marker-end="url(#site-arrow)"></path>
+  <path class="wire" d="M580 176H598V207H615" marker-end="url(#site-arrow)"></path>
+
+  <rect class="box" x="10" y="254" width="220" height="72" rx="4"></rect>
+  <text class="label" x="22" y="278">GitHub Actions</text>
+  <text class="sub" x="22" y="295">signs in without stored keys</text>
+  <text class="sub" x="22" y="310">pull request: preview channel</text>
+
+  <path class="wire dashed" d="M150 254V97" marker-end="url(#site-arrow)"></path>
+  <path class="wire dashed" d="M230 290H480V201" marker-end="url(#site-arrow)"></path>
+  <text class="sub" x="158" y="236">deploys</text>
+  <text class="sub" x="488" y="236">deploys</text>
+
+  <rect class="box ghost" x="540" y="254" width="250" height="72" rx="4"></rect>
+  <text class="label" x="552" y="278">Terraform</text>
+  <text class="sub" x="552" y="295">declares all of it, and a</text>
+  <text class="sub" x="552" y="310">budget alert at $10 a month</text>
+</svg>

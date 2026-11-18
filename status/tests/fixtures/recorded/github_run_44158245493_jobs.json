@@ -1,0 +1,32 @@
+{
+  "total_count": 3,
+  "jobs": [
+    {
+      "id": 134310907863,
+      "run_id": 44158245493,
+      "name": "Pick stacks",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-17T19:34:21Z",
+      "completed_at": "2026-11-17T19:34:29Z"
+    },
+    {
+      "id": 134311034925,
+      "run_id": 44158245493,
+      "name": "Drill ${{ matrix.stack }}",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-17T19:34:30Z",
+      "completed_at": "2026-11-17T19:34:29Z"
+    },
+    {
+      "id": 134311035459,
+      "run_id": 44158245493,
+      "name": "Commit the drill reports",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-17T19:34:30Z",
+      "completed_at": "2026-11-17T19:34:29Z"
+    }
+  ]
+}

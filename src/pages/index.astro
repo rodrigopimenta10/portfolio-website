@@ -1,0 +1,230 @@
+---
+import { Image } from 'astro:assets';
+import portrait from '../assets/rodrigo.jpg';
+import FeaturedProject from '../components/FeaturedProject.astro';
+import StatusPanel from '../components/StatusPanel.astro';
+import { site } from '../data/site';
+import Base from '../layouts/Base.astro';
+import { allProjects, isPersonal, isWork, resumeWords } from '../lib/projects';
+
+const projects = await allProjects();
+const featured = projects.filter(isPersonal);
+const atWork = projects.filter(isWork);
+---
+
+<Base path="/">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="who">
+      <div class="who">
+        <p class="id">
+          <Image class="portrait" src={portrait} alt="Rodrigo Pimenta" width={56} height={56} densities={[1, 2, 3]} loading="eager" />
+          <span class="eyebrow">Backend and platform engineer · Relocating to New York</span>
+        </p>
+        <h1 id="who">
+          I’m Rodrigo Pimenta. I build systems that keep themselves running and <em>say so when they can’t</em>.
+        </h1>
+        {/* What a recruiter came for, before anything else: on a phone these sit above the panel. */}
+        <ul class="doors">
+          <li><a class="button" href={site.resumePdf}>Resume (PDF)</a></li>
+          <li><a class="button quiet" href={site.bookCall}>Book a 30-minute call</a></li>
+          <li><a class="button quiet" href={`mailto:${site.email}`}>Email me</a></li>
+          <li class="links">
+            <a class="plain mono" href={site.linkedin}>LinkedIn</a>
+            <a class="plain mono" href={site.github}>GitHub</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <StatusPanel />
+      </div>
+
+      <div class="more">
+        <p>
+          Six-plus years in Python: self-healing automation, asyncio services, PostgreSQL and CI/CD,
+          on call 24/7 against a 99.9% availability SLA at Hughes Network Systems. Outside work I
+          build on Google Cloud and AWS with Terraform.
+        </p>
+        <p class="seeking">{site.seeking}</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="projects-title">
+      <div class="section-head">
+        <p class="eyebrow">Projects</p>
+        <h2 id="projects-title">Things you can open and check</h2>
+      </div>
+      <div class="featured">
+        {featured.map((project, index) => <FeaturedProject project={project} index={index} />)}
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="work-title">
+      <div class="section-head">
+        <p class="eyebrow">At Hughes Network Systems</p>
+        <h2 id="work-title">Two systems in production</h2>
+        <p class="measure soft">
+          This code belongs to my employer and is not public, so these are described in my resume’s
+          words and no others.
+        </p>
+      </div>
+      <div class="work">
+        {
+          atWork.map((project) => {
+            const words = resumeWords(project);
+            return (
+              <article>
+                <h3>
+                  <a href={`/projects/${project.id}`}>{project.data.title}</a>
+                </h3>
+                <p>{words.sentences.slice(0, 2).join(' ')}</p>
+                <p class="mono soft">{words.stack.join(' · ')}</p>
+              </article>
+            );
+          })
+        }
+      </div>
+      <p class="after">
+        <a href="/projects/ceph-storage-self-healing-monitor#sim-title">Try the failover idea as a simulation</a>
+        <span aria-hidden="true"> · </span>
+        <a href="/experience">All experience</a>
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    /* On a phone: who he is and the ways in, the short pitch, then the live panel. */
+    grid-template-areas: 'who' 'more' 'panel';
+    gap: var(--space-6);
+    padding-block: var(--space-6) var(--space-8);
+  }
+
+  .who {
+    grid-area: who;
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  h1 {
+    font-size: var(--text-hero);
+    line-height: 1.07;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .panel {
+    grid-area: panel;
+    min-width: 0;
+  }
+
+  .more {
+    grid-area: more;
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    max-width: 36rem;
+  }
+
+  .seeking {
+    font-weight: 600;
+  }
+
+  .id {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .portrait {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--rule-strong);
+    object-fit: cover;
+    flex: none;
+  }
+
+  .doors {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .doors .links {
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .doors .plain {
+    display: inline-block;
+    padding-block: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+
+  .featured {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  .work {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .work article {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  .work h3 a {
+    text-decoration-color: transparent;
+  }
+
+  .work h3 a:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .after {
+    margin-top: var(--space-6);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+
+  @media (min-width: 44rem) {
+    .work {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-7);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .hero {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      grid-template-areas: 'who panel' 'more panel';
+      grid-template-rows: auto 1fr;
+      column-gap: var(--space-8);
+      row-gap: var(--space-5);
+      padding-block: var(--space-7) var(--space-9);
+    }
+
+    .panel {
+      padding-top: var(--space-2);
+    }
+  }
+</style>

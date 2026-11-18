@@ -1,0 +1,325 @@
+---
+import FailoverSim from '../../components/FailoverSim.astro';
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import StatusPanel from '../../components/StatusPanel.astro';
+import AwsPlatformDiagram from '../../components/diagrams/AwsPlatformDiagram.astro';
+import OrbitalWatchDiagram from '../../components/diagrams/OrbitalWatchDiagram.astro';
+import SightlineDiagram from '../../components/diagrams/SightlineDiagram.astro';
+import Base from '../../layouts/Base.astro';
+import { allProjects, isPersonal, isWork, resumeWords, type Project } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  const projects = await allProjects();
+  return projects.map((project, index) => ({
+    params: { id: project.id },
+    props: { project, number: index + 1, next: projects[(index + 1) % projects.length] },
+  }));
+}
+
+interface Props {
+  project: Project;
+  number: number;
+  next: Project;
+}
+
+const { project, number, next } = Astro.props;
+const diagrams = {
+  sightline: SightlineDiagram,
+  'aws-platform-terraform': AwsPlatformDiagram,
+  'orbital-watch': OrbitalWatchDiagram,
+};
+const personal = isPersonal(project) ? project : null;
+const work = isWork(project) ? project : null;
+const words = work ? resumeWords(work) : null;
+const { Content } = await render(project);
+const Diagram = personal ? diagrams[personal.data.diagram.name] : null;
+const description = personal ? personal.data.summary : (words?.sentences.slice(1, 2).join(' ') ?? '');
+---
+
+<Base title={project.data.title} path={`/projects/${project.id}`} description={description}>
+  <article class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">
+        <a href="/projects">Projects</a> · {String(number).padStart(2, '0')}{work && ' · Hughes Network Systems'}
+      </p>
+      <h1>{project.data.title}</h1>
+      {personal && <p class="lede">{personal.data.summary}</p>}
+      {
+        personal && (
+          <p class="doors">
+            {personal.data.live && (
+              <a class="button" href={personal.data.live}>
+                Open the live site
+              </a>
+            )}
+            <a class:list={['button', { quiet: Boolean(personal.data.live) }]} href={personal.data.code}>
+              Read the code
+            </a>
+          </p>
+        )
+      }
+      {
+        work && (
+          <p class="lede">
+            In production at Hughes Network Systems. The code belongs to my employer and is not
+            public, so this page keeps to what my resume says and the general ideas behind it.
+          </p>
+        )
+      }
+    </header>
+
+    {
+      personal && (
+        <>
+          {personal.data.statusId && (
+            <div class="now">
+              <StatusPanel only={personal.data.statusId} heading="Right now" />
+            </div>
+          )}
+
+          <dl class="facts">
+            <div>
+              <dt class="eyebrow">My part</dt>
+              <dd>{personal.data.role}</dd>
+            </div>
+            <div>
+              <dt class="eyebrow">Result</dt>
+              <dd>{personal.data.result}</dd>
+            </div>
+            <div>
+              <dt class="eyebrow">Stack</dt>
+              <dd>
+                <ul class="stack mono">
+                  {personal.data.stack.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          </dl>
+
+          <figure class="shot">
+            <div class="frame">
+              <Image
+                src={personal.data.screenshot.src}
+                alt={personal.data.screenshot.alt}
+                widths={[480, 720, 960, 1440]}
+                sizes="(min-width: 78rem) 74rem, calc(100vw - 2.25rem)"
+                loading="eager"
+              />
+            </div>
+            <figcaption>{personal.data.screenshot.caption}</figcaption>
+          </figure>
+
+          <div class="columns">
+            <div class="prose">
+              <Content />
+            </div>
+          </div>
+
+          <figure class="architecture">
+            <p class="eyebrow">Architecture <span class="scroll-hint">· scroll sideways for all of it →</span></p>
+            <div class="frame diagram-scroll" tabindex="0" role="group" aria-label="Architecture diagram; scrolls sideways on a small screen">
+              {Diagram && <Diagram />}
+            </div>
+            <figcaption>
+              {personal.data.diagram.caption} Drawn from{' '}
+              <a href={personal.data.diagram.sourceHref}>{personal.data.diagram.sourceLabel}</a> in the repository.
+            </figcaption>
+          </figure>
+
+          <section class="sources" aria-labelledby="sources-title">
+            <h2 id="sources-title">Where these claims come from</h2>
+            <ul>
+              {personal.data.sources.map((source) => (
+                <li>
+                  <p>{source.claim}</p>
+                  <p class="mono soft">{source.href ? <a href={source.href}>{source.where}</a> : source.where}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )
+    }
+
+    {
+      work && words && (
+        <>
+          <section class="resume-words" aria-labelledby="words-title">
+            <p class="eyebrow" id="words-title">
+              From my resume
+            </p>
+            <ul>
+              {words.sentences.map((sentence) => (
+                <li>{sentence}</li>
+              ))}
+            </ul>
+            <p class="eyebrow stack-label">Stack</p>
+            <ul class="stack mono">
+              {words.stack.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </section>
+
+          <div class="prose after-words">
+            <Content />
+            <p class="soft">
+              There is no screenshot, architecture sketch, name or threshold here: those are my
+              employer’s. <a href="/resume">The full resume</a> · <a href="/experience">Experience</a>
+            </p>
+          </div>
+
+          {project.id.startsWith('ceph') && (
+            <section class="section sim-here">
+              <FailoverSim />
+            </section>
+          )}
+        </>
+      )
+    }
+
+    <nav class="next" aria-label="More projects">
+      <a href={`/projects/${next.id}`}>
+        <span class="eyebrow">Next project</span>
+        <span class="next-title">{next.data.title}</span>
+      </a>
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .page-head .eyebrow a {
+    text-decoration-color: var(--rule-strong);
+  }
+
+  .doors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  .now {
+    max-width: 44rem;
+    margin-bottom: var(--space-7);
+  }
+
+  .facts {
+    display: grid;
+    gap: var(--space-5);
+    padding-block: var(--space-6);
+    border-block: 1px solid var(--rule);
+  }
+
+  .facts > div {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+
+  .facts dd {
+    margin: 0;
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .stack li {
+    padding: 0.15rem 0.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    line-height: 1.6;
+  }
+
+  .shot {
+    margin-block: var(--space-7);
+  }
+
+  .shot :global(img) {
+    width: 100%;
+  }
+
+  .architecture {
+    margin-block: var(--space-8) var(--space-7);
+  }
+
+  .architecture .frame {
+    margin-top: var(--space-3);
+  }
+
+  .sources {
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--rule);
+  }
+
+  .sources h2 {
+    font-size: var(--text-lg);
+  }
+
+  .sources ul {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    max-width: 52rem;
+  }
+
+  .sources li {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .resume-words {
+    padding-block: var(--space-6);
+    border-block: 1px solid var(--rule);
+  }
+
+  .resume-words > ul:first-of-type {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    max-width: 46rem;
+    font-size: var(--text-lg);
+    line-height: 1.45;
+  }
+
+  .stack-label {
+    margin-block: var(--space-6) var(--space-3);
+  }
+
+  .after-words {
+    margin-top: var(--space-6);
+  }
+
+  .next {
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
+  }
+
+  .next a {
+    display: inline-grid;
+    gap: var(--space-1);
+    text-decoration: none;
+  }
+
+  .next-title {
+    font-size: var(--text-xl);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.2em;
+  }
+
+  @media (min-width: 52rem) {
+    .facts {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-7);
+    }
+  }
+</style>

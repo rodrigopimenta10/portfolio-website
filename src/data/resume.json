@@ -1,0 +1,153 @@
+{
+  "source": "rodrigo_pimenta_resume.tex",
+  "contact": {
+    "name": "Rodrigo Pimenta",
+    "phone": "980-259-2752",
+    "email": "RodrigoPimenta102@gmail.com",
+    "linkedin": "https://linkedin.com/in/rodrigoppimenta",
+    "github": "https://github.com/rodrigopimenta10",
+    "site": "https://rodrigopimenta.com",
+    "location": "New York, NY (relocating)"
+  },
+  "summary": "Backend and platform software engineer (6+ years, Python) who builds systems that keep themselves running: self-healing automation, distributed storage, asyncio services, PostgreSQL, and CI/CD, with 24/7 on-call against a 99.9% SLA. Outside work, builds Terraform-managed services on Google Cloud.",
+  "experience": [
+    {
+      "id": "hughes-network-systems",
+      "role": "Systems Engineer III (Software Engineering)",
+      "org": "Hughes Network Systems",
+      "location": "Germantown, MD",
+      "dates": "Nov 2021 – Present",
+      "bullets": [
+        "Second of 21 contributors over the last year on the satellite gateway automation platform: 491 commits across 67 delivered tickets spanning monitoring, alerting, self-healing, and reporting for five ground-segment platforms",
+        "Root-caused and eliminated a platform-wide logging defect that silently discarded log records, cutting the log footprint from 19.68 GB to 58 MB and reclaiming ~25 GB in production; swept all 146 scheduled jobs for the same pattern",
+        "Root-caused two production failures: a 738 MB core dump traced with gdb to an unguarded deserialization path in a vendor gateway component, and a 177-process leak traced to a library deadlock at interpreter teardown; delivered both as actionable defect reports and shipped the supervision module that closed the leak",
+        "Designed the platform's shared logging entry point, now used by every script and device module; introduced continuous integration to the organization; migrated the action-audit data model with 26,857 rows reconciled exactly",
+        "Authored the platform's Kubernetes migration design covering 161 scheduled jobs and made the shared library cluster-ready (stdout log collection, service-DNS database routing, unit-tested), on a Patroni-managed high-availability PostgreSQL pair",
+        "Lead analyst on infrastructure failure investigations and 24/7 on-call against a 99.9% availability SLA; rollback owner in formal change control, building incident timelines from core-dump metadata and process logs"
+      ]
+    },
+    {
+      "id": "pathrise",
+      "role": "Software Engineering Fellow",
+      "org": "Pathrise",
+      "location": "Remote",
+      "dates": "Jan 2021 – Nov 2021",
+      "bullets": [],
+      "summary": "algorithms, data structures, technical interviewing"
+    },
+    {
+      "id": "united-states-navy-reserve",
+      "role": "Mass Communication Specialist, E-3 (Active Duty)",
+      "org": "United States Navy Reserve",
+      "location": "Great Lakes, IL / Fort Meade, MD",
+      "dates": "Jan 2020 – Jan 2021",
+      "bullets": [
+        "Completed basic training and the Defense Information School (DINFOS) at Fort Meade, MD; honorably discharged"
+      ]
+    },
+    {
+      "id": "bank-of-america",
+      "role": "Technology Analyst (Software Engineering)",
+      "org": "Bank of America",
+      "location": "Charlotte, NC",
+      "dates": "Jun 2018 – Dec 2019",
+      "bullets": [
+        "Developed PowerShell and Python scripts to automate software validation and hardware testing across 20+ ATM models in the enterprise lab",
+        "Built a reusable CI/CD deployment framework in Jenkins that standardized release processes and moved builds from weekly to hourly, reducing environment setup time by 15%"
+      ]
+    }
+  ],
+  "systems": [
+    {
+      "id": "sightline",
+      "name": "Sightline",
+      "stack": [
+        "Python",
+        "TypeScript/React",
+        "Google Cloud Run",
+        "Terraform",
+        "Firestore",
+        "Redis",
+        "Pub/Sub"
+      ],
+      "link": {
+        "href": "https://lunarsightline.com",
+        "text": "lunarsightline.com"
+      },
+      "bullets": [
+        "Led the 6-person team behind a lunar landing-site planner (NASA Space Apps 2026); owned architecture decisions and directed AI coding agents that wrote most of the code. Python pipeline on NASA SPICE/LOLA data matches JPL Horizons within 0.0071° over 5,469,984 hourly checks. Four Cloud Run services behind a load balancer, CDN and Cloud Armor, all in Terraform applied from GitHub Actions with no stored keys; canary deploys with automatic rollback; 2,020 tests in CI"
+      ]
+    },
+    {
+      "id": "ceph-storage-self-healing-monitor",
+      "name": "Ceph Storage Self-Healing Monitor",
+      "stack": [
+        "Python",
+        "uv",
+        "Fabric/SSH",
+        "PostgreSQL",
+        "Grafana",
+        "pytest"
+      ],
+      "bullets": [
+        "Sole author (77 of 79 commits, 6,586 lines, 61 tests). Monitors 24 storage nodes across 8 clusters on a 3-minute cycle and averages ~130 verified metadata-server failovers per month with no human involvement. Failover gated by a four-verdict standby-capacity assessment so it never moves into a worse node, outcomes verified against the cluster log to distinguish a real failover from a same-node reclaim. 7-table append-only event history, 19-panel Grafana dashboard, pytest in CI"
+      ]
+    },
+    {
+      "id": "config-integrity-self-heal",
+      "name": "Config Integrity Self-Heal",
+      "stack": [
+        "Python",
+        "asyncio",
+        "SFTP",
+        "PostgreSQL"
+      ],
+      "bullets": [
+        "Sole author (30 of 30 commits, 3,594 lines, 76 tests). Detects configuration drift across 18 gateways at 8 sites over SFTP and restarts the affected service, averaging ~295 remediations per month with 89% of episodes closing inside one 10-minute polling cycle. Modernized a blocking-I/O workload onto asyncio with semaphore-bounded fan-out rather than process pools"
+      ]
+    },
+    {
+      "id": "orbital-watch",
+      "name": "Orbital Watch",
+      "stack": [
+        "Python"
+      ],
+      "link": {
+        "href": "https://orbital.rodrigopimenta.com",
+        "text": "orbital.rodrigopimenta.com"
+      },
+      "note": "satellite-pass dashboard labeling each data source fresh, stale or failed",
+      "bullets": []
+    }
+  ],
+  "education": [
+    {
+      "school": "University of Maryland, A. James Clark School of Engineering",
+      "location": "College Park, MD",
+      "degree": "Bachelor of Science in Computer Engineering | College Park Scholars",
+      "dates": "Aug 2014 – Dec 2018"
+    }
+  ],
+  "skills": [
+    {
+      "label": "Languages",
+      "items": "Python (uv, ruff, pandas, SQLAlchemy, psycopg2, Fabric), SQL, Bash, PowerShell, TypeScript/JavaScript (React)"
+    },
+    {
+      "label": "Automation, CI/CD & Testing",
+      "items": "Terraform, GitHub Actions, Ansible, Molecule, Jenkins, Bitbucket Pipelines, Git, pytest"
+    },
+    {
+      "label": "Cloud, Data & Observability",
+      "items": "Google Cloud (Cloud Run, Pub/Sub, BigQuery), Redis, PostgreSQL (Patroni HA), Grafana"
+    },
+    {
+      "label": "Systems",
+      "items": "Distributed Systems, REST APIs, Linux/RHEL, Docker, Kubernetes, Ceph, asyncio, gdb/core dumps, 24/7 on-call"
+    },
+    {
+      "label": "AI Tooling",
+      "items": "Kiro, Cursor, Claude Code"
+    }
+  ]
+}

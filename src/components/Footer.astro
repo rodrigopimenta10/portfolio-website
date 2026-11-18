@@ -1,0 +1,91 @@
+---
+import { site } from '../data/site';
+import { buildInfo } from '../lib/build-info';
+
+const built = buildInfo.builtAt.slice(0, 16).replace('T', ' ');
+---
+
+<footer class="site-footer">
+  <div class="wrap inner">
+    <div class="contact">
+      <p class="eyebrow">Contact</p>
+      <p class="seeking">{site.seeking}</p>
+      <ul>
+        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+        <li><a href={site.linkedin} rel="me">LinkedIn</a></li>
+        <li><a href={site.github} rel="me">GitHub</a></li>
+        <li><a href={site.resumePdf}>Resume (PDF)</a></li>
+        <li><a href={site.bookCall}>Book a 30-minute call</a></li>
+      </ul>
+    </div>
+    <div class="colophon mono">
+      <p>
+        Static pages built with Astro. The status panel is the only live data, served by one small
+        service. <a href="/how-this-site-runs">How this site runs</a>.
+      </p>
+      <p>
+        {buildInfo.commit ? (
+          <>
+            Built {built} UTC from commit{' '}
+            {buildInfo.commitIsPublic ? <a href={`${site.repo}/commit/${buildInfo.commit}`}>{buildInfo.commit}</a> : buildInfo.commit}.
+          </>
+        ) : (
+          <>Built {built} UTC.</>
+        )}{' '}
+        <a href={site.repo}>Source</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-9);
+    border-top: 1px solid var(--rule);
+    background: var(--paper-sunk);
+  }
+
+  .inner {
+    display: grid;
+    gap: var(--space-6);
+    padding-block: var(--space-7);
+  }
+
+  .seeking {
+    margin-top: var(--space-2);
+    font-size: var(--text-lg);
+  }
+
+  .contact ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-3);
+  }
+
+  .contact a {
+    display: inline-block;
+    padding-block: var(--space-1);
+    overflow-wrap: anywhere;
+  }
+
+  .colophon {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 34rem;
+  }
+
+  @media (min-width: 52rem) {
+    .inner {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+    }
+
+    .colophon {
+      justify-self: end;
+    }
+  }
+</style>

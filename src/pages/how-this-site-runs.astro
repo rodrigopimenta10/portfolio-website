@@ -1,0 +1,441 @@
+---
+// How the site is hosted, what it costs and what was left out. While `site.hosting.live` is false
+// the page says plainly that this is built and tested but not deployed.
+import SiteDiagram from '../components/diagrams/SiteDiagram.astro';
+import { site } from '../data/site';
+import Base from '../layouts/Base.astro';
+
+const live = site.hosting.live;
+const asOf = new Date(`${site.hosting.asOf}T00:00:00Z`).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+// The day the prices in the cost table were read from Google's pricing pages.
+const pricesReadOn = '18 November 2026';
+
+const pieces = [
+  {
+    name: 'The pages',
+    what: 'Astro builds every page to a plain HTML file. No page is rendered by a server when you ask for it.',
+    done: 'Built',
+    pending: null,
+  },
+  {
+    name: 'Hosting',
+    what: 'Firebase Hosting serves the files from a CDN with HTTPS, clean URLs, a year of caching for fingerprinted assets and five minutes for pages. Requests under /api/ are passed to the status service.',
+    done: 'Configuration written',
+    pending: 'not deployed',
+  },
+  {
+    name: 'The status service',
+    what: 'One Cloud Run service, portfolio-status, in us-east4. It runs no instances when nobody is asking and at most two. Python 3.12, FastAPI and httpx, in a container that runs as an unprivileged user.',
+    done: 'Built and tested',
+    pending: 'not deployed',
+  },
+  {
+    name: 'Infrastructure',
+    what: 'Terraform declares the Hosting sites, the container registry, the Cloud Run service and its own service account, the keyless sign-in for GitHub Actions and a budget alert. State is kept in a Cloud Storage bucket.',
+    done: 'Written and validated',
+    pending: 'not applied',
+  },
+  {
+    name: 'Checks',
+    what: 'Every pull request is type-checked, unit-tested (site and service), built, smoke-tested in a browser against the status service running on recorded responses, and held to a Lighthouse floor of 95 in all four categories.',
+    done: 'Written',
+    pending: 'not yet run on GitHub',
+  },
+  {
+    name: 'Deploys',
+    what: 'A merge to main deploys the files and the service from GitHub Actions. It signs in to Google Cloud through Workload Identity Federation, so there is no key to store or leak. Each pull request gets its own preview channel.',
+    done: 'Written',
+    pending: 'inactive until repository variables exist',
+  },
+];
+
+const costs = [
+  {
+    piece: 'Firebase Hosting',
+    cost: '$0',
+    why: 'No charge up to 10 GB stored and 360 MB transferred a day. This site is a few megabytes.',
+  },
+  {
+    piece: 'Cloud Run',
+    cost: '$0 to about $1',
+    why: 'It scales to zero, and the free tier covers 2 million requests, 180,000 vCPU-seconds and 360,000 GiB-seconds a month. That allowance is shared by every project on the billing account, so if others use it up this service pays the list price of $0.000024 per vCPU-second. The CDN holds each answer for a minute, so at most about 43,200 requests a month can reach it.',
+  },
+  {
+    piece: 'Artifact Registry',
+    cost: '$0 to a few cents',
+    why: 'The first 0.5 GB is free. One image is about 230 MB uncompressed, and a cleanup policy keeps only the latest few.',
+  },
+  {
+    piece: 'State bucket and logs',
+    cost: 'Cents',
+    why: 'Terraform state is a few kilobytes. The service logs one line per request.',
+  },
+];
+
+const leftOut = [
+  {
+    what: 'No load balancer',
+    why: 'A load balancer is billed by the hour whether or not anyone visits. Firebase Hosting already gives a CDN, a certificate and the /api rewrite.',
+  },
+  {
+    what: 'No warm instances',
+    why: 'Keeping one instance running would remove the cold start and would be billed around the clock. Instead the first request after a quiet spell waits a few seconds, and the panel says so while it waits.',
+  },
+  {
+    what: 'No server rendering',
+    why: 'A page that is a file cannot be down because a server is. Only the panel depends on the service, and it is built to say when the service is not there.',
+  },
+  {
+    what: 'No database, cookies or third-party scripts',
+    why: 'Nothing here needs them. The two typefaces, Newsreader and IBM Plex Mono, are open-licensed and served from this site. Page views are counted by one request to the status service that carries the page’s path and nothing else, and goes to its log. It is not sent when the browser asks not to be tracked.',
+  },
+  {
+    what: 'No secrets',
+    why: 'Every source the service reads is public. A GitHub token can be supplied to raise the rate limit, and the service works without one.',
+  },
+];
+
+const failures = [
+  { when: 'One source is slow or down', then: 'Its row says “could not check” with the reason and the last known answer. The other rows are unaffected.' },
+  { when: 'GitHub’s rate limit is used up', then: 'The AWS row says so, with the time the limit resets, and the service stops asking until then.' },
+  { when: 'The status service is cold', then: 'The panel shows “checking”, then a line explaining the wait. Pages are already on screen.' },
+  { when: 'The status service is down', then: 'Every row says “could not check”, the panel says nothing on it is live, and offers to try again. Pages still load.' },
+  { when: 'A source reports its own trouble', then: 'The row says “degraded” and repeats what the source said, for example how many of Orbital Watch’s feeds are stale.' },
+];
+---
+
+<Base title="How this site runs" path="/how-this-site-runs" description="Static pages on Firebase Hosting, one Cloud Run service that scales to zero, Terraform, and keyless deploys from GitHub Actions. What it costs and what was left out.">
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">How this site runs</p>
+      <h1>Files on a CDN, and one small service that is allowed to sleep</h1>
+      <p class="lede">
+        The site argues that a system should keep itself running and say when it cannot. This page
+        is how it tries to live up to that, for about the price of nothing.
+      </p>
+    </header>
+
+    {
+      !live && (
+        <aside class="notice" aria-label="Deployment status">
+          <p class="eyebrow">Not live yet · as of {asOf}</p>
+          <p>
+            Everything described here is written, and what can be tested without a cloud account
+            has been. Nothing has been created in Google Cloud and nothing is deployed:
+            rodrigopimenta.com still serves the previous version of this site. Each piece below is
+            marked with what is done and what is not.
+          </p>
+        </aside>
+      )
+    }
+
+    <figure class="architecture">
+      <p class="eyebrow scroll-hint">Scroll sideways for all of it →</p>
+      <div class="frame diagram-scroll" tabindex="0" role="group" aria-label="Architecture diagram; scrolls sideways on a small screen">
+        <SiteDiagram />
+      </div>
+      <figcaption>
+        {live ? 'How a request is served.' : 'How a request will be served once this is deployed.'} The same
+        shape is in <code>firebase.json</code>, the workflows and the Terraform.
+      </figcaption>
+    </figure>
+
+    <section class="section" aria-labelledby="pieces-title">
+      <div class="section-head">
+        <h2 id="pieces-title">The pieces</h2>
+      </div>
+      <ul class="pieces">
+        {
+          pieces.map((piece) => (
+            <li>
+              <h3>{piece.name}</h3>
+              <p>{piece.what}</p>
+              <p class="tags">
+                <span class="tag built">{piece.done}</span>
+                {!live && piece.pending && <span class="tag planned">{piece.pending}</span>}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="section" id="status" aria-labelledby="status-title">
+      <div class="section-head">
+        <h2 id="status-title">The status panel</h2>
+      </div>
+      <div class="prose">
+        <p>
+          The panel on the home page is the only part of the site that is not a file. After the page
+          has painted, the browser asks <code>/api/status</code>, and the service answers with one
+          row per system: Sightline, Orbital Watch, the AWS platform’s last live drill, and this
+          site.
+        </p>
+        <p>
+          The service asks each system’s own public endpoint, all at once. Sightline’s status
+          endpoint names the revision that is serving and its region. Orbital Watch publishes a
+          health file that its own page reads. GitHub’s API lists the runs of the drill workflow.
+          Each call gets four seconds, each source six in all, and the page gives up on the service
+          after ten.
+        </p>
+        <p>
+          Answers are kept in memory for a minute, and GitHub’s for five, because GitHub allows an
+          anonymous caller 60 requests an hour. The CDN may hold the whole answer for another
+          minute, or fifteen seconds when a check in it failed, so that recovery shows sooner.
+          Every row carries the time it was really checked, measured on the service’s clock.
+        </p>
+        <p>
+          A check that fails never becomes an error page and never becomes “up”. It becomes “could
+          not check”, with the reason. That state means the check failed, not the system: from one
+          vantage point the two cannot be told apart, and the panel does not pretend otherwise.
+        </p>
+      </div>
+      <table class="failures">
+        <caption class="eyebrow">What you see when something fails</caption>
+        <thead>
+          <tr>
+            <th scope="col">When</th>
+            <th scope="col">The panel</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            failures.map((failure) => (
+              <tr>
+                <th scope="row">{failure.when}</th>
+                <td>{failure.then}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section" aria-labelledby="cost-title">
+      <div class="section-head">
+        <h2 id="cost-title">What it costs</h2>
+        <p class="measure">
+          {live ? 'About' : 'Expected: about'} $0 to $2 a month. A budget alert emails me at $10, long before
+          a mistake could become expensive. {!live && 'These are estimates from the published prices; there is no bill yet.'}
+        </p>
+      </div>
+      <table class="costs">
+        <thead>
+          <tr>
+            <th scope="col">Piece</th>
+            <th scope="col">A month</th>
+            <th scope="col">Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            costs.map((row) => (
+              <tr>
+                <th scope="row">{row.piece}</th>
+                <td class="mono amount">{row.cost}</td>
+                <td>{row.why}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <p class="mono soft price-note">
+        Prices and free allowances read from Google’s pricing pages on {pricesReadOn}.
+      </p>
+    </section>
+
+    <section class="section" aria-labelledby="left-out-title">
+      <div class="section-head">
+        <h2 id="left-out-title">Left out on purpose</h2>
+      </div>
+      <dl class="left-out">
+        {
+          leftOut.map((item) => (
+            <div>
+              <dt>{item.what}</dt>
+              <dd>{item.why}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="section" aria-labelledby="source-title">
+      <div class="section-head">
+        <h2 id="source-title">Read it yourself</h2>
+      </div>
+      <div class="prose">
+        <p>
+          The site, the status service, the hosting configuration and the workflows are in
+          <a href={site.repo}>one public repository</a>. The Terraform is kept in a separate
+          repository that is not published.
+        </p>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .notice {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 52rem;
+    padding: var(--space-4) var(--space-5);
+    border: 1px dashed var(--state-degraded);
+    border-radius: var(--radius);
+    background: var(--wash-degraded);
+  }
+
+  .notice .eyebrow {
+    color: var(--state-degraded);
+  }
+
+  .architecture {
+    margin-block: var(--space-7);
+  }
+
+  .pieces {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .pieces li {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+  }
+
+  .tags .tag {
+    white-space: normal;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  caption {
+    text-align: left;
+    padding-bottom: var(--space-3);
+  }
+
+  th,
+  td {
+    padding: var(--space-3) var(--space-4) var(--space-3) 0;
+    border-top: 1px solid var(--rule);
+    vertical-align: top;
+    font-weight: 400;
+  }
+
+  thead th {
+    border-top: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  tbody th {
+    font-weight: 600;
+  }
+
+  .failures {
+    margin-top: var(--space-6);
+    max-width: 56rem;
+  }
+
+  .amount {
+    white-space: nowrap;
+  }
+
+  .price-note {
+    margin-top: var(--space-4);
+  }
+
+  .left-out {
+    display: grid;
+    gap: var(--space-5);
+    max-width: 46rem;
+  }
+
+  .left-out dt {
+    font-weight: 600;
+  }
+
+  .left-out dd {
+    margin: var(--space-1) 0 0;
+  }
+
+  /* On a narrow screen a three-column table is unreadable: each row becomes a small block. */
+  @media (max-width: 43.99rem) {
+    table,
+    tbody,
+    tr,
+    th,
+    td {
+      display: block;
+    }
+
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    tr {
+      padding-block: var(--space-3);
+      border-top: 1px solid var(--rule);
+    }
+
+    th,
+    td {
+      padding: 0;
+      border: 0;
+    }
+
+    td {
+      margin-top: var(--space-1);
+    }
+  }
+
+  @media (min-width: 44rem) {
+    .pieces {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-6) var(--space-7);
+    }
+
+    .failures tbody th {
+      width: 38%;
+    }
+
+    .costs tbody th {
+      width: 11rem;
+    }
+  }
+
+  @media (min-width: 68rem) {
+    .pieces {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+</style>

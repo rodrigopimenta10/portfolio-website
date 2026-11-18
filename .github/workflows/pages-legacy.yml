@@ -1,0 +1,68 @@
+# Keeps the old address alive: rodrigopimenta10.github.io/portfolio-website/
+#
+# Resumes already sent carry that address in their header, so it must keep answering. It no longer
+# gets a copy of the site. It gets dist-legacy/: a page that sends visitors to rodrigopimenta.com
+# (canonical link, meta refresh, a visible link and a script), the resume PDF at the same path as
+# before, and the privacy page that was published there. See scripts/build-legacy.mjs.
+#
+# This is the workflow that used to build the Vite site for GitHub Pages (deploy.yml), cut down to
+# that bundle. It runs only on main, so it changes nothing until this branch is merged.
+name: pages-legacy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - legacy/**
+      - public/rodrigo_pimenta_resume.pdf
+      - public/privacy/**
+      - public/favicon.svg
+      - scripts/build-legacy.mjs
+      - .github/workflows/pages-legacy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two Pages deployments at once.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      # The bundle is copied files; nothing to install.
+      - name: Build the bundle
+        run: node scripts/build-legacy.mjs
+
+      - name: The resume in the bundle is the resume in the repository
+        run: cmp public/rodrigo_pimenta_resume.pdf dist-legacy/rodrigo_pimenta_resume.pdf
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist-legacy
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

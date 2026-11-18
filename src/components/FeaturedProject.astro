@@ -1,0 +1,114 @@
+---
+// A large card for the home page: screenshot, one sentence, a few facts, and the doors.
+import { Image } from 'astro:assets';
+import type { PersonalProject } from '../lib/projects';
+
+interface Props {
+  project: PersonalProject;
+  index: number;
+}
+
+const { project, index } = Astro.props;
+const { data } = project;
+const href = `/projects/${project.id}`;
+---
+
+<article class:list={['card', { flip: index % 2 === 1 }]}>
+  <a class="shot frame" href={href} tabindex="-1" aria-hidden="true">
+    <Image
+      src={data.screenshot.src}
+      alt=""
+      widths={[480, 720, 960, 1440]}
+      sizes="(min-width: 60rem) 44rem, calc(100vw - 2.25rem)"
+      loading="lazy"
+      decoding="async"
+    />
+  </a>
+  <div class="text">
+    <p class="eyebrow">{String(index + 1).padStart(2, '0')}</p>
+    <h3><a href={href}>{data.title}</a></h3>
+    <p class="summary">{data.summary}</p>
+    <ul class="facts mono">
+      {data.facts.map((fact) => <li>{fact}</li>)}
+    </ul>
+    <p class="doors mono">
+      <a href={href}>About {data.title}</a>
+      {data.live && <a href={data.live}>Live site</a>}
+      <a href={data.code}>Code</a>
+    </p>
+  </div>
+</article>
+
+<style>
+  .card {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .shot {
+    display: block;
+    align-self: start;
+    transition: border-color 150ms ease;
+  }
+
+  .shot:hover {
+    border-color: var(--rule-strong);
+  }
+
+  .shot :global(img) {
+    width: 100%;
+  }
+
+  .text {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+  }
+
+  h3 {
+    font-size: var(--text-xl);
+  }
+
+  h3 a {
+    text-decoration-color: transparent;
+  }
+
+  h3 a:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .facts {
+    display: grid;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule);
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .doors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-5);
+    margin-top: var(--space-1);
+  }
+
+  .doors a {
+    display: inline-block;
+    padding-block: var(--space-2);
+    font-weight: 500;
+  }
+
+  @media (min-width: 60rem) {
+    .card {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: var(--space-7);
+      align-items: center;
+    }
+
+    .card.flip .shot {
+      order: 2;
+    }
+  }
+</style>
