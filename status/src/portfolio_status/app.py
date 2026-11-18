@@ -1,4 +1,4 @@
-"""The web app: GET /api/status and GET /api/healthz.
+"""The web app: GET /api/status, GET /api/healthz and POST /api/hit.
 
 Environment:
   K_REVISION            set by Cloud Run; reported in the "This site" row.
@@ -12,8 +12,10 @@ Environment:
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+import re
 import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
@@ -39,6 +41,8 @@ USER_AGENT = f"portfolio-status/{__version__} (+https://rodrigopimenta.com/how-t
 CALL_TIMEOUT_SECONDS = 4.0
 CONNECT_TIMEOUT_SECONDS = 2.0
 TIMEOUT = httpx.Timeout(CALL_TIMEOUT_SECONDS, connect=CONNECT_TIMEOUT_SECONDS)
+# A page of this site, as /api/hit accepts it: a short path of plain characters and nothing else.
+PAGE_PATH = re.compile(r"^/[A-Za-z0-9/_-]{0,80}$")
 
 
 def create_app(
@@ -112,6 +116,18 @@ def create_app(
     async def healthz(response: Response) -> dict[str, bool]:
         response.headers["Cache-Control"] = "no-store"
         return {"ok": True}
+
+    @app.post("/api/hit", status_code=204)
+    async def hit(path: str = "/") -> Response:
+        """Counts one page view. No cookie and no identifier: one log line with the page's path.
+
+        Cloud Run turns a JSON line on stdout into a structured log entry, so the count is a log
+        query and nothing is stored by this service. A path that is not a plain page path is
+        answered the same way and not logged.
+        """
+        if PAGE_PATH.fullmatch(path):
+            print(json.dumps({"severity": "INFO", "event": "page_view", "path": path}), flush=True)
+        return Response(status_code=204, headers={"Cache-Control": "no-store"})
 
     return app
 

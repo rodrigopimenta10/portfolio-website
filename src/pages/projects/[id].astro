@@ -63,7 +63,7 @@ const description = personal ? personal.data.summary : (words?.sentences.slice(1
         work && (
           <p class="lede">
             In production at Hughes Network Systems. The code belongs to my employer and is not
-            public, so this page says what my resume says and nothing more.
+            public, so this page keeps to what my resume says and the general ideas behind it.
           </p>
         )
       }
@@ -165,19 +165,10 @@ const description = personal ? personal.data.summary : (words?.sentences.slice(1
           </section>
 
           <div class="prose after-words">
-            <p>
-              There is no screenshot or architecture sketch here: I cannot show either without
-              showing my employer’s system.
-              {project.id.startsWith('ceph') && (
-                <>
-                  {' '}
-                  The idea of a failover that checks the standby first is one I can show: the
-                  simulation below uses made-up clusters and none of this system’s code or numbers.
-                </>
-              )}
-            </p>
-            <p>
-              <a href="/resume">The full resume</a> · <a href="/experience">Experience</a>
+            <Content />
+            <p class="soft">
+              There is no screenshot, architecture sketch, name or threshold here: those are my
+              employer’s. <a href="/resume">The full resume</a> · <a href="/experience">Experience</a>
             </p>
           </div>
 

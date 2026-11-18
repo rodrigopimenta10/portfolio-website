@@ -76,6 +76,8 @@ async function proxy(request, response, pathname) {
   }
   try {
     const upstream = await fetch(new URL(pathname + (new URL(request.url, 'http://x').search ?? ''), api), {
+      // The method goes with it, as Firebase Hosting's rewrite passes it: /api/hit is a POST.
+      method: request.method,
       headers: { accept: request.headers.accept ?? '*/*' },
     });
     const body = Buffer.from(await upstream.arrayBuffer());

@@ -47,6 +47,16 @@ const rows = only ? SYSTEMS.filter((system) => system.id === only) : SYSTEMS;
 
   <div class="note mono" data-status-note hidden>
     <p data-status-note-text></p>
+    {/* When the service itself does not answer, the rows are put away and the systems are one press away. */}
+    <p class="direct" data-status-direct hidden>
+      Open them directly:{' '}
+      {rows.map((system, index) => (
+        <>
+          {index > 0 && ' · '}
+          <a href={system.url}>{system.name}</a>
+        </>
+      ))}
+    </p>
     <button class="retry" type="button" data-status-retry hidden>Try again</button>
   </div>
 
@@ -245,6 +255,15 @@ const rows = only ? SYSTEMS.filter((system) => system.id === only) : SYSTEMS;
 
   .note[hidden] {
     display: none;
+  }
+
+  /* The service did not answer: four rows saying the same thing become one note. */
+  .status[data-failed] .rows {
+    display: none;
+  }
+
+  .note .direct {
+    flex-basis: 100%;
   }
 
   .note[data-tone='failed'] {

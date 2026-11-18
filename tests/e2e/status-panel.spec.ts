@@ -95,6 +95,10 @@ for (const [name, fail, reason] of [
       await expect(row(page, id)).toContainText('could not check');
     }
     await expect(panel(page)).toContainText(`The status service did not answer: ${reason}. Nothing on this panel is live right now.`);
+    // Four rows saying the same thing are put away; one note says it, with the systems a press away.
+    await expect(row(page, 'sightline')).toBeHidden();
+    await expect(panel(page).getByRole('link', { name: 'Sightline' })).toBeVisible();
+    await expect(panel(page).getByRole('link', { name: 'Sightline' })).toHaveAttribute('href', 'https://lunarsightline.com');
     // The rest of the page is unaffected.
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Things you can open and check' })).toBeVisible();
@@ -103,6 +107,7 @@ for (const [name, fail, reason] of [
     await panel(page).getByRole('button', { name: 'Try again' }).click();
     await expect(panel(page).getByRole('status')).toContainText('All 4 up');
     await expect(panel(page)).not.toContainText('did not answer');
+    await expect(row(page, 'sightline')).toBeVisible();
   });
 }
 

@@ -33,6 +33,13 @@ function mount(panel: HTMLElement): void {
   const noteText = panel.querySelector<HTMLElement>('[data-status-note-text]');
   const retry = panel.querySelector<HTMLButtonElement>('[data-status-retry]');
   const drillButton = panel.querySelector<HTMLButtonElement>('[data-status-drill]');
+  const direct = panel.querySelector<HTMLElement>('[data-status-direct]');
+  /** The whole service failed to answer: the rows are put away and one note says so. */
+  const setFailed = (failed: boolean): void => {
+    if (failed) panel.dataset['failed'] = '';
+    else delete panel.dataset['failed'];
+    if (direct) direct.hidden = !failed;
+  };
   if (!summaryLine || !note || !noteText || !retry) return;
 
   let loaded: Loaded | null = null;
@@ -157,6 +164,7 @@ function mount(panel: HTMLElement): void {
     if (drillButton) drillButton.hidden = true;
     const previous = loaded;
     loaded = null;
+    setFailed(true);
     for (const row of rows.values()) {
       setRow(row, 'unknown', STATE_LABEL.unknown, 'No answer from the status service.', null, '');
     }
@@ -165,7 +173,7 @@ function mount(panel: HTMLElement): void {
     setNote(
       'failed',
       `The status service did not answer: ${reason}. Nothing on this panel is live right now.${before} ` +
-        'The systems themselves may be fine; each name links to the real thing.',
+        'The systems themselves may be fine.',
       true,
     );
   }
@@ -175,6 +183,7 @@ function mount(panel: HTMLElement): void {
     inFlight = true;
     retry!.hidden = true;
     if (!loaded) {
+      setFailed(false);
       for (const row of rows.values()) {
         row.dataset['state'] = 'loading';
         setText(row.querySelector('[data-state-label]'), 'checking');

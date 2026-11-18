@@ -14,6 +14,8 @@ export const site = {
   linkedin: resume.contact.linkedin,
   github: resume.contact.github,
   resumePdf: '/rodrigo_pimenta_resume.pdf',
+  // His own 30-minute "Intro Call" booking page.
+  bookCall: 'https://calendly.com/rodrigopimenta102/30min',
   repo: 'https://github.com/rodrigopimenta10/portfolio-website',
   /**
    * Whether the hosting described on "How this site runs" is live. While false, that page and the
