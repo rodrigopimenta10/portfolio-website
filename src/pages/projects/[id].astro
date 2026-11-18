@@ -1,4 +1,5 @@
 ---
+import FailoverSim from '../../components/FailoverSim.astro';
 import { Image } from 'astro:assets';
 import { render } from 'astro:content';
 import StatusPanel from '../../components/StatusPanel.astro';
@@ -118,7 +119,7 @@ const description = personal ? personal.data.summary : (words?.sentences.slice(1
           </div>
 
           <figure class="architecture">
-            <p class="eyebrow">Architecture</p>
+            <p class="eyebrow">Architecture <span class="scroll-hint">· scroll sideways for all of it →</span></p>
             <div class="frame diagram-scroll" tabindex="0" role="group" aria-label="Architecture diagram; scrolls sideways on a small screen">
               {Diagram && <Diagram />}
             </div>
@@ -170,9 +171,8 @@ const description = personal ? personal.data.summary : (words?.sentences.slice(1
               {project.id.startsWith('ceph') && (
                 <>
                   {' '}
-                  The idea of a failover that checks the standby first is one I can show. There is{' '}
-                  <a href="/#sim-title">a small simulation of it on the home page</a>, with made-up clusters
-                  and none of this system’s code or numbers.
+                  The idea of a failover that checks the standby first is one I can show: the
+                  simulation below uses made-up clusters and none of this system’s code or numbers.
                 </>
               )}
             </p>
@@ -180,6 +180,12 @@ const description = personal ? personal.data.summary : (words?.sentences.slice(1
               <a href="/resume">The full resume</a> · <a href="/experience">Experience</a>
             </p>
           </div>
+
+          {project.id.startsWith('ceph') && (
+            <section class="section sim-here">
+              <FailoverSim />
+            </section>
+          )}
         </>
       )
     }

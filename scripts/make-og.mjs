@@ -1,4 +1,5 @@
-// Draws public/og.png, the 1200x630 card shown when a link to the site is shared.
+// Draws public/og.png, the 1200x630 card shown when a link to the site is shared, and
+// public/apple-touch-icon.png.
 // Run by hand if the sentence or the look changes:  node scripts/make-og.mjs
 import { chromium } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -16,20 +17,28 @@ const html = `<!doctype html><meta charset="utf-8"><style>
   body { width: 1200px; height: 630px; padding: 72px 80px; background: #f7f5ef; color: #1b1a17; font-family: N, serif;
          display: flex; flex-direction: column; justify-content: space-between; }
   .eyebrow { font: 500 22px M, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #55514a; }
-  h1 { font-size: 68px; font-weight: 400; line-height: 1.06; letter-spacing: -0.02em; max-width: 1000px; }
+  h1 { font-size: 104px; font-weight: 400; line-height: 1; letter-spacing: -0.025em; }
+  .says { margin-top: 28px; font-size: 46px; line-height: 1.14; letter-spacing: -0.015em; max-width: 980px; }
   em { color: #0a6a4d; }
   .foot { display: flex; justify-content: space-between; align-items: center; font: 500 24px M, monospace; }
   .up { display: flex; align-items: center; gap: 14px; color: #0a6a4d; }
   .dot { width: 16px; height: 16px; border-radius: 50%; background: #0a6a4d; }
 </style>
-<p class="eyebrow">Rodrigo Pimenta · Backend and platform engineer</p>
-<h1>I build systems that keep themselves running and <em>report their own degradation</em>.</h1>
-<p class="foot"><span>rodrigopimenta.com</span><span class="up"><span class="dot"></span>New York</span></p>`;
+<p class="eyebrow">Backend and platform engineer</p>
+<div><h1>Rodrigo Pimenta</h1>
+<p class="says">I build systems that keep themselves running and <em>say so when they can’t</em>.</p></div>
+<p class="foot"><span>rodrigopimenta.com</span><span class="up"><span class="dot"></span>Open to roles in New York</span></p>`;
 
 const browser = await chromium.launch({ channel: 'chrome' });
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
 await page.setContent(html);
 await page.evaluate(() => document.fonts.ready);
 await page.screenshot({ path: path.join(root, 'public', 'og.png') });
+// The icon a phone shows when the site is added to its home screen: the favicon on the site's paper.
+const icon = await readFile(path.join(root, 'public', 'favicon.svg'), 'utf8');
+const touch = await browser.newPage({ viewport: { width: 180, height: 180 }, deviceScaleFactor: 1 });
+await touch.setContent(`<!doctype html><style>*{margin:0}body{width:180px;height:180px;display:grid;place-items:center;background:#f7f5ef}svg{width:120px;height:120px}</style>${icon}`);
+await touch.screenshot({ path: path.join(root, 'public', 'apple-touch-icon.png') });
+console.log('wrote public/apple-touch-icon.png');
 await browser.close();
 console.log('wrote public/og.png');

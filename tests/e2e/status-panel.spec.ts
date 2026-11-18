@@ -113,3 +113,31 @@ test("a project's page shows that project's row alone", async ({ page }) => {
   await expect(row(page, 'orbital-watch')).toHaveAttribute('data-state', 'up');
   await expect(panel(page).getByRole('status')).toContainText('Asked at');
 });
+
+test('a visitor can fail one check on purpose: the row says so with its last known answer, then recovers', async ({ page }) => {
+  await page.goto('/');
+  const panel = page.locator('[data-status-panel]').first();
+  const row = panel.locator('[data-system="sightline"]');
+  await expect(row).toHaveAttribute('data-state', 'up');
+  const drill = panel.getByRole('button', { name: 'Fail one check on purpose' });
+  await expect(drill).toBeVisible();
+
+  await drill.click();
+  await expect(row).toHaveAttribute('data-state', 'unknown');
+  await expect(row).toContainText('Simulated: this check timed out after 4 s.');
+  await expect(row).toContainText('Last known');
+  await expect(panel.locator('[data-status-summary]')).toContainText('3 of 4 up');
+  await expect(panel.locator('[data-status-note-text]')).toContainText('Nothing real is broken');
+  await expect(panel.getByRole('button', { name: 'Failing one on purpose…' })).toBeDisabled();
+
+  await expect(row).toHaveAttribute('data-state', 'up', { timeout: 10_000 });
+  await expect(panel.locator('[data-status-note-text]')).toContainText('Recovered');
+  await expect(panel.locator('[data-status-summary]')).toContainText('All 4 up');
+  await expect(drill).toBeEnabled({ timeout: 10_000 });
+});
+
+test('a project page with one row does not offer the drill', async ({ page }) => {
+  await page.goto('/projects/sightline');
+  await expect(page.locator('[data-system="sightline"]')).toHaveAttribute('data-state', 'up');
+  await expect(page.locator('[data-status-drill]')).toBeHidden();
+});

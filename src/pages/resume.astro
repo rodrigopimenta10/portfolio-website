@@ -17,7 +17,6 @@ const short = (url: string) => url.replace(/^https?:\/\//, '');
       <ul class="contact mono">
         <li>{contact.location}</li>
         <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>
-        <li><a href={`tel:+1${contact.phone.replace(/\D/g, '')}`}>{contact.phone}</a></li>
         <li><a href={contact.linkedin}>{short(contact.linkedin)}</a></li>
         <li><a href={contact.github}>{short(contact.github)}</a></li>
       </ul>

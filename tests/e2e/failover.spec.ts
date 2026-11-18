@@ -5,7 +5,7 @@ const node = (page: Page, id: string) => sim(page).locator(`[data-node="${id}"]`
 const log = (page: Page) => sim(page).getByRole('log');
 
 async function open(page: Page) {
-  await page.goto('/');
+  await page.goto('/projects/ceph-storage-self-healing-monitor');
   await sim(page).scrollIntoViewIfNeeded();
   // The simulation's code loads when the section comes into view; the buttons enable when it has.
   await expect(node(page, 'a1')).toBeEnabled();
@@ -100,7 +100,8 @@ test('off screen, the simulation schedules nothing', async ({ page }) => {
 
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(sim(page)).not.toBeInViewport();
-  await page.locator('[data-status-panel]').evaluate((element) => element.remove());
+  // A status panel, where a page has one, keeps its own timer: it is not what is counted here.
+  await page.evaluate(() => document.querySelector('[data-status-panel]')?.remove());
   await page.waitForTimeout(500);
   const before = await ticks();
   await page.waitForTimeout(2_000);

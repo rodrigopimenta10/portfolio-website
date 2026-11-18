@@ -25,7 +25,7 @@ const systems = (await allProjects()).filter(isWork);
             <article class="role">
               <header>
                 <p class="mono soft dates">{role.data.dates}</p>
-                <h2>{role.data.role}</h2>
+                <h2>{role.data.role.replace(/(\w)-(\w)/g, '$1\u2011$2')}</h2>
                 <p class="org">
                   {role.data.org}
                   <span class="soft"> · {role.data.location}</span>
@@ -58,7 +58,7 @@ const systems = (await allProjects()).filter(isWork);
                       })}
                     </ul>
                     <p class="mono soft">
-                      The failover idea, as a simulation with made-up clusters: <a href="/#sim-title">on the home page</a>.
+                      The failover idea, as a simulation with made-up clusters: <a href="/projects/ceph-storage-self-healing-monitor#sim-title">on the Ceph monitor’s page</a>.
                     </p>
                   </div>
                 )}
@@ -136,6 +136,8 @@ const systems = (await allProjects()).filter(isWork);
   .bullets {
     display: grid;
     gap: var(--space-3);
+    /* Rows keep their own height when the column beside them is taller. */
+    align-content: start;
     padding-left: 1.2em;
   }
 

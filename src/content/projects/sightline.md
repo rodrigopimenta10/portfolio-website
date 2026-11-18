@@ -30,7 +30,7 @@ facts:
   - Led a team of six
   - Four Cloud Run services, all in Terraform
   - 0.0071° from JPL Horizons over 5,469,984 checks
-  - AI agents wrote most of the code, directed by me
+  - 2,020 tests in CI; canary deploys that roll back
 sources:
   - claim: Led the six-person team, owned the architecture decisions, directed AI coding agents that wrote most of the code.
     where: Resume, Systems Built; the repository README names the team of six and its captain.

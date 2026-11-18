@@ -1,5 +1,6 @@
 ---
-import FailoverSim from '../components/FailoverSim.astro';
+import { Image } from 'astro:assets';
+import portrait from '../assets/rodrigo.jpg';
 import FeaturedProject from '../components/FeaturedProject.astro';
 import StatusPanel from '../components/StatusPanel.astro';
 import { site } from '../data/site';
@@ -15,10 +16,22 @@ const atWork = projects.filter(isWork);
   <div class="wrap">
     <section class="hero" aria-labelledby="who">
       <div class="who">
-        <p class="eyebrow">Backend and platform engineer · New York</p>
+        <p class="id">
+          <Image class="portrait" src={portrait} alt="Rodrigo Pimenta" width={56} height={56} densities={[1, 2, 3]} loading="eager" />
+          <span class="eyebrow">Backend and platform engineer · Relocating to New York</span>
+        </p>
         <h1 id="who">
-          I’m Rodrigo Pimenta, a backend and platform engineer who builds systems that keep themselves running and <em>report their own degradation</em>.
+          I’m Rodrigo Pimenta. I build systems that keep themselves running and <em>say so when they can’t</em>.
         </h1>
+        {/* What a recruiter came for, before anything else: on a phone these sit above the panel. */}
+        <ul class="doors">
+          <li><a class="button" href={site.resumePdf}>Resume (PDF)</a></li>
+          <li><a class="button quiet" href={`mailto:${site.email}`}>Email me</a></li>
+          <li class="links">
+            <a class="plain mono" href={site.linkedin}>LinkedIn</a>
+            <a class="plain mono" href={site.github}>GitHub</a>
+          </li>
+        </ul>
       </div>
 
       <div class="panel">
@@ -32,12 +45,6 @@ const atWork = projects.filter(isWork);
           build on Google Cloud and AWS with Terraform.
         </p>
         <p class="seeking">{site.seeking}</p>
-        <ul class="contact mono">
-          <li><a href={`mailto:${site.email}`}>Email</a></li>
-          <li><a href={site.linkedin}>LinkedIn</a></li>
-          <li><a href={site.github}>GitHub</a></li>
-          <li><a href="/resume">Resume</a></li>
-        </ul>
       </div>
     </section>
 
@@ -76,11 +83,11 @@ const atWork = projects.filter(isWork);
           })
         }
       </div>
-      <p class="after"><a href="/experience">All experience</a></p>
-    </section>
-
-    <section class="section">
-      <FailoverSim />
+      <p class="after">
+        <a href="/projects/ceph-storage-self-healing-monitor#sim-title">Try the failover idea as a simulation</a>
+        <span aria-hidden="true"> · </span>
+        <a href="/experience">All experience</a>
+      </p>
     </section>
   </div>
 </Base>
@@ -88,7 +95,8 @@ const atWork = projects.filter(isWork);
 <style>
   .hero {
     display: grid;
-    grid-template-areas: 'who' 'panel' 'more';
+    /* On a phone: who he is and the ways in, the short pitch, then the live panel. */
+    grid-template-areas: 'who' 'more' 'panel';
     gap: var(--space-6);
     padding-block: var(--space-6) var(--space-8);
   }
@@ -129,15 +137,38 @@ const atWork = projects.filter(isWork);
     font-weight: 600;
   }
 
-  .contact {
+  .id {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-5);
+    align-items: center;
+    gap: var(--space-3);
   }
 
-  .contact a {
+  .portrait {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--rule-strong);
+    object-fit: cover;
+    flex: none;
+  }
+
+  .doors {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .doors .links {
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .doors .plain {
     display: inline-block;
     padding-block: var(--space-2);
+    font-size: var(--text-sm);
     font-weight: 500;
   }
 

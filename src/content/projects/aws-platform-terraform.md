@@ -3,7 +3,7 @@ kind: personal
 title: aws-platform-terraform
 order: 2
 summary: A production-style AWS platform in Terraform, built as reusable modules with tests, one roadmap item at a time.
-role: It is a learning portfolio. A scheduled Claude Code run builds the next roadmap item and writes a note explaining it; I review the work and study the note.
+role: It is how I am learning AWS platform engineering. A scheduled Claude Code run builds the next roadmap item and writes a note explaining it; I review each change and study the note.
 stack:
   - Terraform
   - terraform test with mock providers

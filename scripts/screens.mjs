@@ -125,7 +125,7 @@ if (!only || only === 'states') {
 if (!only || only === 'sim') {
   for (const [size, viewport] of viewports) {
     for (const theme of themes) {
-      const { context, page } = await open(viewport, theme, '/');
+      const { context, page } = await open(viewport, theme, '/projects/ceph-storage-self-healing-monitor');
       const sim = page.locator('[data-failover]');
       await sim.scrollIntoViewIfNeeded();
       await page.locator('[data-node="a1"]:not([disabled])').click();

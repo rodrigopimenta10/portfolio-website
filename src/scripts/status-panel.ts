@@ -4,12 +4,21 @@
 // The panel has four states and looks deliberate in each: loading (rows say "checking"), slow
 // (a line explains why the wait can happen), answered (state, fact and ages per row), and failed
 // (every row says "could not check" and the panel says what went wrong and offers to try again).
+//
+// Once it has an answer, a visitor can also make one check fail on purpose. Nothing is sent
+// anywhere: for a few seconds one row is drawn as it would be if its check had timed out, with
+// its last known answer, and then drawn as it really is again. The panel says it is simulated
+// the whole time.
 import { SLOW_AFTER_MS, fetchStatus, type FetchResult } from '../lib/status/client';
 import type { StatusResponse, SystemStatus } from '../lib/status/types';
 import { STATE_LABEL, lastKnownLine, metaLine, summary, utcTime } from '../lib/status/view';
 
 const REFRESH_MS = 60_000;
 const TICK_MS = 1_000;
+/** How long the row stays failed in a drill, and how long the panel then says it recovered. */
+const DRILL_FAILED_MS = 6_000;
+const DRILL_RECOVERED_MS = 5_000;
+const RECORDED_NOTE = 'Recorded responses, not live data: the service is running in test mode.';
 
 interface Loaded {
   data: StatusResponse;
@@ -23,6 +32,7 @@ function mount(panel: HTMLElement): void {
   const note = panel.querySelector<HTMLElement>('[data-status-note]');
   const noteText = panel.querySelector<HTMLElement>('[data-status-note-text]');
   const retry = panel.querySelector<HTMLButtonElement>('[data-status-retry]');
+  const drillButton = panel.querySelector<HTMLButtonElement>('[data-status-drill]');
   if (!summaryLine || !note || !noteText || !retry) return;
 
   let loaded: Loaded | null = null;
@@ -30,8 +40,11 @@ function mount(panel: HTMLElement): void {
   let visible = true;
   let refreshTimer: number | undefined;
   let tickTimer: number | undefined;
+  /** The system whose check is failing on purpose, while a drill is on. */
+  let drilled: string | null = null;
+  let drillTimer: number | undefined;
 
-  function setNote(tone: 'waiting' | 'failed' | 'recorded' | null, text = '', withRetry = false): void {
+  function setNote(tone: 'waiting' | 'failed' | 'recorded' | 'drill' | null, text = '', withRetry = false): void {
     note!.hidden = tone === null;
     if (tone) note!.dataset['tone'] = tone;
     noteText!.textContent = text;
@@ -74,7 +87,8 @@ function mount(panel: HTMLElement): void {
   function renderLoaded(): void {
     if (!loaded) return;
     const shown: SystemStatus[] = [];
-    for (const system of loaded.data.systems) {
+    for (const real of loaded.data.systems) {
+      const system = real.id === drilled ? timedOut(real) : real;
       const row = rows.get(system.id);
       if (!row) continue;
       renderRow(row, system, loaded);
@@ -91,7 +105,56 @@ function mount(panel: HTMLElement): void {
     setText(summaryLine, rows.size > 1 ? `${summary(shown)} · ${time}` : `Asked at ${time}`);
   }
 
+  /** A system as the service would report it if its check had just timed out: no fact, a reason, and the last known answer. */
+  function timedOut(system: SystemStatus): SystemStatus {
+    const { fact, since, since_label, latency_ms, ...rest } = system;
+    void since;
+    void since_label;
+    void latency_ms;
+    return {
+      ...rest,
+      state: 'unknown',
+      reason: 'Simulated: this check timed out after 4 s.',
+      ...(fact ? { last_known: { state: system.state, fact, checked_at: system.checked_at } } : {}),
+    };
+  }
+
+  function restNote(): void {
+    setNote(loaded?.data.recorded ? 'recorded' : null, loaded?.data.recorded ? RECORDED_NOTE : '');
+  }
+
+  function endDrill(): void {
+    window.clearTimeout(drillTimer);
+    drilled = null;
+    if (drillButton) {
+      drillButton.disabled = false;
+      drillButton.textContent = 'Fail one check on purpose';
+    }
+  }
+
+  function startDrill(): void {
+    if (!loaded || drilled || !drillButton) return;
+    const target = loaded.data.systems.find((system) => system.state === 'up' && rows.has(system.id));
+    if (!target) return;
+    drilled = target.id;
+    drillButton.disabled = true;
+    drillButton.textContent = 'Failing one on purpose…';
+    setNote('drill', `Simulated: the check of ${target.name} is failing on purpose. Nothing real is broken. The row keeps its last known answer and says how old it is.`);
+    renderLoaded();
+    drillTimer = window.setTimeout(() => {
+      drilled = null;
+      renderLoaded();
+      setNote('drill', `Recovered: ${target.name} is checked again. That is what this panel does when a real check fails.`);
+      drillTimer = window.setTimeout(() => {
+        endDrill();
+        restNote();
+      }, DRILL_RECOVERED_MS);
+    }, DRILL_FAILED_MS);
+  }
+
   function renderFailed(reason: string): void {
+    endDrill();
+    if (drillButton) drillButton.hidden = true;
     const previous = loaded;
     loaded = null;
     for (const row of rows.values()) {
@@ -135,11 +198,11 @@ function mount(panel: HTMLElement): void {
 
     if (result.ok) {
       loaded = { data: result.data, receivedAtMs: result.receivedAtMs };
-      setNote(
-        result.data.recorded ? 'recorded' : null,
-        result.data.recorded ? 'Recorded responses, not live data: the service is running in test mode.' : '',
-      );
+      // A drill in progress keeps its own words; they give way when it ends.
+      if (!drilled && note!.dataset['tone'] !== 'drill') restNote();
       renderLoaded();
+      // Offered on the full panel only, and only when something is up to fail.
+      if (drillButton) drillButton.hidden = rows.size < 2 || !result.data.systems.some((system) => system.state === 'up');
     } else {
       renderFailed(result.reason);
     }
@@ -160,6 +223,7 @@ function mount(panel: HTMLElement): void {
   }
 
   retry.addEventListener('click', () => void load());
+  drillButton?.addEventListener('click', startDrill);
   document.addEventListener('visibilitychange', schedule);
   if ('IntersectionObserver' in window) {
     new IntersectionObserver((entries) => {

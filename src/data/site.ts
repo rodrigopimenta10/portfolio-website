@@ -4,12 +4,11 @@ import resume from './resume.json';
 export const site = {
   name: resume.contact.name,
   url: 'https://rodrigopimenta.com',
-  // One sentence: who he is and what he builds. The clauses are the resume summary's and
-  // Orbital Watch's thesis, joined.
-  sentence:
-    "I'm Rodrigo Pimenta, a backend and platform engineer who builds systems that keep themselves running and report their own degradation.",
+  // One sentence: who he is and what he builds. The first clause is the resume summary's; the
+  // second is Orbital Watch's thesis (a system should report its own degradation) in plain words.
+  sentence: "I'm Rodrigo Pimenta. I build systems that keep themselves running and say so when they can't.",
   description:
-    'Rodrigo Pimenta is a backend and platform engineer (six-plus years, Python) who builds systems that keep themselves running and report their own degradation. Open to backend and platform engineering roles in New York.',
+    'Backend and platform engineer, six-plus years in Python. I build systems that keep themselves running and say so when they cannot. Open to roles in New York.',
   seeking: 'Open to backend and platform engineering roles in New York.',
   email: resume.contact.email,
   linkedin: resume.contact.linkedin,
