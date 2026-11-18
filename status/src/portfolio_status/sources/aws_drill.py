@@ -7,7 +7,7 @@ jobs of each recent run to find the last one that really applied something.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -20,6 +20,10 @@ REPO = "rodrigopimenta10/aws-platform-terraform"
 API = "https://api.github.com"
 # How many recent runs to look through for one that drilled. Each costs one API call, once.
 LOOK_BACK = 4
+# Drills only run when a stack changes. Once the last one is older than this, the row says that
+# nothing has needed one since, instead of presenting an old drill as recent news. It stays "up":
+# a repository that has stopped changing is finished, not broken.
+QUIET_AFTER = timedelta(days=30)
 
 
 class AwsDrill:
@@ -53,7 +57,7 @@ class AwsDrill:
         for run in finished[:LOOK_BACK]:
             drilled = await self._drilled(client, run, now)
             if drilled:
-                return self._finding(run, drilled, running)
+                return self._finding(run, drilled, running, now)
 
         # Recent runs all skipped their drills: say that, with the latest run's own result.
         latest = finished[0]
@@ -67,16 +71,22 @@ class AwsDrill:
             since_label="finished",
         )
 
-    def _finding(self, run: dict[str, Any], drilled: list[tuple[str, str]], running: bool) -> Finding:
+    def _finding(
+        self, run: dict[str, Any], drilled: list[tuple[str, str]], running: bool, now: datetime
+    ) -> Finding:
         stacks = [stack for stack, _ in drilled]
         failed = [stack for stack, conclusion in drilled if conclusion != "success"]
         number = run.get("run_number")
         since = parse_time(run.get("updated_at"), "the run's end time")
         suffix = "; another is running now" if running else ""
         if not failed and run.get("conclusion") == "success":
+            quiet = now - since > QUIET_AFTER and not running
+            lead = (
+                "Nothing has needed a drill since the last one passed" if quiet else "Last live drill passed"
+            )
             return Finding(
                 state="up",
-                fact=f"Last live drill passed: {join_words(stacks)} applied to a real AWS account "
+                fact=f"{lead}: {join_words(stacks)} applied to a real AWS account "
                 f"and destroyed (run {number}){suffix}",
                 since=since,
                 since_label="finished",

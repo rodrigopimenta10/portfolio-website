@@ -5,7 +5,8 @@
 <svg class="diagram" viewBox="0 0 800 340" role="img" aria-labelledby="site-diagram-title site-diagram-desc">
   <title id="site-diagram-title">How this site is served</title>
   <desc id="site-diagram-desc">
-    A visitor's request reaches Firebase Hosting, a CDN. Pages, styles, scripts, images and the
+    The visitor's browser first asks Cloudflare DNS where rodrigopimenta.com is; Cloudflare answers
+    that one question and carries no traffic. The request then reaches Firebase Hosting, a CDN. Pages, styles, scripts, images and the
     resume PDF are static files. Requests under /api are passed to one Cloud Run service,
     portfolio-status, in us-east4, which runs between zero and two instances and asks three public
     sources: Sightline's status endpoint, Orbital Watch's health file and GitHub's API. GitHub
@@ -20,6 +21,11 @@
 
   <rect class="box" x="10" y="34" width="80" height="52" rx="4"></rect>
   <text class="label" x="50" y="65" text-anchor="middle">visitor</text>
+
+  <rect class="box" x="10" y="124" width="126" height="56" rx="4"></rect>
+  <text class="label" x="20" y="147">Cloudflare DNS</text>
+  <text class="sub" x="20" y="165">name lookup only</text>
+  <path class="wire" d="M50 86V123" marker-end="url(#site-arrow)"></path>
 
   <rect class="box accent" x="130" y="24" width="200" height="72" rx="4"></rect>
   <text class="label" x="142" y="48">Firebase Hosting</text>
