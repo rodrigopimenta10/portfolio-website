@@ -17,7 +17,7 @@ statusId: orbital-watch
 screenshot:
   src: ../../assets/screens/orbital-watch.webp
   alt: The Orbital Watch dashboard. A header marked FRESH with the build time, an operational assessment reading geomagnetic conditions nominal, five space-weather tiles and a chart of recent planetary Kp values.
-  caption: orbital.rodrigopimenta.com on 18 November 2026. Taken with headless Chrome at 1440 by 900.
+  caption: orbital.rodrigopimenta.com on 18 November 2026. Taken with headless Chrome at 1440 by 900, at twice the pixel density.
 diagram:
   name: orbital-watch
   caption: A scheduled build fetches, computes and judges its own sources, then writes static files. The browser never calls an upstream API, so an upstream outage cannot take the page down.

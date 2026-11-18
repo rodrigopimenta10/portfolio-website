@@ -17,7 +17,7 @@ statusId: aws-platform
 screenshot:
   src: ../../assets/screens/aws-platform-terraform.webp
   alt: A drill report on GitHub titled "Live drill m1, 2026-11-18". Its table reads plan gate passed, apply success in 61 seconds with 39 resources, destroy success in 250 seconds, destroy verified yes.
-  caption: The report the live drill of 18 November 2026 committed to the repository, as GitHub shows it. Taken with headless Chrome at 1440 by 900.
+  caption: The report the live drill of 18 November 2026 committed to the repository, as GitHub shows it. Taken with headless Chrome at 1440 by 900, at twice the pixel density.
 diagram:
   name: aws-platform-terraform
   caption: A push to main runs the offline checks. If they pass, the drill applies the changed stacks to a real AWS account, records what it made, destroys it, and commits a report.
