@@ -1,0 +1,32 @@
+{
+  "total_count": 3,
+  "jobs": [
+    {
+      "id": 133022546972,
+      "run_id": 43782472874,
+      "name": "Pick stacks",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-16T00:47:43Z",
+      "completed_at": "2026-11-16T00:47:48Z"
+    },
+    {
+      "id": 133022590054,
+      "run_id": 43782472874,
+      "name": "Drill m2",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-16T00:47:54Z",
+      "completed_at": "2026-11-16T00:54:42Z"
+    },
+    {
+      "id": 133024670206,
+      "run_id": 43782472874,
+      "name": "Commit the drill reports",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-16T00:54:45Z",
+      "completed_at": "2026-11-16T00:55:23Z"
+    }
+  ]
+}

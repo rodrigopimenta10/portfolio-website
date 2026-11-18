@@ -1,29 +1,34 @@
 # Dependencies
 node_modules/
+status/.venv/
 
-# Build output
+# Build output and caches
 dist/
+dist-legacy/
+.astro/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# Test output
+playwright-report/
+test-results/
+.lighthouseci/
 
 # Environment
 .env
 .env.local
 .env.*.local
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
+# Firebase CLI state
+.firebase/
+firebase-debug.log
 
-# Editor
+# macOS and editors
+.DS_Store
 .vscode/
 .idea/
 *.swp
-*.swo
 
 # Logs
 *.log
-npm-debug.log*
-
-# Thumbnails (large, regeneratable)
-images/thumbnails/
-public/images/thumbnails/

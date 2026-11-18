@@ -1,0 +1,136 @@
+{
+  "generated_at": "2026-11-18T18:02:05.203816+00:00",
+  "overall": "fresh",
+  "counts": {
+    "fresh": 7,
+    "stale": 0,
+    "failed": 0
+  },
+  "sources": [
+    {
+      "name": "celestrak_stations",
+      "label": "Celestrak \u2014 Space Stations",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=json",
+      "state": "fresh",
+      "outcome": "snapshot",
+      "last_success": "2026-11-18T14:28:08.624591+00:00",
+      "age_seconds": 12836.582469,
+      "elapsed_seconds": 0.0,
+      "thresholds": {
+        "fresh_within_seconds": 28800.0,
+        "stale_within_seconds": 172800.0
+      },
+      "detail": "Served from the committed snapshot captured 3h 33m ago, within the 8h freshness window. The build does not call this upstream; a scheduled refresher owns that traffic.",
+      "error": null,
+      "notes": [
+        "Served from the committed snapshot; the build does not call this upstream. A scheduled refresher owns all traffic to it, which is what makes the refetch floor real on ephemeral build containers."
+      ]
+    },
+    {
+      "name": "celestrak_weather",
+      "label": "Celestrak \u2014 Weather Satellites",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=weather&FORMAT=json",
+      "state": "fresh",
+      "outcome": "snapshot",
+      "last_success": "2026-11-18T14:28:08.970660+00:00",
+      "age_seconds": 12836.240323,
+      "elapsed_seconds": 0.001,
+      "thresholds": {
+        "fresh_within_seconds": 28800.0,
+        "stale_within_seconds": 172800.0
+      },
+      "detail": "Served from the committed snapshot captured 3h 33m ago, within the 8h freshness window. The build does not call this upstream; a scheduled refresher owns that traffic.",
+      "error": null,
+      "notes": [
+        "Served from the committed snapshot; the build does not call this upstream. A scheduled refresher owns all traffic to it, which is what makes the refetch floor real on ephemeral build containers."
+      ]
+    },
+    {
+      "name": "celestrak_starlink",
+      "label": "Celestrak \u2014 Starlink",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=json",
+      "state": "fresh",
+      "outcome": "snapshot",
+      "last_success": "2026-11-18T14:28:09.922444+00:00",
+      "age_seconds": 12835.293078,
+      "elapsed_seconds": 0.001,
+      "thresholds": {
+        "fresh_within_seconds": 28800.0,
+        "stale_within_seconds": 172800.0
+      },
+      "detail": "Served from the committed snapshot captured 3h 33m ago, within the 8h freshness window. The build does not call this upstream; a scheduled refresher owns that traffic.",
+      "error": null,
+      "notes": [
+        "Served from the committed snapshot; the build does not call this upstream. A scheduled refresher owns all traffic to it, which is what makes the refetch floor real on ephemeral build containers."
+      ]
+    },
+    {
+      "name": "swpc_kp",
+      "label": "NOAA SWPC \u2014 Planetary K-index",
+      "url": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+      "state": "fresh",
+      "outcome": "live",
+      "last_success": "2026-11-18T18:02:05.239771+00:00",
+      "age_seconds": 0.000772,
+      "elapsed_seconds": 0.021,
+      "thresholds": {
+        "fresh_within_seconds": 10800.0,
+        "stale_within_seconds": 43200.0
+      },
+      "detail": "Fetched from upstream 0s ago.",
+      "error": null,
+      "notes": []
+    },
+    {
+      "name": "swpc_solar_wind",
+      "label": "NOAA SWPC \u2014 Solar Wind Speed",
+      "url": "https://services.swpc.noaa.gov/products/summary/solar-wind-speed.json",
+      "state": "fresh",
+      "outcome": "live",
+      "last_success": "2026-11-18T18:02:05.256273+00:00",
+      "age_seconds": 0.000519,
+      "elapsed_seconds": 0.016,
+      "thresholds": {
+        "fresh_within_seconds": 10800.0,
+        "stale_within_seconds": 43200.0
+      },
+      "detail": "Fetched from upstream 0s ago.",
+      "error": null,
+      "notes": []
+    },
+    {
+      "name": "swpc_mag_field",
+      "label": "NOAA SWPC \u2014 IMF (Bt/Bz)",
+      "url": "https://services.swpc.noaa.gov/products/summary/solar-wind-mag-field.json",
+      "state": "fresh",
+      "outcome": "live",
+      "last_success": "2026-11-18T18:02:05.272612+00:00",
+      "age_seconds": 0.000489,
+      "elapsed_seconds": 0.016,
+      "thresholds": {
+        "fresh_within_seconds": 10800.0,
+        "stale_within_seconds": 43200.0
+      },
+      "detail": "Fetched from upstream 0s ago.",
+      "error": null,
+      "notes": []
+    },
+    {
+      "name": "swpc_solar_cycle",
+      "label": "NOAA SWPC \u2014 Solar Cycle",
+      "url": "https://services.swpc.noaa.gov/json/solar-cycle/observed-solar-cycle-indices.json",
+      "state": "fresh",
+      "outcome": "live",
+      "last_success": "2026-11-18T18:02:05.379349+00:00",
+      "age_seconds": 0.00072,
+      "elapsed_seconds": 0.106,
+      "thresholds": {
+        "fresh_within_seconds": 10800.0,
+        "stale_within_seconds": 43200.0
+      },
+      "detail": "Fetched from upstream 0s ago.",
+      "error": null,
+      "notes": []
+    }
+  ]
+}
