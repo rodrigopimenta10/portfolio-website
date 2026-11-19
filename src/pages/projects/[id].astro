@@ -37,7 +37,12 @@ const Diagram = personal ? diagrams[personal.data.diagram.name] : null;
 const description = personal ? personal.data.summary : (words?.sentences.slice(1, 2).join(' ') ?? '');
 ---
 
-<Base title={project.data.title} path={`/projects/${project.id}`} description={description}>
+<Base
+  title={project.data.title}
+  path={`/projects/${project.id}`}
+  description={description}
+  image={personal ? { src: `/og-${personal.id}.png`, alt: `${personal.data.title}, a project by Rodrigo Pimenta. ${personal.data.screenshot.alt}` } : undefined}
+>
   <article class="wrap">
     <header class="page-head">
       <p class="eyebrow">

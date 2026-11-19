@@ -1,5 +1,6 @@
 // Draws the pictures other sites and devices show for this one:
-//   public/og.png                the 1200x630 card shown when a link is shared (LinkedIn, Slack, iMessage)
+//   public/og.png, og-*.png      the 1200x630 cards shown when a link is shared (LinkedIn, Slack, iMessage):
+//                                the site's, the resume's and one for each project with a screenshot
 //   public/apple-touch-icon.png  the icon a phone shows on its home screen
 //   public/favicon-48.png, public/icon-192.png   the tab icon as PNG, for browsers and search results
 //                                that do not take the SVG
@@ -15,7 +16,7 @@ const icon = await readFile(path.join(root, 'public', 'favicon.svg'), 'utf8');
 
 // A share card is shown small (about 300 px wide in a LinkedIn "Featured" row), so it carries a
 // face, a name and one line, all large, and nothing that needs reading closely.
-const html = `<!doctype html><meta charset="utf-8"><style>
+const card = async (title, says, brand = 'rodrigopimenta.com') => `<!doctype html><meta charset="utf-8"><style>
   @font-face { font-family: G; font-weight: 100 900; src: url(${await data('src/assets/fonts/geist-latin-wght-normal.woff2', 'font/woff2')}); }
   @font-face { font-family: M; font-weight: 500; src: url(${await data('src/assets/fonts/ibm-plex-mono-latin-500-normal.woff2', 'font/woff2')}); }
   * { box-sizing: border-box; margin: 0; }
@@ -37,20 +38,54 @@ const html = `<!doctype html><meta charset="utf-8"><style>
 <div class="glow"></div>
 <div class="card">
   <div>
-    <p class="brand">${icon}<span>rodrigopimenta.com</span></p>
-    <h1>Rodrigo Pimenta</h1>
+    <p class="brand">${icon}<span>${brand}</span></p>
+    <h1>${title}</h1>
     <p class="role">Backend &amp; platform engineer</p>
-    <p class="says">Systems that keep themselves running.</p>
+    <p class="says">${says}</p>
   </div>
   <div class="face"><img src="${await data('src/assets/rodrigo.jpg', 'image/jpeg')}" alt=""></div>
 </div>`;
 
+// A project's own card: its screenshot, with the name over it.
+const projectCard = async (title, line, screen) => `<!doctype html><meta charset="utf-8"><style>
+  @font-face { font-family: G; font-weight: 100 900; src: url(${await data('src/assets/fonts/geist-latin-wght-normal.woff2', 'font/woff2')}); }
+  @font-face { font-family: M; font-weight: 500; src: url(${await data('src/assets/fonts/ibm-plex-mono-latin-500-normal.woff2', 'font/woff2')}); }
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1200px; height: 630px; position: relative; overflow: hidden; background: #090c11; color: #e9edf4; font-family: G, sans-serif; }
+  .shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .shade { position: absolute; inset: 0; background: linear-gradient(to top, rgb(6 8 12 / 0.98) 0%, rgb(6 8 12 / 0.95) 42%, rgb(6 8 12 / 0.35) 62%, transparent 82%); }
+  .text { position: absolute; left: 64px; right: 64px; bottom: 52px; }
+  .brand { display: flex; align-items: center; gap: 16px; font: 500 25px M, monospace; color: #c4ccd8; }
+  .brand svg { width: 48px; height: 48px; }
+  h1 { margin-top: 20px; font-size: 88px; font-weight: 650; line-height: 1; letter-spacing: -0.045em; }
+  .line { margin-top: 16px; font-size: 34px; font-weight: 500; letter-spacing: -0.02em; color: #c4ccd8; }
+</style>
+<img class="shot" src="${await data(screen, 'image/webp')}" alt="">
+<div class="shade"></div>
+<div class="text">
+  <p class="brand">${icon}<span>Rodrigo Pimenta · rodrigopimenta.com</span></p>
+  <h1>${title}</h1>
+  <p class="line">${line}</p>
+</div>`;
+
+const cards = [
+  ['og.png', await card('Rodrigo Pimenta', 'Systems that keep themselves running.')],
+  ['og-resume.png', await card('Resume', 'Read it online or download the PDF', 'Rodrigo Pimenta')],
+  ['og-sightline.png', await projectCard('Sightline', 'A lunar landing-site planner on Google Cloud', 'src/assets/screens/sightline.webp')],
+  ['og-aws-platform-terraform.png', await projectCard('aws-platform-terraform', 'An AWS platform in Terraform, drilled in a real account', 'src/assets/screens/aws-platform-terraform.webp')],
+  ['og-orbital-watch.png', await projectCard('Orbital Watch', 'Satellite passes and space weather that reports its own freshness', 'src/assets/screens/orbital-watch.webp')],
+];
+
 const browser = await chromium.launch({ channel: 'chrome' });
-const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
-await page.setContent(html);
-await page.evaluate(() => document.fonts.ready);
-await page.screenshot({ path: path.join(root, 'public', 'og.png') });
-console.log('wrote public/og.png');
+for (const [file, html] of cards) {
+  const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
+  await page.setContent(html);
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: path.join(root, 'public', file) });
+  await page.close();
+  console.log(`wrote public/${file}`);
+}
 
 // The tab icon at fixed sizes. The touch icon fills its square: a phone rounds the corners itself.
 for (const [file, size, bleed] of [
