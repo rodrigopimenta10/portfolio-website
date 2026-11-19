@@ -14,7 +14,7 @@ interface Props {
   path: string;
   noindex?: boolean;
   /** This page's own share picture, 1200 by 630, as a path under public/. The site's card if omitted. */
-  image?: { src: string; alt: string };
+  image?: { src: string; alt: string } | undefined;
 }
 
 const { title, description = site.description, path, noindex = false, image } = Astro.props;
