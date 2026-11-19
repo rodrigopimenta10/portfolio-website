@@ -5,7 +5,7 @@ import FeaturedProject from '../components/FeaturedProject.astro';
 import StatusPanel from '../components/StatusPanel.astro';
 import { site } from '../data/site';
 import Base from '../layouts/Base.astro';
-import { allProjects, isPersonal, isWork, resumeWords } from '../lib/projects';
+import { allProjects, isPersonal, isWork, resumeWords, resumeLine } from '../lib/projects';
 
 const projects = await allProjects();
 const featured = projects.filter(isPersonal);
@@ -16,7 +16,25 @@ const figures = [
   { value: '6+', unit: 'years', label: 'of Python in production' },
   { value: '99.9%', unit: 'SLA', label: 'held on call, 24/7' },
   { value: '24', unit: 'nodes', label: 'of storage in 8 clusters, watched and healed every 3 minutes' },
-  { value: '2,020', unit: 'tests', label: 'in Sightline’s CI; deploys go out as a canary' },
+  { value: '161', unit: 'jobs', label: 'covered by the Kubernetes migration design I authored' },
+];
+
+// Work that reaches past one system: each line is cut from the resume, and the build checks it.
+const scope = [
+  { kind: 'Design', line: resumeLine("Designed the platform's shared logging entry point, now used by every script and device module") },
+  { kind: 'Process', line: resumeLine('introduced continuous integration to the organization') },
+  {
+    kind: 'Incidents',
+    line: resumeLine(
+      'Lead analyst on infrastructure failure investigations and 24/7 on-call against a 99.9% availability SLA; rollback owner in formal change control',
+    ),
+  },
+  {
+    kind: 'Root cause',
+    line: resumeLine(
+      'Root-caused and eliminated a platform-wide logging defect that silently discarded log records, cutting the log footprint from 19.68 GB to 58 MB',
+    ),
+  },
 ];
 
 // The headline number of each system at work, from the same resume lines the page quotes below it.
@@ -117,12 +135,22 @@ const headline: Record<string, { value: string; label: string }> = {
     <section class="section" aria-labelledby="work-title">
       <div class="section-head">
         <p class="eyebrow">At Hughes Network Systems</p>
-        <h2 id="work-title">Two systems in production</h2>
+        <h2 id="work-title">Platform-wide work, and two systems I built</h2>
         <p class="measure soft">
-          This code belongs to my employer and is not public, so these are described in my resume’s
-          words and no others.
+          This code belongs to my employer and is not public, so all of this is in my resume’s words
+          and no others.
         </p>
       </div>
+      <ul class="scope">
+        {
+          scope.map((item) => (
+            <li class="surface">
+              <span class="kind">{item.kind}</span>
+              <span>{item.line}</span>
+            </li>
+          ))
+        }
+      </ul>
       <div class="work">
         {
           atWork.map((project) => {
@@ -141,7 +169,7 @@ const headline: Record<string, { value: string; label: string }> = {
                     {project.data.title}
                   </a>
                 </h3>
-                <p class="soft">{words.sentences.slice(0, 2).join(' ')}</p>
+                <p class="soft">{words.sentences.slice(1, 3).join(' ')}</p>
                 <ul class="chips">
                   {words.stack.map((item) => <li class="tag">{item}</li>)}
                 </ul>
@@ -389,6 +417,30 @@ const headline: Record<string, { value: string; label: string }> = {
     gap: var(--space-5);
   }
 
+  .scope {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .scope li {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    min-width: 0;
+    padding: var(--space-4) var(--space-5);
+    line-height: 1.5;
+  }
+
+  .scope .kind {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
   /* A card is never wider than its column, whatever is inside it. */
   .featured > :global(*),
   .work > * {
@@ -474,7 +526,8 @@ const headline: Record<string, { value: string; label: string }> = {
   }
 
   @media (min-width: 44rem) {
-    .work {
+    .work,
+    .scope {
       grid-template-columns: 1fr 1fr;
     }
 
