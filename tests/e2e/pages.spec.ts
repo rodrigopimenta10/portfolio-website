@@ -43,6 +43,13 @@ for (const { path, heading } of pages) {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, 'the page must not scroll sideways').toBeLessThanOrEqual(0);
 
+    // No card is wider than what holds it. A long label that could not break once pushed a card
+    // 12 px past its column on a 360 px phone, which only showed as a sideways scroll on Linux.
+    const spilling = await page.locator('.surface').evaluateAll(
+      (cards) => cards.filter((card) => card.getBoundingClientRect().right > (card.parentElement?.getBoundingClientRect().right ?? Infinity) + 0.5).length,
+    );
+    expect(spilling, 'no card may be wider than its column').toBe(0);
+
     // A Content-Security-Policy violation shows up as a console error.
     await page.waitForLoadState('networkidle');
     expect(errors).toEqual([]);

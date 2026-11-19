@@ -389,6 +389,12 @@ const headline: Record<string, { value: string; label: string }> = {
     gap: var(--space-5);
   }
 
+  /* A card is never wider than its column, whatever is inside it. */
+  .featured > :global(*),
+  .work > * {
+    min-width: 0;
+  }
+
   .work article {
     position: relative;
     display: grid;
@@ -443,11 +449,6 @@ const headline: Record<string, { value: string; label: string }> = {
     border-radius: var(--radius);
   }
 
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
 
   .go {
     margin-top: var(--space-1);
