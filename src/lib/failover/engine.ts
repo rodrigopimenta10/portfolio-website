@@ -1,8 +1,10 @@
 // A small simulation of a self-healing monitor: nodes in clusters, a monitor that looks at them on
-// a fixed cycle, moves work off a failed node when a standby can carry it, and refuses when none can.
+// a fixed cycle, moves work off a failed node when the standby can carry it, and refuses when it
+// cannot.
 //
-// It is generic on purpose. The clusters, names, loads and timings are made up for the page; none
-// of it is taken from a real system.
+// Each cluster has two active nodes, which share its work, and one standby: a common layout for a
+// Ceph file system's metadata servers. Everything else is generic on purpose. The clusters, names,
+// loads and timings are made up for the page; none of it is taken from a real system.
 //
 // Everything here is pure: state in, state out, with the time passed in. The page (failover-ui.ts)
 // owns the clock and the DOM; the unit tests run whole cycles with no timers at all.
@@ -22,16 +24,17 @@ export interface SimNode {
   failedAtMs: number | null;
   /** Whether the monitor has already logged that this standby is down. */
   reported: boolean;
+  /** When the monitor first saw this active node down, until its work is served again. */
+  detectedAtMs: number | null;
+  /** True while the monitor has refused to move this node's work and is waiting for capacity or a person. */
+  refused: boolean;
 }
 
 export interface SimCluster {
   id: string;
   name: string;
-  /** Share of a node's capacity the cluster's workload needs, in percent. */
+  /** Share of a node's capacity that each active node's part of the work needs, in percent. */
   demand: number;
-  /** True while the monitor has refused to fail over and is waiting for capacity or a person. */
-  alert: boolean;
-  detectedAtMs: number | null;
   nodes: SimNode[];
 }
 
@@ -55,9 +58,9 @@ export interface SimState {
 
 type Phase =
   | { kind: 'probe'; cluster: string }
-  | { kind: 'assess'; cluster: string }
-  | { kind: 'failover'; cluster: string; to: string }
-  | { kind: 'verify'; cluster: string; to: string }
+  | { kind: 'assess'; cluster: string; node: string }
+  | { kind: 'failover'; cluster: string; from: string; to: string }
+  | { kind: 'verify'; cluster: string; from: string; to: string }
   | { kind: 'finish' };
 
 /** One cycle in progress: what is left to do, and whether anything worth logging has happened. */
@@ -68,7 +71,7 @@ export interface CycleRun {
 }
 
 function node(id: string, role: SimNode['role'], base: number): SimNode {
-  return { id, role, healthy: true, base, failedAtMs: null, reported: false };
+  return { id, role, healthy: true, base, failedAtMs: null, reported: false, detectedAtMs: null, refused: false };
 }
 
 export function initialState(): SimState {
@@ -79,41 +82,45 @@ export function initialState(): SimState {
       {
         id: 'a',
         name: 'Cluster A',
-        demand: 40,
-        alert: false,
-        detectedAtMs: null,
-        nodes: [node('a1', 'active', 10), node('a2', 'standby', 25), node('a3', 'standby', 45)],
+        demand: 30,
+        nodes: [node('a1', 'active', 10), node('a2', 'active', 15), node('a3', 'standby', 25)],
       },
       {
         id: 'b',
         name: 'Cluster B',
-        demand: 50,
-        alert: false,
-        detectedAtMs: null,
-        nodes: [node('b1', 'active', 10), node('b2', 'standby', 35), node('b3', 'standby', 70)],
+        demand: 35,
+        nodes: [node('b1', 'active', 10), node('b2', 'active', 20), node('b3', 'standby', 40)],
       },
       {
-        // One standby, and it is busy: failing c1 shows the monitor refusing.
+        // Its standby is busy: failing c1 or c2 shows the monitor refusing.
         id: 'c',
         name: 'Cluster C',
-        demand: 60,
-        alert: false,
-        detectedAtMs: null,
-        nodes: [node('c1', 'active', 15), node('c2', 'standby', 65)],
+        demand: 45,
+        nodes: [node('c1', 'active', 15), node('c2', 'active', 10), node('c3', 'standby', 70)],
       },
     ],
   };
 }
 
-/** Percent of capacity in use on a node: its other work, plus the cluster's workload if it is serving it. */
+/** Percent of capacity in use on a node: its other work, plus its part of the cluster's work if it is active. */
 export function loadOf(cluster: SimCluster, target: SimNode): number {
   if (!target.healthy) return 0;
   return target.base + (target.role === 'active' ? cluster.demand : 0);
 }
 
-/** True when the cluster's workload is being served. */
+/** How many of the cluster's two active nodes are up and serving their part of the work. */
+export function activeUp(cluster: SimCluster): number {
+  return cluster.nodes.filter((candidate) => candidate.role === 'active' && candidate.healthy).length;
+}
+
+/** True when every part of the cluster's work is being served. */
 export function isServing(cluster: SimCluster): boolean {
-  return cluster.nodes.some((candidate) => candidate.role === 'active' && candidate.healthy);
+  return activeUp(cluster) === cluster.nodes.filter((candidate) => candidate.role === 'active').length;
+}
+
+/** True while the monitor is refusing to move some node's work in this cluster. */
+export function isRefusing(cluster: SimCluster): boolean {
+  return cluster.nodes.some((candidate) => candidate.refused);
 }
 
 function seconds(ms: number): string {
@@ -159,11 +166,18 @@ export function toggleNode(state: SimState, nodeId: string, atMs: number): SimSt
       mapNode(current, nodeId, (old) => ({ ...old, healthy: false, failedAtMs: atMs, reported: false })),
     );
     return append(next, [
-      { atMs, kind: 'manual', text: `You failed ${nodeId}, ${target.role === 'active' ? 'the active node' : 'a standby'} in ${cluster.name}.` },
+      { atMs, kind: 'manual', text: `You failed ${nodeId}, ${target.role === 'active' ? 'an active node' : 'the standby'} in ${cluster.name}.` },
     ]);
   }
   const next = mapCluster(state, cluster.id, (current) =>
-    mapNode(current, nodeId, (old) => ({ ...old, healthy: true, failedAtMs: null, reported: false })),
+    // A node the monitor is refusing over keeps that mark until the next check sees it answering.
+    mapNode(current, nodeId, (old) => ({
+      ...old,
+      healthy: true,
+      failedAtMs: null,
+      reported: false,
+      detectedAtMs: old.refused ? old.detectedAtMs : null,
+    })),
   );
   return append(next, [{ atMs, kind: 'manual', text: `You brought ${nodeId} back.` }]);
 }
@@ -195,7 +209,7 @@ interface Verdict {
   healthy: boolean;
 }
 
-/** For each standby: is it up, and does it have room for the cluster's workload? */
+/** For each standby: is it up, and does it have room for one active node's part of the work? */
 export function assess(cluster: SimCluster): Verdict[] {
   return cluster.nodes
     .filter((candidate) => candidate.role === 'standby')
@@ -218,7 +232,7 @@ export function advance(state: SimState, run: CycleRun, atMs: number): { state: 
 
   if (phase.kind === 'finish') {
     if (events === 0) {
-      const waiting = next.clusters.filter((cluster) => cluster.alert).map((cluster) => cluster.name);
+      const waiting = next.clusters.filter(isRefusing).map((cluster) => cluster.name);
       if (waiting.length === 0) {
         log('quiet', 'All clusters healthy. Nothing to do.', 'quiet:healthy');
       } else {
@@ -235,37 +249,45 @@ export function advance(state: SimState, run: CycleRun, atMs: number): { state: 
 
   const cluster = next.clusters.find((candidate) => candidate.id === phase.cluster);
   if (!cluster) return { state: next, run: { ...run, queue, events } };
-  const active = cluster.nodes.find((candidate) => candidate.role === 'active');
+  const change = (id: string, to: (old: SimNode) => SimNode) => {
+    next = mapCluster(next, cluster.id, (current) => mapNode(current, id, to));
+  };
 
   if (phase.kind === 'probe') {
-    for (const standby of cluster.nodes) {
-      if (standby.role === 'standby' && !standby.healthy && !standby.reported) {
-        log('note', `${cluster.name}: standby ${standby.id} is down. Nothing to move; one fewer spare.`);
-        next = mapCluster(next, cluster.id, (current) => mapNode(current, standby.id, (old) => ({ ...old, reported: true })));
-        events++;
+    const assessments: Phase[] = [];
+    for (const member of cluster.nodes) {
+      if (member.role === 'standby') {
+        if (!member.healthy && !member.reported) {
+          log('note', `${cluster.name}: standby ${member.id} is down. Nothing to move; no spare until it is back.`);
+          change(member.id, (old) => ({ ...old, reported: true }));
+          events++;
+        }
+      } else if (member.healthy) {
+        if (member.refused) {
+          log('recover', `${cluster.name}: ${member.id} is answering again. Serving; alert cleared.`);
+          events++;
+        }
+        if (member.refused || member.detectedAtMs !== null) {
+          change(member.id, (old) => ({ ...old, refused: false, detectedAtMs: null }));
+        }
+      } else {
+        if (member.detectedAtMs === null) {
+          const lag = member.failedAtMs === null ? '' : `, ${seconds(atMs - member.failedAtMs)} s after it failed`;
+          log('detect', `${cluster.name}: active node ${member.id} is not answering. Detected${lag}.`);
+          change(member.id, (old) => ({ ...old, detectedAtMs: atMs }));
+          events++;
+        }
+        assessments.push({ kind: 'assess', cluster: cluster.id, node: member.id });
       }
     }
-    if (active?.healthy) {
-      if (cluster.alert) {
-        log('recover', `${cluster.name}: ${active.id} is answering again. Serving; alert cleared.`);
-        next = mapCluster(next, cluster.id, (current) => ({ ...current, alert: false, detectedAtMs: null }));
-        events++;
-      }
-    } else if (active) {
-      if (!cluster.alert) {
-        const lag = active.failedAtMs === null ? '' : `, ${seconds(atMs - active.failedAtMs)} s after it failed`;
-        log('detect', `${cluster.name}: active node ${active.id} is not answering. Detected${lag}.`);
-        next = mapCluster(next, cluster.id, (current) => ({ ...current, detectedAtMs: atMs }));
-        events++;
-      }
-      queue = [{ kind: 'assess', cluster: cluster.id }, ...queue];
-    }
+    queue = [...assessments, ...queue];
   }
 
   if (phase.kind === 'assess') {
-    if (!active || active.healthy) return { state: next, run: { ...run, queue, events } };
+    const failed = cluster.nodes.find((candidate) => candidate.id === phase.node);
+    if (!failed || failed.healthy || failed.role !== 'active') return { state: next, run: { ...run, queue, events } };
     const verdicts = assess(cluster);
-    if (!cluster.alert) {
+    if (!failed.refused) {
       for (const verdict of verdicts) {
         const outcome = !verdict.healthy ? 'down' : verdict.fits ? 'fits' : 'too busy';
         log('assess', `${verdict.id}: ${verdict.healthy ? `${verdict.free}% free, ` : ''}needs ${cluster.demand}%: ${outcome}.`);
@@ -273,56 +295,51 @@ export function advance(state: SimState, run: CycleRun, atMs: number): { state: 
     }
     const best = verdicts.filter((verdict) => verdict.fits).sort((a, b) => b.free - a.free)[0];
     if (best) {
-      if (cluster.alert) {
+      if (failed.refused) {
         log('assess', `${cluster.name}: ${best.id} has capacity now (${best.free}% free, needs ${cluster.demand}%).`);
       }
       events++;
-      queue = [{ kind: 'failover', cluster: cluster.id, to: best.id }, ...queue];
-    } else if (!cluster.alert) {
+      queue = [{ kind: 'failover', cluster: cluster.id, from: failed.id, to: best.id }, ...queue];
+    } else if (!failed.refused) {
       log(
         'refuse',
-        `${cluster.name}: no standby can carry the load. Refusing to fail over: it would overload a healthy node. ` +
-          `${cluster.name} stays down and a person is paged.`,
+        `${cluster.name}: the standby cannot carry ${failed.id}'s work. Refusing to fail over: it would overload a healthy node. ` +
+          `${failed.id}'s part of ${cluster.name} stays down and a person is paged.`,
       );
-      next = mapCluster(next, cluster.id, (current) => ({ ...current, alert: true }));
+      change(failed.id, (old) => ({ ...old, refused: true }));
       events++;
     }
   }
 
   if (phase.kind === 'failover') {
+    const failed = cluster.nodes.find((candidate) => candidate.id === phase.from);
     const target = cluster.nodes.find((candidate) => candidate.id === phase.to);
-    if (!active || active.healthy) {
-      log('note', `${cluster.name}: ${active?.id ?? 'the active node'} came back before the move. Nothing to do.`);
+    if (!failed || failed.healthy) {
+      log('note', `${cluster.name}: ${phase.from} came back before the move. Nothing to do.`);
+      change(phase.from, (old) => ({ ...old, refused: false, detectedAtMs: null }));
     } else if (!target?.healthy || target.role !== 'standby') {
       log('note', `${cluster.name}: ${phase.to} failed before the move. Assessing again.`);
-      queue = [{ kind: 'assess', cluster: cluster.id }, ...queue];
+      queue = [{ kind: 'assess', cluster: cluster.id, node: failed.id }, ...queue];
     } else {
-      log('act', `${cluster.name}: failing over ${active.id} → ${target.id}.`);
-      next = mapCluster(next, cluster.id, (current) => ({
-        ...current,
-        alert: false,
-        nodes: current.nodes.map((candidate) =>
-          candidate.id === active.id
-            ? { ...candidate, role: 'standby', reported: true }
-            : candidate.id === target.id
-              ? { ...candidate, role: 'active' }
-              : candidate,
-        ),
-      }));
-      queue = [{ kind: 'verify', cluster: cluster.id, to: target.id }, ...queue];
+      log('act', `${cluster.name}: failing over ${failed.id} → ${target.id}.`);
+      change(failed.id, (old) => ({ ...old, role: 'standby', reported: true, refused: false }));
+      change(target.id, (old) => ({ ...old, role: 'active' }));
+      queue = [{ kind: 'verify', cluster: cluster.id, from: failed.id, to: target.id }, ...queue];
     }
     events++;
   }
 
   if (phase.kind === 'verify') {
+    const failed = cluster.nodes.find((candidate) => candidate.id === phase.from);
     const target = cluster.nodes.find((candidate) => candidate.id === phase.to);
     if (target?.healthy && target.role === 'active') {
-      const took = cluster.detectedAtMs === null ? '' : ` Recovered ${seconds(atMs - cluster.detectedAtMs)} s after detection.`;
+      const since = failed?.detectedAtMs ?? null;
+      const took = since === null ? '' : ` Recovered ${seconds(atMs - since)} s after detection.`;
       log('verify', `${cluster.name}: verified, ${target.id} is serving.${took}`);
-      next = mapCluster(next, cluster.id, (current) => ({ ...current, detectedAtMs: null }));
     } else {
       log('note', `${cluster.name}: could not verify ${phase.to}; it is not answering. Checking again next cycle.`);
     }
+    change(phase.from, (old) => ({ ...old, detectedAtMs: null }));
     events++;
   }
 

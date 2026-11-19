@@ -12,10 +12,11 @@ const state = initialState();
     <p class="eyebrow">Simulation · made-up clusters, not a real system</p>
     <h2 id="sim-title">A monitor that refuses to make things worse</h2>
     <p class="measure">
-      Press a node to fail it. Nothing happens at first: the monitor only looks every
-      {CYCLE_MS / 1000} seconds. On its next check it finds the failure, asks whether a standby has
-      room for the work, and moves it. If no standby has room it refuses, because overloading a
-      healthy node turns one failure into two. Try <strong>c1</strong>: its only standby is busy.
+      Each cluster has two active nodes, which share its work, and one standby. Press a node to
+      fail it. Nothing happens at first: the monitor only looks every {CYCLE_MS / 1000} seconds. On
+      its next check it finds the failure, asks whether the standby has room for that node's work,
+      and moves it. If the standby has no room it refuses, because overloading a healthy node turns
+      one failure into two. Try <strong>c1</strong>: the standby in its cluster is busy.
     </p>
   </header>
 
@@ -45,7 +46,7 @@ const state = initialState();
                 serving
               </p>
             </header>
-            <p class="mono soft need">Its work needs {cluster.demand}% of one node.</p>
+            <p class="mono soft need">Each active node's work needs {cluster.demand}% of a node.</p>
             <ul>
               {cluster.nodes.map((node) => (
                 <li>
@@ -194,12 +195,15 @@ const state = initialState();
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-3);
+    /* A long state ("half served · refused to move") drops under the name on a phone. */
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
   }
 
   .cluster h3 {
     font-size: var(--text-base);
     font-weight: 600;
+    white-space: nowrap;
   }
 
   .cluster-state {
@@ -213,6 +217,14 @@ const state = initialState();
 
   .cluster[data-serving='false'] .cluster-state {
     color: var(--state-down);
+  }
+
+  .cluster[data-serving='part'] {
+    border-color: var(--state-degraded);
+  }
+
+  .cluster[data-serving='part'] .cluster-state {
+    color: var(--state-degraded);
   }
 
   .need {

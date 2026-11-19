@@ -129,7 +129,7 @@ if (!only || only === 'sim') {
       const sim = page.locator('[data-failover]');
       await sim.scrollIntoViewIfNeeded();
       await page.locator('[data-node="a1"]:not([disabled])').click();
-      await page.locator('[data-log]').getByText('verified, a2 is serving').waitFor({ timeout: 15000 });
+      await page.locator('[data-log]').getByText('verified, a3 is serving').waitFor({ timeout: 15000 });
       await sim.scrollIntoViewIfNeeded();
       await shot(page, `simulation-failover-${size}-${theme}`, false);
       await page.locator('[data-node="c1"]').click();
