@@ -9,7 +9,8 @@
     balancer sends plan paths to the plans service, which uses Firestore; chat paths to the co-pilot
     service, which calls the Anthropic API and publishes to Pub/Sub, which feeds BigQuery and a
     private events worker; and everything else to the web service, which reads Cloud Storage and
-    Text-to-Speech. All four services are Cloud Run. Redis holds rate limits and kept answers.
+    Text-to-Speech. All four services are Cloud Run. Redis, an optional shared store for rate limits
+    and kept answers, has been switched off since November 2026 to cut cost.
     Everything is declared in Terraform and applied from GitHub Actions with no stored keys.
   </desc>
   <defs>
@@ -81,7 +82,7 @@
 
   <rect class="box ghost" x="450" y="406" width="340" height="38" rx="4"></rect>
   <text class="label" x="462" y="430">Redis</text>
-  <text class="sub" x="506" y="430">rate limits, kept answers, circuit breaker</text>
+  <text class="sub" x="506" y="430">shared limits and answers · off since Nov 2026</text>
 
   <rect class="box ghost" x="10" y="330" width="250" height="68" rx="4"></rect>
   <text class="label" x="24" y="354">All of it in Terraform</text>
