@@ -44,6 +44,9 @@ sources:
   - claim: 13 sites, every hour from 2026 to 2049; 1.04 trillion Sun and Earth answers computed.
     where: Repository README, "By the numbers".
     href: https://github.com/shackleton-station/sightline#readme
+  - claim: The event's settings, the two scale-downs, about $105 and about $43 a month at list price, and the measured cold starts.
+    where: The repository's docs/DEPLOY.md, "Settings after the event", and docs/PROGRESS.md.
+    href: https://github.com/shackleton-station/sightline/blob/main/docs/DEPLOY.md#settings-after-the-event
 ---
 
 ## What it does
@@ -67,14 +70,30 @@ load balancer with a CDN and an edge firewall sends each path to its service. Ev
 declared in Terraform and applied from GitHub Actions, which signs in to Google Cloud with no
 stored keys.
 
-Since November 2026 it runs at a smaller size, because it has few visitors: the saved-plans and
-co-pilot services sleep when nobody is using them, and the shared Redis store is switched off, so
-each service keeps its rate limits in its own memory. The first saved plan after a quiet spell
-opens in under two seconds; the first co-pilot answer takes about seven. Both are one setting each
-to turn back on.
-
 Merging to `main` deploys one service at a time. Each new version starts with no visitors, is
 tested, then takes a share of traffic, and rolls back by itself if its checks fail.
+
+## From the hackathon to now
+
+For the event weekend, 13 to 17 November 2026, it was sized for a room full of people arriving at
+once:
+
+- two warm copies of each of the three services a visitor reaches, up to ten each, with CPU always on;
+- a 5 GB Redis store with a replica, shared by all three for rate limits, kept answers and
+  presenters' rooms.
+
+After the event it had few visitors, so I brought it down in two steps. Each was a settings change
+in a pull request that showed its Terraform plan before anything was applied.
+
+- **17 November:** one warm copy of each service, at most three, CPU only while a request is open,
+  and Redis down to a single 1 GB node.
+- **18 November:** Redis off, with each service keeping its limits in its own memory. Saved plans
+  and the co-pilot sleep when nobody is using them. The web server keeps one warm copy, so the
+  first screen never waits.
+
+At list prices the second step alone took it from about $105 a month to about $43, and the
+event's size cost several times that. What it gave up is measured, not guessed: the first saved plan after a quiet spell opens in under two seconds, and the first
+co-pilot answer takes about seven. Going back is one setting for Redis and one for the copies.
 
 ## Who wrote the code
 
