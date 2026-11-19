@@ -25,3 +25,15 @@ export function resumeWords(project: WorkProject): { stack: string[]; sentences:
     .map((sentence) => (sentence.endsWith('.') ? sentence : `${sentence}.`));
   return { stack: system.stack, sentences };
 }
+
+/**
+ * A line about work, cut from a resume bullet. The build fails if the resume no longer says it,
+ * so the home page cannot drift from the resume. Returned with a capital first letter.
+ */
+export function resumeLine(excerpt: string): string {
+  const said = resume.experience.some((job) =>
+    job.bullets.some((bullet) => bullet.toLowerCase().includes(excerpt.toLowerCase())),
+  );
+  if (!said) throw new Error(`The resume has no line that says: "${excerpt}"`);
+  return excerpt.charAt(0).toUpperCase() + excerpt.slice(1);
+}
