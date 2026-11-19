@@ -166,9 +166,10 @@ Kept as a record, in the order it was done on 18 November 2026.
    in the build made those builds fail on purpose, so Cloudflare kept serving the old site while
    this one was reviewed on its `web.app` address.
 4. `rodrigopimenta.com` and `www` were added as custom domains on the Hosting site. Firebase's
-   three check records (TXT) went into the Cloudflare zone first, so the certificate was issued
-   before any visitor was sent here.
-5. The apex record became an `A` record and `www` a `CNAME`, both pointing at Firebase (DNS only).
+   check records (TXT: ownership and the certificate challenge, for each name) went into the
+   Cloudflare zone first, so the certificates were issued before any visitor was sent here.
+5. The apex and `www` records became `A` records pointing at Firebase (DNS only, not proxied).
    The `orbital` record was left as it is.
-6. The Cloudflare Pages project and the build guard were removed.
+6. The Cloudflare Pages project was stopped from building this repository and detached from the
+   domain, and the build guard was removed.
 
