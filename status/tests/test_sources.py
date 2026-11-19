@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 
 import httpx
 import pytest
@@ -122,6 +123,23 @@ def test_drill_reports_the_latest_run_that_really_drilled():
     assert finding.since_label == "finished"
     # Run 25 drilled, so only its jobs were asked for.
     assert calls.count == {GITHUB_RUNS_URL: 1, JOBS_URL.format(44373926752): 1}
+
+
+def test_drill_long_past_says_nothing_has_needed_one_since_and_stays_up():
+    calls = Calls(github_answers())
+
+    async def go() -> Finding:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(calls)) as client:
+            return await AwsDrill().check(client, RECORDED_AT + timedelta(days=200))
+
+    finding = asyncio.run(go())
+
+    assert finding.state == "up"
+    assert finding.fact == (
+        "Nothing has needed a drill since the last one passed: "
+        "m1 applied to a real AWS account and destroyed (run 25)"
+    )
+    assert finding.since.isoformat() == "2026-11-18T18:58:16+00:00"
 
 
 def test_drill_walks_back_past_runs_that_skipped_their_drills():

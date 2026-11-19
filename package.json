@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/not-on-cloudflare.mjs && astro build && node scripts/build-legacy.mjs",
+    "build": "astro build && node scripts/build-legacy.mjs",
     "preview": "node scripts/serve.mjs",
     "check": "astro check",
     "test": "vitest run",

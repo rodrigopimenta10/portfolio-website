@@ -3,9 +3,10 @@
 Rodrigo Pimenta's portfolio: a static Astro site, and one small Python service behind the status
 panel on its home page.
 
-**Status of this branch (`rebuild/gcp`, 18 November 2026):** built and tested locally, not
-deployed. `main` still holds the previous Vite site, which is what rodrigopimenta.com serves.
-Nothing has been created in Google Cloud. [Going live](#going-live) lists what is left.
+**Status (18 November 2026):** live at [rodrigopimenta.com](https://rodrigopimenta.com), served by
+Firebase Hosting in the Google Cloud project that `portfolio-infra` describes. Every merge to `main`
+deploys. The domain is registered and its DNS is held at Cloudflare (DNS only, not proxied); nothing
+else of this site runs there.
 
 ## What is here
 
@@ -23,7 +24,7 @@ legacy/               the page for the old GitHub Pages address
 scripts/              local server, screenshots, resume import, output check
 tests/unit/           Vitest: engine, status wording, resume import, firebase.json
 tests/e2e/            Playwright: every page, the panel in each state, the simulation
-firebase.json         hosting rules (written, not deployed)
+firebase.json         hosting rules
 .github/workflows/    ci.yml, deploy.yml, pages-legacy.yml
 docs/screens/         screenshots of every page, taken before this branch was handed over
 ```
@@ -153,21 +154,22 @@ the service name is public in Sightline's repository).
   and the privacy page.
 - The Terraform is in a separate repository, `portfolio-infra`.
 
-## Going live
+## How it went live
 
-In order. None of this has been done.
+Kept as a record, in the order it was done on 18 November 2026.
 
-1. Apply the Terraform in `portfolio-infra` (its README has the bootstrap steps).
-2. Set the repository variables from its outputs: `GCP_PROJECT_ID`,
+1. The Terraform in `portfolio-infra` was applied (its README has the bootstrap steps).
+2. The repository variables were set from its outputs: `GCP_PROJECT_ID`,
    `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT`, `GCP_PREVIEW_SERVICE_ACCOUNT`,
    `FIREBASE_HOSTING_SITE`.
-3. Cloudflare Pages is connected to this repository and builds every branch, `main` included.
-   Before merging, stop it building this repository; otherwise it will publish this site without
-   its status service.
-4. Open a pull request from this branch. CI runs for the first time, and `deploy.yml` publishes a
-   preview channel. Look at it.
-5. Merge. `deploy.yml` deploys the service and the pages to the Firebase site's `web.app` address.
-6. Add `rodrigopimenta.com` as a custom domain on the Hosting site and change the DNS records at
-   Cloudflare to the ones Firebase gives (DNS only, not proxied). Leave `orbital` as it is.
-7. Set `site.hosting.live` to `true` in `src/data/site.ts`, so "How this site runs" stops saying
-   it is not live.
+3. The previous site ran on Cloudflare Pages, which built every branch of this repository. A guard
+   in the build made those builds fail on purpose, so Cloudflare kept serving the old site while
+   this one was reviewed on its `web.app` address.
+4. `rodrigopimenta.com` and `www` were added as custom domains on the Hosting site. Firebase's
+   check records (TXT: ownership and the certificate challenge, for each name) went into the
+   Cloudflare zone first, so the certificates were issued before any visitor was sent here.
+5. The apex and `www` records became `A` records pointing at Firebase (DNS only, not proxied).
+   The `orbital` record was left as it is.
+6. The Cloudflare Pages project was stopped from building this repository and detached from the
+   domain, and the build guard was removed.
+
