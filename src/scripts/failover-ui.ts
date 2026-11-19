@@ -5,8 +5,9 @@ import {
   CYCLE_MS,
   advance,
   beginCycle,
+  activeUp,
   initialState,
-  isServing,
+  isRefusing,
   loadOf,
   nextWait,
   toggleNode,
@@ -49,10 +50,14 @@ export function mount(section: HTMLElement): void {
     for (const cluster of state.clusters) {
       const box = section.querySelector<HTMLElement>(`[data-cluster="${cluster.id}"]`);
       if (!box) continue;
-      const serving = isServing(cluster);
-      box.dataset['serving'] = String(serving);
+      // Two active nodes share the work: both up is serving, one up is half of it, none is down.
+      const up = activeUp(cluster);
+      box.dataset['serving'] = up === 2 ? 'true' : up === 1 ? 'part' : 'false';
       const label = box.querySelector('[data-cluster-state]');
-      if (label) label.textContent = serving ? 'serving' : cluster.alert ? 'down · refused to move' : 'down';
+      if (label) {
+        const served = up === 2 ? 'serving' : up === 1 ? 'half served' : 'down';
+        label.textContent = up < 2 && isRefusing(cluster) ? `${served} · refused to move` : served;
+      }
       for (const node of cluster.nodes) {
         const button = box.querySelector<HTMLButtonElement>(`[data-node="${node.id}"]`);
         if (!button) continue;

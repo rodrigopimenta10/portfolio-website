@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   CYCLE_MS,
+  activeUp,
   advance,
   assess,
   beginCycle,
   initialState,
+  isRefusing,
   isServing,
   loadOf,
   nextWait,
@@ -28,51 +30,59 @@ describe('the monitor cycle', () => {
     expect(state.clusters.every(isServing)).toBe(true);
   });
 
+  it('starts every cluster with two active nodes and one standby', () => {
+    for (const c of initialState().clusters) {
+      expect(c.nodes.map((n) => n.role)).toEqual(['active', 'active', 'standby']);
+    }
+  });
+
   it('does not notice a failure until its next cycle', () => {
     const failed = toggleNode(initialState(), 'a1', 1_000);
 
     expect(isServing(cluster(failed, 'a'))).toBe(false);
+    expect(activeUp(cluster(failed, 'a'))).toBe(1);
     expect(nodeOf(failed, 'a1').role).toBe('active');
-    expect(texts(failed)).toEqual(['You failed a1, the active node in Cluster A.']);
+    expect(texts(failed)).toEqual(['You failed a1, an active node in Cluster A.']);
   });
 
-  it('fails over to the standby with the most room, and logs each step with its time', () => {
+  it('fails over to the standby, and logs each step with its time', () => {
     const failed = toggleNode(initialState(), 'a1', 1_000);
     const { state } = runCycle(failed, 6_000);
 
-    expect(nodeOf(state, 'a2').role).toBe('active');
-    expect(nodeOf(state, 'a1')).toMatchObject({ role: 'standby', healthy: false });
+    expect(nodeOf(state, 'a3').role).toBe('active');
+    expect(nodeOf(state, 'a1')).toMatchObject({ role: 'standby', healthy: false, refused: false, detectedAtMs: null });
     expect(isServing(cluster(state, 'a'))).toBe(true);
-    expect(loadOf(cluster(state, 'a'), nodeOf(state, 'a2'))).toBe(65);
+    expect(loadOf(cluster(state, 'a'), nodeOf(state, 'a3'))).toBe(55);
     expect(state.log.map((entry) => [entry.atMs, entry.kind, entry.text])).toEqual([
-      [1_000, 'manual', 'You failed a1, the active node in Cluster A.'],
+      [1_000, 'manual', 'You failed a1, an active node in Cluster A.'],
       [6_250, 'detect', 'Cluster A: active node a1 is not answering. Detected, 5.3 s after it failed.'],
-      [6_600, 'assess', 'a2: 75% free, needs 40%: fits.'],
-      [6_600, 'assess', 'a3: 55% free, needs 40%: fits.'],
-      [7_300, 'act', 'Cluster A: failing over a1 → a2.'],
-      [7_700, 'verify', 'Cluster A: verified, a2 is serving. Recovered 1.4 s after detection.'],
+      [6_600, 'assess', 'a3: 75% free, needs 30%: fits.'],
+      [7_300, 'act', 'Cluster A: failing over a1 → a3.'],
+      [7_700, 'verify', 'Cluster A: verified, a3 is serving. Recovered 1.4 s after detection.'],
     ]);
   });
 
-  it('skips a standby that is too busy and uses one that fits', () => {
-    const { state } = runCycle(toggleNode(initialState(), 'b1', 0), 6_000);
+  it('leaves the other active node with its own work: it is never used as a spare', () => {
+    const before = initialState();
+    const { state } = runCycle(toggleNode(before, 'a1', 0), 6_000);
 
-    expect(texts(state)).toContain('b3: 30% free, needs 50%: too busy.');
-    expect(nodeOf(state, 'b2').role).toBe('active');
+    expect(nodeOf(state, 'a2')).toEqual(nodeOf(before, 'a2'));
+    expect(loadOf(cluster(state, 'a'), nodeOf(state, 'a2'))).toBe(45);
   });
 
-  it('refuses to fail over when no standby has capacity, and leaves every healthy node alone', () => {
+  it('refuses to fail over when the standby has no capacity, and leaves every healthy node alone', () => {
     const before = toggleNode(initialState(), 'c1', 0);
     const { state } = runCycle(before, 6_000);
 
-    expect(cluster(state, 'c').alert).toBe(true);
-    expect(isServing(cluster(state, 'c'))).toBe(false);
-    expect(nodeOf(state, 'c1').role).toBe('active');
+    expect(nodeOf(state, 'c1')).toMatchObject({ role: 'active', healthy: false, refused: true });
+    expect(isRefusing(cluster(state, 'c'))).toBe(true);
+    expect(activeUp(cluster(state, 'c'))).toBe(1);
     expect(nodeOf(state, 'c2')).toEqual(nodeOf(before, 'c2'));
+    expect(nodeOf(state, 'c3')).toEqual(nodeOf(before, 'c3'));
     expect(texts(state).slice(-2)).toEqual([
-      'c2: 35% free, needs 60%: too busy.',
-      'Cluster C: no standby can carry the load. Refusing to fail over: it would overload a healthy node. ' +
-        'Cluster C stays down and a person is paged.',
+      'c3: 30% free, needs 45%: too busy.',
+      "Cluster C: the standby cannot carry c1's work. Refusing to fail over: it would overload a healthy node. " +
+        "c1's part of Cluster C stays down and a person is paged.",
     ]);
   });
 
@@ -88,7 +98,7 @@ describe('the monitor cycle', () => {
       untilCycle: 4,
       text: 'No change. Cluster C still has no standby with capacity; still refusing to move.',
     });
-    expect(cluster(state, 'c').alert).toBe(true);
+    expect(isRefusing(cluster(state, 'c'))).toBe(true);
   });
 
   it('clears the alert when the failed node comes back by hand', () => {
@@ -96,24 +106,41 @@ describe('the monitor cycle', () => {
     state = toggleNode(state, 'c1', 9_000);
     state = runCycle(state, 12_000).state;
 
-    expect(cluster(state, 'c').alert).toBe(false);
+    expect(isRefusing(cluster(state, 'c'))).toBe(false);
     expect(isServing(cluster(state, 'c'))).toBe(true);
+    expect(nodeOf(state, 'c1')).toMatchObject({ role: 'active', healthy: true, refused: false, detectedAtMs: null });
     expect(texts(state).at(-1)).toBe('Cluster C: c1 is answering again. Serving; alert cleared.');
   });
 
+  it('uses the one standby for the first of two failures and refuses the second', () => {
+    let state = toggleNode(toggleNode(initialState(), 'a1', 0), 'a2', 0);
+    expect(activeUp(cluster(state, 'a'))).toBe(0);
+    state = runCycle(state, 6_000).state;
+
+    expect(nodeOf(state, 'a3')).toMatchObject({ role: 'active', healthy: true });
+    expect(nodeOf(state, 'a2')).toMatchObject({ role: 'active', healthy: false, refused: true });
+    expect(activeUp(cluster(state, 'a'))).toBe(1);
+    expect(texts(state)).toContain('a1: needs 30%: down.');
+    expect(texts(state).at(-1)).toBe(
+      "Cluster A: the standby cannot carry a2's work. Refusing to fail over: it would overload a healthy node. " +
+        "a2's part of Cluster A stays down and a person is paged.",
+    );
+  });
+
   it('fails over later if capacity appears while it is refusing', () => {
-    // B: b1 fails and b2 takes over; then b2 fails with b1 still down and b3 too busy.
+    // B: b1 fails and the standby b3 takes its work; then b2 fails with b1, now the spare, still down.
     let state = runCycle(toggleNode(initialState(), 'b1', 0), 6_000).state;
     state = runCycle(toggleNode(state, 'b2', 8_000), 12_000).state;
-    expect(cluster(state, 'b').alert).toBe(true);
-    expect(texts(state)).toContain('b1: needs 50%: down.');
+    expect(nodeOf(state, 'b2').refused).toBe(true);
+    expect(texts(state)).toContain('b1: needs 35%: down.');
 
-    // b1 is repaired: it is a standby with room, so the next cycle moves the work to it.
+    // b1 is repaired: it is a standby with room, so the next cycle moves b2's work to it.
     state = runCycle(toggleNode(state, 'b1', 14_000), 18_000).state;
 
     expect(nodeOf(state, 'b1')).toMatchObject({ role: 'active', healthy: true });
-    expect(cluster(state, 'b').alert).toBe(false);
-    expect(texts(state)).toContain('Cluster B: b1 has capacity now (90% free, needs 50%).');
+    expect(isRefusing(cluster(state, 'b'))).toBe(false);
+    expect(isServing(cluster(state, 'b'))).toBe(true);
+    expect(texts(state)).toContain('Cluster B: b1 has capacity now (90% free, needs 35%).');
     expect(texts(state).at(-1)).toMatch(/^Cluster B: verified, b1 is serving\./);
   });
 
@@ -123,25 +150,39 @@ describe('the monitor cycle', () => {
 
     expect(texts(state).filter((text) => text.includes('standby a3 is down'))).toHaveLength(1);
     expect(nodeOf(state, 'a1').role).toBe('active');
+    expect(nodeOf(state, 'a2').role).toBe('active');
   });
 
   it('handles a standby that fails between the assessment and the move', () => {
     let { state, run } = beginCycle(toggleNode(initialState(), 'a1', 0));
     let atMs = 6_000;
-    // Probe A, then assess A: the plan is now to move to a2.
+    // Probe A, then assess a1: the plan is now to move its work to a3.
     for (let n = 0; n < 2; n++) ({ state, run } = advance(state, run, (atMs += nextWait(run)!)));
-    expect(run.queue[0]).toEqual({ kind: 'failover', cluster: 'a', to: 'a2' });
+    expect(run.queue[0]).toEqual({ kind: 'failover', cluster: 'a', from: 'a1', to: 'a3' });
 
-    state = toggleNode(state, 'a2', atMs + 100);
+    state = toggleNode(state, 'a3', atMs + 100);
     for (let wait = nextWait(run); wait !== null; wait = nextWait(run)) ({ state, run } = advance(state, run, (atMs += wait)));
 
-    expect(texts(state)).toContain('Cluster A: a2 failed before the move. Assessing again.');
-    expect(nodeOf(state, 'a3').role).toBe('active');
-    expect(isServing(cluster(state, 'a'))).toBe(true);
+    expect(texts(state)).toContain('Cluster A: a3 failed before the move. Assessing again.');
+    expect(texts(state)).toContain('a3: needs 30%: down.');
+    expect(nodeOf(state, 'a1')).toMatchObject({ role: 'active', healthy: false, refused: true });
+    expect(loadOf(cluster(state, 'a'), nodeOf(state, 'a2'))).toBe(45);
+  });
+
+  it('detects a node again if it comes back and fails again between two checks', () => {
+    let state = runCycle(toggleNode(initialState(), 'a3', 0), 6_000).state;
+    // With the standby down, a1's failure is refused; then a1 returns and is seen answering.
+    state = runCycle(toggleNode(state, 'a1', 7_000), 12_000).state;
+    state = runCycle(toggleNode(state, 'a1', 13_000), 18_000).state;
+    expect(nodeOf(state, 'a1')).toMatchObject({ healthy: true, refused: false, detectedAtMs: null });
+
+    state = runCycle(toggleNode(state, 'a1', 20_000), 24_000).state;
+    expect(texts(state).filter((text) => text.startsWith('Cluster A: active node a1 is not answering.'))).toHaveLength(2);
   });
 
   it('never promotes a node that is down or that would be overloaded', () => {
-    // Every order of failing three nodes, a cycle after each: no active node may exceed 100%.
+    // Every order of failing three nodes, a cycle after each: no node may exceed 100%, and every
+    // cluster keeps exactly two nodes in the active role.
     const ids = initialState().clusters.flatMap((c) => c.nodes.map((n) => n.id));
     for (const first of ids) {
       for (const second of ids) {
@@ -156,7 +197,7 @@ describe('the monitor cycle', () => {
             for (const n of c.nodes) {
               expect(loadOf(c, n), `${first},${second},${third}: ${n.id}`).toBeLessThanOrEqual(100);
             }
-            expect(c.nodes.filter((n) => n.role === 'active')).toHaveLength(1);
+            expect(c.nodes.filter((n) => n.role === 'active'), `${first},${second},${third}: ${c.id}`).toHaveLength(2);
           }
         }
       }
@@ -172,10 +213,8 @@ describe('the monitor cycle', () => {
 });
 
 describe('assess', () => {
-  it('gives each standby a verdict', () => {
-    expect(assess(cluster(initialState(), 'b'))).toEqual([
-      { id: 'b2', free: 65, healthy: true, fits: true },
-      { id: 'b3', free: 30, healthy: true, fits: false },
-    ]);
+  it('gives the standby a verdict', () => {
+    expect(assess(cluster(initialState(), 'b'))).toEqual([{ id: 'b3', free: 60, healthy: true, fits: true }]);
+    expect(assess(cluster(initialState(), 'c'))).toEqual([{ id: 'c3', free: 30, healthy: true, fits: false }]);
   });
 });
