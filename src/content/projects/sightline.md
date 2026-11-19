@@ -10,7 +10,7 @@ stack:
   - Google Cloud Run
   - Terraform
   - Firestore
-  - Redis
+  - Redis (optional, off since Nov 2026)
   - Pub/Sub and BigQuery
   - GitHub Actions
 result: Sun and Earth positions match JPL Horizons within 0.0071° over 5,469,984 hourly checks. Deploys go out as a canary and roll back automatically. 2,020 tests run in CI.
@@ -66,6 +66,12 @@ the web server, saved plans, the co-pilot, and a private worker that counts ques
 load balancer with a CDN and an edge firewall sends each path to its service. Every piece of it is
 declared in Terraform and applied from GitHub Actions, which signs in to Google Cloud with no
 stored keys.
+
+Since November 2026 it runs at a smaller size, because it has few visitors: the saved-plans and
+co-pilot services sleep when nobody is using them, and the shared Redis store is switched off, so
+each service keeps its rate limits in its own memory. The first saved plan after a quiet spell
+opens in under two seconds; the first co-pilot answer takes about seven. Both are one setting each
+to turn back on.
 
 Merging to `main` deploys one service at a time. Each new version starts with no visitors, is
 tested, then takes a share of traffic, and rolls back by itself if its checks fail.
