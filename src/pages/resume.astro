@@ -9,7 +9,12 @@ const { contact } = resume;
 const short = (url: string) => url.replace(/^https?:\/\//, '');
 ---
 
-<Base title="Resume" path="/resume" description="Resume of Rodrigo Pimenta, backend and platform software engineer: experience, systems built, education and skills.">
+<Base
+  title="Resume"
+  path="/resume"
+  description="Resume of Rodrigo Pimenta, backend and platform software engineer: experience, systems built, education and skills."
+  image={{ src: '/og-resume.png', alt: 'Resume of Rodrigo Pimenta, backend and platform engineer, with his portrait. Read online or download the PDF.' }}
+>
   <div class="wrap resume">
     <header class="page-head">
       <p class="eyebrow">Resume</p>

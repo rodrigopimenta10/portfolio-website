@@ -40,11 +40,16 @@ const shots = [
     name: 'aws-platform-terraform',
     // The report the latest live drill committed to the repository.
     url: 'https://github.com/rodrigopimenta10/aws-platform-terraform/blob/main/docs/live/2026-11-18-m1.md',
-    colorScheme: 'light',
+    // A narrower window: GitHub then drops its file tree and the report fills the picture, so its
+    // table can be read at card size. Dark, like the other two pictures.
+    viewport: { width: 1000, height: 625 },
+    deviceScaleFactor: 2.88,
     prepare: async (page) => {
       await page.waitForTimeout(3000);
-      await page.getByRole('heading', { name: /Live drill/ }).first().scrollIntoViewIfNeeded();
-      await page.mouse.wheel(0, 180);
+      const heading = page.getByRole('heading', { name: /Live drill/ }).first();
+      await heading.scrollIntoViewIfNeeded();
+      const top = await heading.evaluate((element) => element.getBoundingClientRect().top);
+      await page.mouse.wheel(0, top - 40);
       await page.waitForTimeout(800);
     },
   },
@@ -54,10 +59,10 @@ const browser = await chromium.launch({ channel: 'chrome' });
 for (const shot of shots) {
   if (process.argv[3] && process.argv[3] !== shot.name) continue;
   const context = await browser.newContext({
-    viewport: { width: 1440, height: 900 },
-    // Two device pixels for each CSS pixel, so the picture is 2880 by 1800 and stays sharp on a
-    // high-density display, where the page shows it up to 1184 CSS pixels wide.
-    deviceScaleFactor: 2,
+    viewport: shot.viewport ?? { width: 1440, height: 900 },
+    // Two device pixels for each CSS pixel (more for a narrower window), so the picture is 2880 by
+    // 1800 and stays sharp on a high-density display, where the page shows it up to 1184 CSS pixels wide.
+    deviceScaleFactor: shot.deviceScaleFactor ?? 2,
     colorScheme: shot.colorScheme ?? 'dark',
   });
   const page = await context.newPage();

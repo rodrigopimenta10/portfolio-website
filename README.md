@@ -84,8 +84,8 @@ interactive pieces are plain TypeScript.
 The status service: `fastapi` (the two routes and the response schema), `httpx` (async outbound
 calls, and a transport the tests replace), `uvicorn` (the server). Dev: `pytest`, `ruff`.
 
-Fonts are self-hosted, latin subset, both under the SIL Open Font License 1.1: Newsreader
-(Production Type) and IBM Plex Mono (IBM). The licence texts are in `src/assets/fonts/` and
+Fonts are self-hosted, latin subset, both under the SIL Open Font License 1.1: Geist
+(Vercel) and IBM Plex Mono (IBM). The licence texts are in `src/assets/fonts/` and
 published at `/licenses/`. Text is never blocked on them (`font-display: swap`).
 
 ## Add a project

@@ -10,40 +10,66 @@ const { path } = Astro.props;
 const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
-<header class="site-header wrap">
-  <a class="site-name" href="/" aria-current={path === '/' ? 'page' : undefined}>{site.name}</a>
-  <nav aria-label="Main">
-    <ul>
-      {
-        nav.map((item) => (
-          <li>
-            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined} title={'title' in item ? item.title : undefined}>
-              {item.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </nav>
-  <ThemeToggle />
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="site-name" href="/" aria-current={path === '/' ? 'page' : undefined}>
+      <span class="mark" aria-hidden="true">RP</span>
+      <span>{site.name}</span>
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined} title={'title' in item ? item.title : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <ThemeToggle />
+  </div>
 </header>
 
 <style>
   .site-header {
+    border-bottom: 1px solid transparent;
+  }
+
+  .bar {
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-areas: 'name toggle' 'nav nav';
     align-items: center;
-    gap: var(--space-2) var(--space-5);
-    padding-block: var(--space-4);
+    gap: var(--space-1) var(--space-5);
+    padding-block: var(--space-3);
   }
 
   .site-name {
     grid-area: name;
-    font-size: var(--text-lg);
-    font-weight: 500;
-    letter-spacing: -0.01em;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     text-decoration: none;
+  }
+
+  /* The same mark as the tab icon: initials on the accent. */
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.6rem;
+    background: var(--grad);
+    color: var(--accent-ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   nav {
@@ -54,31 +80,27 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
     display: flex;
     flex-wrap: wrap;
     /* Four links fit one line at 360 px. */
-    gap: 0 var(--space-3);
-    margin-inline: calc(-1 * var(--space-1));
+    gap: 0 var(--space-4);
   }
 
   nav a {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-    padding: 0 var(--space-1);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    font-size: 0.9375rem;
+    font-weight: 500;
     text-decoration: none;
     color: var(--ink-soft);
-    border-bottom: 1px solid transparent;
+    border-radius: 999px;
+    transition:
+      color 120ms ease,
+      background-color 120ms ease;
   }
 
   /* On a phone the four links share one line, down to 360 px wide. */
   @media (max-width: 45.99rem) {
-    ul {
-      margin-inline: 0;
-    }
-
     nav a {
-      padding: 0;
-      font-size: 0.84rem;
+      font-size: 0.875rem;
     }
   }
 
@@ -88,7 +110,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
 
   nav a[aria-current='page'] {
     color: var(--ink);
-    border-bottom-color: var(--accent);
+    font-weight: 600;
   }
 
   :global(.theme-toggle) {
@@ -96,14 +118,38 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
   }
 
   @media (min-width: 46rem) {
+    /* On wider screens the header stays at the top while the page scrolls under it. */
     .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--header-bg);
+      -webkit-backdrop-filter: saturate(1.4) blur(14px);
+      backdrop-filter: saturate(1.4) blur(14px);
+      border-bottom-color: var(--rule);
+    }
+
+    .bar {
       grid-template-columns: 1fr auto auto;
       grid-template-areas: 'name nav toggle';
-      padding-block: var(--space-5);
+      padding-block: var(--space-3);
     }
 
     ul {
-      gap: var(--space-5);
+      gap: var(--space-1);
+    }
+
+    nav a {
+      min-height: 2.5rem;
+      padding: 0 var(--space-4);
+    }
+
+    nav a:hover {
+      background: var(--paper-sunk);
+    }
+
+    nav a[aria-current='page'] {
+      background: var(--paper-sunk);
     }
   }
 </style>
