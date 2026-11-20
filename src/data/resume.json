@@ -127,7 +127,7 @@
   "skills": [
     {
       "label": "Languages",
-      "items": "Python (uv, ruff, pandas, SQLAlchemy, psycopg2, Fabric), SQL, Bash, PowerShell, TypeScript/JavaScript (React)"
+      "items": "Python (asyncio, pandas, NumPy, SQLAlchemy, psycopg2), SQL, Bash, PowerShell, TypeScript/JavaScript (React)"
     },
     {
       "label": "Automation, CI/CD & Testing",
@@ -139,7 +139,7 @@
     },
     {
       "label": "Systems",
-      "items": "Distributed Systems, REST APIs, Linux/RHEL, Docker, Kubernetes, Ceph, asyncio, gdb/core dumps, 24/7 on-call"
+      "items": "Distributed Systems, REST APIs, Linux/RHEL, Docker, Kubernetes, Ceph, gdb/core dumps, 24/7 on-call"
     },
     {
       "label": "AI Tooling",
