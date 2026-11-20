@@ -21,36 +21,42 @@ const pieces = [
     name: 'The pages',
     what: 'Astro builds every page to a plain HTML file. No page is rendered by a server when you ask for it.',
     done: 'Built',
+    running: 'Live',
     pending: null,
   },
   {
     name: 'Hosting',
     what: 'Firebase Hosting serves the files from a CDN with HTTPS, clean URLs, a year of caching for fingerprinted assets and five minutes for pages. Requests under /api/ are passed to the status service.',
     done: 'Configuration written',
+    running: 'Serving',
     pending: 'not deployed',
   },
   {
     name: 'The status service',
     what: 'One Cloud Run service, portfolio-status, in us-east4. It runs no instances when nobody is asking and at most two. Python 3.12, FastAPI and httpx, in a container that runs as an unprivileged user.',
     done: 'Built and tested',
+    running: 'Running',
     pending: 'not deployed',
   },
   {
     name: 'Infrastructure',
     what: 'Terraform declares the Hosting sites, the container registry, the Cloud Run service and its own service account, the keyless sign-in for GitHub Actions and a budget alert. State is kept in a Cloud Storage bucket.',
     done: 'Written and validated',
+    running: 'Applied',
     pending: 'not applied',
   },
   {
     name: 'Checks',
     what: 'Every pull request is type-checked, unit-tested (site and service), built, smoke-tested in a browser against the status service running on recorded responses, and held to a Lighthouse floor of 95 in all four categories.',
     done: 'Written',
+    running: 'Runs on every pull request',
     pending: 'not yet run on GitHub',
   },
   {
     name: 'Deploys',
     what: 'A merge to main deploys the files and the service from GitHub Actions. It signs in to Google Cloud through Workload Identity Federation, so there is no key to store or leak. Each pull request gets its own preview channel.',
     done: 'Written',
+    running: 'Runs on every merge to main',
     pending: 'inactive until repository variables exist',
   },
 ];
@@ -157,7 +163,7 @@ const failures = [
               <h3>{piece.name}</h3>
               <p>{piece.what}</p>
               <p class="tags">
-                <span class="tag built">{piece.done}</span>
+                <span class="tag built">{live ? piece.running : piece.done}</span>
                 {!live && piece.pending && <span class="tag planned">{piece.pending}</span>}
               </p>
             </li>

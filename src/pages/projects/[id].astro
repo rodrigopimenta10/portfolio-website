@@ -34,7 +34,7 @@ const work = isWork(project) ? project : null;
 const words = work ? resumeWords(work) : null;
 const { Content } = await render(project);
 const Diagram = personal ? diagrams[personal.data.diagram.name] : null;
-const description = personal ? personal.data.summary : (words?.sentences.slice(1, 2).join(' ') ?? '');
+const description = personal ? personal.data.summary : (words?.sentences.slice(0, 1).join(' ') ?? '');
 ---
 
 <Base
