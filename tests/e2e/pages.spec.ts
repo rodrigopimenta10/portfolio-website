@@ -72,6 +72,36 @@ test('the resume PDF is at its old address and is a PDF', async ({ request }) =>
   expect((await response.body()).subarray(0, 5).toString()).toBe('%PDF-');
 });
 
+// A visitor who opens a project, GitHub or the resume keeps the portfolio in the tab they came from.
+for (const path of ['/', '/projects', '/projects/sightline', '/projects/orbital-watch', '/resume', '/how-this-site-runs']) {
+  test(`${path}: every link that leaves the site opens in a new tab, and no other link does`, async ({ page }) => {
+    await page.goto(path);
+    const links = await page.locator('a[href]').evaluateAll((anchors) =>
+      anchors.map((a) => {
+        const href = a.getAttribute('href') ?? '';
+        const leaves = (/^https?:/.test(href) && new URL(href).host !== location.host) || /\.pdf$/.test(href);
+        return { href, leaves, target: a.getAttribute('target'), rel: a.getAttribute('rel') ?? '' };
+      }),
+    );
+
+    expect(links.filter((link) => link.leaves).length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link.target, link.href).toBe(link.leaves ? '_blank' : null);
+      if (link.leaves) expect(link.rel, link.href).toContain('noopener');
+    }
+  });
+}
+
+test('the resume button opens the PDF in a new tab and the site stays where it was', async ({ page, context }) => {
+  await page.goto('/resume');
+  await Promise.all([context.waitForEvent('page'), page.getByRole('link', { name: 'Download the PDF' }).click()]);
+
+  // The headless browser has no PDF viewer, so the new tab reports no address; what matters is
+  // that a second tab opened and the first one did not move.
+  expect(context.pages()).toHaveLength(2);
+  expect(page.url()).toMatch(/\/resume$/);
+});
+
 test('fingerprinted assets are cached for a year', async ({ page, request }) => {
   await page.goto('/');
   const font = await page.locator('link[rel="preload"][as="font"]').first().getAttribute('href');
