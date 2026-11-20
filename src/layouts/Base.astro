@@ -20,9 +20,9 @@ interface Props {
 const { title, description = site.description, path, noindex = false, image } = Astro.props;
 const share = image ?? {
   src: '/og.png',
-  alt: 'Rodrigo Pimenta, backend and platform engineer, with his portrait. Systems that keep themselves running.',
+  alt: 'Rodrigo Pimenta, backend and platform software engineer, with his portrait. Systems that keep themselves running.',
 };
-const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · Backend and platform engineer`;
+const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · Backend and platform software engineer`;
 const canonical = new URL(path, site.url).href;
 const person = {
   '@context': 'https://schema.org',

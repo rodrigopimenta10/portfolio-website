@@ -8,8 +8,8 @@ export const site = {
   // second is Orbital Watch's thesis (a system should report its own degradation) in plain words.
   sentence: "I'm Rodrigo Pimenta. I build systems that keep themselves running and say so when they can't.",
   description:
-    'Backend and platform engineer, six-plus years in Python. I build systems that keep themselves running and say so when they cannot. Open to roles in New York.',
-  seeking: 'Open to backend and platform engineering roles in New York.',
+    'Backend and platform software engineer, six-plus years in Python. I build systems that keep themselves running and say so when they cannot. Open to roles in New York.',
+  seeking: 'Open to senior backend and platform engineering roles in New York.',
   email: resume.contact.email,
   linkedin: resume.contact.linkedin,
   github: resume.contact.github,

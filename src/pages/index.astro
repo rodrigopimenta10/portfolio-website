@@ -14,7 +14,7 @@ const atWork = projects.filter(isWork);
 // The four figures under the first screen. Each is the resume's own number, in the resume's words.
 const figures = [
   { value: '6+', unit: 'years', label: 'of Python in production' },
-  { value: '99.9%', unit: 'SLA', label: 'held on call, 24/7' },
+  { value: '99.9%', unit: 'SLA', label: 'the target I am on call against, 24/7' },
   { value: '24', unit: 'nodes', label: 'of storage in 8 clusters, watched and healed every 3 minutes' },
   { value: '161', unit: 'jobs', label: 'covered by the Kubernetes migration design I authored' },
 ];
@@ -58,15 +58,16 @@ const headline: Record<string, { value: string; label: string }> = {
         <div class="who">
           <p class="id">
             <Image class="portrait" src={portrait} alt="Rodrigo Pimenta" width={56} height={56} densities={[1, 2, 3]} loading="eager" />
-            <span class="eyebrow">Backend and platform engineer · Relocating to New York</span>
+            <span class="eyebrow">Backend and platform software engineer · Relocating to New York</span>
           </p>
           <h1 id="who">
             <span class="hello">I’m Rodrigo Pimenta.</span> I build systems that keep themselves running and <em class="grad">say so when they can’t</em>.
           </h1>
           <p class="pitch">
             Six-plus years in Python: self-healing automation, asyncio services, PostgreSQL and CI/CD,
-            on call 24/7 against a 99.9% availability SLA at Hughes Network Systems. Outside work I
-            build on Google Cloud and AWS with Terraform.
+            on call 24/7 against a 99.9% availability SLA at Hughes Network Systems, where I set the
+            engineering standards and review the code for a department of about 12 engineers.
+            Outside work I build on Google Cloud and AWS with Terraform.
           </p>
           {/* What a recruiter came for, before anything else: on a phone these sit above the panel. */}
           <ul class="doors">

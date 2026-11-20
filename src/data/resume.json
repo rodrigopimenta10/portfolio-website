@@ -9,7 +9,7 @@
     "site": "https://rodrigopimenta.com",
     "location": "New York, NY (relocating)"
   },
-  "summary": "Backend and platform software engineer (6+ years, Python) who builds systems that keep themselves running: self-healing automation, distributed storage, asyncio services, PostgreSQL, CI/CD. Escalation point and code-review gate for a ~12-engineer department; outside work, builds Terraform-managed services on Google Cloud.",
+  "summary": "Backend and platform software engineer (6+ years, Python) who builds systems that keep themselves running: self-healing automation, distributed storage, asyncio services, PostgreSQL, CI/CD. Sets the engineering standards, reviews the code and mentors engineers across a ~12-engineer department; outside work, builds Terraform-managed platforms on Google Cloud and AWS.",
   "experience": [
     {
       "id": "hughes-network-systems",
@@ -53,7 +53,7 @@
       "dates": "Jun 2018 – Dec 2019",
       "bullets": [
         "Automated software validation and hardware testing across 20+ ATM models with PowerShell and Python scripts",
-        "Built a Jenkins CI/CD framework that standardized releases, moved builds from weekly to hourly, cut setup time 15%"
+        "Built a Jenkins CI/CD framework that standardized releases, moved builds from weekly to hourly and cut setup time 15%"
       ]
     }
   ],
@@ -138,8 +138,8 @@
       "items": "Terraform, GitHub Actions, Ansible, Molecule, Jenkins, Bitbucket Pipelines, Git, pytest"
     },
     {
-      "label": "Cloud, Data & Observability",
-      "items": "Google Cloud (Cloud Run, Pub/Sub, BigQuery), Redis, PostgreSQL (Patroni HA), Grafana"
+      "label": "Cloud & Data",
+      "items": "Google Cloud (Cloud Run, Pub/Sub, BigQuery), AWS (VPC, IAM), Redis, PostgreSQL (Patroni HA), Grafana"
     },
     {
       "label": "Systems",
