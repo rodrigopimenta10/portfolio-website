@@ -15,7 +15,8 @@ resource "google_firebase_hosting_site" "portfolio" {
   site_id  = var.hosting_site_id
 }
 
-# Reserved for Orbital Watch, which is on Cloudflare Pages today. Nothing is deployed here yet.
+# Orbital Watch's site. Only the site itself is declared here; what is deployed to it, its custom
+# domain and the job behind it are in the orbital-watch repository's own Terraform (infra/).
 resource "google_firebase_hosting_site" "orbital_watch" {
   provider = google-beta
   project  = google_firebase_project.this.project

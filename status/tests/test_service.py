@@ -59,7 +59,7 @@ def test_an_answer_is_reused_for_sixty_seconds_then_fetched_again():
 
 
 def test_many_requests_at_once_make_one_outbound_call():
-    calls = Calls({ORBITAL_URL: json_answer("recorded/orbital_health.json")})
+    calls = Calls({ORBITAL_URL: json_answer("edited/orbital_latest_all_sources_fresh.json")})
 
     async def script(service, clock):
         answers = await asyncio.gather(*(service.snapshot() for _ in range(25)))
@@ -159,7 +159,7 @@ def test_a_slow_source_is_cut_off_and_does_not_hold_up_the_others():
 
     slow = Sightline()
     slow.check = slow_check  # type: ignore[method-assign]
-    calls = Calls({ORBITAL_URL: json_answer("recorded/orbital_health.json")})
+    calls = Calls({ORBITAL_URL: json_answer("edited/orbital_latest_all_sources_fresh.json")})
 
     async def script(service, clock):
         import portfolio_status.service as module

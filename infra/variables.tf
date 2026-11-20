@@ -57,7 +57,7 @@ variable "hosting_site_id" {
 }
 
 variable "orbital_watch_site_id" {
-  description = "A second Firebase Hosting site, reserved for Orbital Watch. Nothing is deployed to it for now."
+  description = "The Firebase Hosting site that serves Orbital Watch. The orbital-watch repository deploys to it."
   type        = string
   default     = "rodrigopimenta-orbital-watch"
 }

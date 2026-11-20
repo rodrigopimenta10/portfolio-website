@@ -26,8 +26,8 @@ def test_all_up_reports_four_systems_with_a_real_fact_each(client_for):
     systems = by_id(body)
     assert systems["sightline"]["fact"] == "Serving revision clps-web-00368-545 in us-east4"
     assert systems["orbital-watch"]["fact"] == "7 of 7 data sources fresh"
-    assert systems["orbital-watch"]["since"].startswith("2026-11-18T18:02:05")
-    assert systems["orbital-watch"]["since_label"] == "data built"
+    assert systems["orbital-watch"]["since"].startswith("2026-11-18T19:02:05")
+    assert systems["orbital-watch"]["since_label"] == "data published"
     assert systems["aws-platform"]["fact"] == (
         "Last live drill passed: m1 applied to a real AWS account and destroyed (run 25)"
     )
@@ -109,7 +109,7 @@ def test_html_where_json_was_expected_is_could_not_check():
         systems = by_id(client.get("/api/status").json())
 
     assert systems["sightline"]["reason"] == "Sightline's status endpoint did not return JSON."
-    assert systems["orbital-watch"]["reason"] == "Orbital Watch's health file did not return JSON."
+    assert systems["orbital-watch"]["reason"] == "Orbital Watch's published document did not return JSON."
     assert systems["aws-platform"]["reason"] == "GitHub's API did not return JSON."
 
 
@@ -140,13 +140,14 @@ def test_this_site_reports_its_cloud_run_revision_and_region(client_for):
     assert systems["this-site"]["since_label"] == "instance started"
 
 
-def test_orbital_watch_is_degraded_when_its_builds_have_stopped(client_for):
+def test_orbital_watch_is_degraded_when_it_has_stopped_publishing(client_for):
     late = RECORDED_AT + timedelta(hours=9)
     systems = by_id(client_for("all-up", now=late).get("/api/status").json())
 
     assert systems["orbital-watch"]["state"] == "degraded"
     assert (
-        "its last build was 10 hours ago, and it should rebuild every 2" in systems["orbital-watch"]["reason"]
+        "it last published 9 hours ago, and it should publish every 10 minutes"
+        in systems["orbital-watch"]["reason"]
     )
 
 

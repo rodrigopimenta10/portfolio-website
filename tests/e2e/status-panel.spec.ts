@@ -11,7 +11,7 @@ test('all up: each row shows its state, a real fact and when it was checked', as
   await expect(row(page, 'sightline')).toHaveAttribute('data-state', 'up');
   await expect(row(page, 'sightline')).toContainText('Serving revision clps-web-00368-545 in us-east4');
   await expect(row(page, 'orbital-watch')).toContainText('7 of 7 data sources fresh');
-  await expect(row(page, 'orbital-watch')).toContainText(/checked .+ · data built 1 h \d+ min ago/);
+  await expect(row(page, 'orbital-watch')).toContainText(/checked .+ · data published \d+ min ago/);
   await expect(row(page, 'aws-platform')).toContainText('Last live drill passed: m1 applied to a real AWS account and destroyed (run 25)');
   await expect(row(page, 'this-site')).toContainText('Status service running outside Cloud Run');
   // The test service answers from files, and the panel says so rather than passing them off as live.

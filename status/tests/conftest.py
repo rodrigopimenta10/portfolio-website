@@ -18,7 +18,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 RECORDED_AT = datetime(2026, 11, 18, 19, 7, 44, tzinfo=UTC)
 
 SIGHTLINE_URL = "https://lunarsightline.com/api/status"
-ORBITAL_URL = "https://orbital.rodrigopimenta.com/data/health.json"
+ORBITAL_URL = "https://storage.googleapis.com/portfolio-prod-0p1ht-orbital-watch-public/latest.json"
 GITHUB_RUNS_URL = (
     "https://api.github.com/repos/rodrigopimenta10/aws-platform-terraform"
     "/actions/workflows/live-drill.yml/runs?event=workflow_run&per_page=10"

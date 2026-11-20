@@ -7,9 +7,9 @@
       "file": "../../recorded/sightline_status.json"
     },
     {
-      "url": "https://orbital.rodrigopimenta.com/data/health.json",
+      "url": "https://storage.googleapis.com/portfolio-prod-0p1ht-orbital-watch-public/latest.json",
       "status": 200,
-      "file": "../../recorded/orbital_health.json"
+      "file": "../../edited/orbital_latest_all_sources_fresh.json"
     },
     {
       "url": "https://api.github.com/repos/rodrigopimenta10/aws-platform-terraform/actions/workflows/live-drill.yml/runs?event=workflow_run&per_page=10",

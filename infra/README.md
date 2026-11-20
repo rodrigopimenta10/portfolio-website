@@ -22,7 +22,7 @@ from this folder (`infra/`).
 | `google_project_service.this` (11) | Turns on the APIs used here: Artifact Registry, Billing Budgets, Resource Manager, Firebase, Firebase Hosting, IAM, IAM Credentials, Monitoring, Cloud Run, Service Usage, STS | Free |
 | `google_firebase_project.this` | Adds Firebase to the project, which Hosting needs | Free |
 | `google_firebase_hosting_site.portfolio` | The Hosting site for the portfolio (`rodrigopimenta-portfolio`) | Free up to 10 GB stored and 360 MB transferred a day, then $0.026 per GB stored and $0.15 per GB transferred |
-| `google_firebase_hosting_site.orbital_watch` | A second site, reserved for Orbital Watch, unused for now | Free while empty |
+| `google_firebase_hosting_site.orbital_watch` | A second site, serving Orbital Watch; its deploys, domain and job are in that repository's `infra/` | Free at this traffic |
 | `google_artifact_registry_repository.portfolio` | Docker repository for the status service's image, with cleanup rules: keep the latest five, delete anything else after a week | First 0.5 GB free, then about $0.10 per GB a month |
 | `google_service_account.status` | The identity the service runs as. It holds no roles | Free |
 | `google_cloud_run_v2_service.status` | `portfolio-status` in `us-east4`: 1 vCPU, 256 MiB, zero to two instances, CPU billed only during requests | $0 when idle. The free tier (2 million requests, 180,000 vCPU-seconds, 360,000 GiB-seconds a month) is shared by the whole billing account; past it, $0.000024 per vCPU-second |

@@ -1,0 +1,21 @@
+{
+  "kind": "orbital-watch.latest",
+  "schema_version": 2,
+  "generated_at": "2026-11-20T16:40:14.887363+00:00",
+  "meta": {
+    "pipeline": {
+      "cadence_seconds": 600.0,
+      "silence_limit_seconds": 1800.0,
+      "run_seconds": 1.79,
+      "revision": "ce878eac017bd4ca01ad683cc60da6d72dd91b4f"
+    }
+  },
+  "health": {
+    "overall": "failed",
+    "counts": {
+      "fresh": 4,
+      "stale": 2,
+      "failed": 1
+    }
+  }
+}
