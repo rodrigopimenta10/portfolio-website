@@ -27,23 +27,13 @@
       ]
     },
     {
-      "id": "pathrise",
-      "role": "Software Engineering Fellow",
-      "org": "Pathrise",
-      "location": "Remote",
-      "dates": "Jan 2021 – Nov 2021",
-      "bullets": [],
-      "summary": "algorithms, data structures, technical interviewing"
-    },
-    {
-      "id": "united-states-navy-reserve",
-      "role": "Mass Communication Specialist, E-3 (Active Duty)",
-      "org": "United States Navy Reserve",
-      "location": "Great Lakes, IL / Fort Meade, MD",
+      "id": "u-s-navy-reserve",
+      "role": "Mass Communication Specialist, E-3",
+      "org": "U.S. Navy Reserve",
+      "location": "Active duty",
       "dates": "Jan 2020 – Jan 2021",
-      "bullets": [
-        "Completed basic training and the Defense Information School (DINFOS) at Fort Meade, MD; honorably discharged"
-      ]
+      "bullets": [],
+      "summary": "honorably discharged"
     },
     {
       "id": "bank-of-america",
@@ -126,6 +116,12 @@
       "location": "College Park, MD",
       "degree": "Bachelor of Science in Computer Engineering | College Park Scholars",
       "dates": "Aug 2014 – Dec 2018"
+    },
+    {
+      "school": "Pathrise",
+      "location": "Remote",
+      "degree": "Software Engineering Fellowship: algorithms, data structures, technical interviewing",
+      "dates": "Jan 2021 – Nov 2021"
     }
   ],
   "skills": [

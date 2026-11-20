@@ -185,6 +185,17 @@ function parseSystems(body) {
 
 function parseEducation(body) {
   return entries(body).map((entry) => {
+    // A one-row entry: the school, then "what it was (where): details", then the dates.
+    if (entry.macro === 'resumeOneLineHeading') {
+      const [school, detail, dates] = entry.args.map(plain);
+      const place = /\(([^)]+)\)/.exec(detail);
+      return {
+        school,
+        location: place ? place[1][0].toUpperCase() + place[1].slice(1) : '',
+        degree: detail.replace(/\s*\([^)]*\)/, ''),
+        dates,
+      };
+    }
     const [school, location, degree, dates] = entry.args.map(plain);
     return { school, location, degree, dates };
   });
