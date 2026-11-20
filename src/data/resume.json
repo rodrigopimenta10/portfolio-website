@@ -9,7 +9,7 @@
     "site": "https://rodrigopimenta.com",
     "location": "New York, NY (relocating)"
   },
-  "summary": "Backend and platform software engineer (6+ years, Python) who builds systems that keep themselves running: self-healing automation, distributed storage, asyncio services, PostgreSQL, and CI/CD, with 24/7 on-call against a 99.9% SLA. Outside work, builds Terraform-managed services on Google Cloud.",
+  "summary": "Backend and platform software engineer (6+ years, Python) who builds systems that keep themselves running: self-healing automation, distributed storage, asyncio services, PostgreSQL, CI/CD. Escalation point and code-review gate for a ~12-engineer department; outside work, builds Terraform-managed services on Google Cloud.",
   "experience": [
     {
       "id": "hughes-network-systems",
@@ -18,12 +18,12 @@
       "location": "Germantown, MD",
       "dates": "Nov 2021 – Present",
       "bullets": [
-        "Second of 21 contributors over the last year on the satellite gateway automation platform: 491 commits across 67 delivered tickets spanning monitoring, alerting, self-healing, and reporting for five ground-segment platforms",
+        "Escalation point and code-review gate for a ~12-engineer department automating HughesNet's satellite gateways: review ~10 pull requests a week across every repository, own merges to main, and have mentored and onboarded 5 engineers",
+        "Defined the department's engineering standards and built the tooling behind them: introduced continuous integration (Jenkins) with a dev-to-main review flow, PostgreSQL and Grafana; designed the shared logging entry point used by every script and device module; standardized email and Teams alerting, and the master tables every alert and self-heal writes to",
+        "Authored the platform's Kubernetes migration design covering 161 scheduled jobs and made the shared library cluster-ready (stdout log collection, service-DNS database routing, unit-tested), on a Patroni-managed high-availability PostgreSQL pair",
         "Root-caused and eliminated a platform-wide logging defect that silently discarded log records, cutting the log footprint from 19.68 GB to 58 MB and reclaiming ~25 GB in production; swept all 146 scheduled jobs for the same pattern",
         "Root-caused two production failures: a 738 MB core dump traced with gdb to an unguarded deserialization path in a vendor gateway component, and a 177-process leak traced to a library deadlock at interpreter teardown; delivered both as actionable defect reports and shipped the supervision module that closed the leak",
-        "Designed the platform's shared logging entry point, now used by every script and device module; introduced continuous integration to the organization; migrated the action-audit data model with 26,857 rows reconciled exactly",
-        "Authored the platform's Kubernetes migration design covering 161 scheduled jobs and made the shared library cluster-ready (stdout log collection, service-DNS database routing, unit-tested), on a Patroni-managed high-availability PostgreSQL pair",
-        "Lead analyst on infrastructure failure investigations and 24/7 on-call against a 99.9% availability SLA; rollback owner in formal change control, building incident timelines from core-dump metadata and process logs"
+        "Lead analyst on infrastructure failure investigations, on call 24/7 against a 99.9% SLA; rollback owner in change control"
       ]
     },
     {
@@ -52,8 +52,8 @@
       "location": "Charlotte, NC",
       "dates": "Jun 2018 – Dec 2019",
       "bullets": [
-        "Developed PowerShell and Python scripts to automate software validation and hardware testing across 20+ ATM models in the enterprise lab",
-        "Built a reusable CI/CD deployment framework in Jenkins that standardized release processes and moved builds from weekly to hourly, reducing environment setup time by 15%"
+        "Automated software validation and hardware testing across 20+ ATM models with PowerShell and Python scripts",
+        "Built a Jenkins CI/CD framework that standardized releases, moved builds from weekly to hourly, cut setup time 15%"
       ]
     }
   ],
@@ -75,7 +75,7 @@
         "text": "lunarsightline.com"
       },
       "bullets": [
-        "Led the 6-person team behind a lunar landing-site planner (NASA Space Apps 2026); owned architecture decisions and directed AI coding agents that wrote most of the code. Python pipeline on NASA SPICE/LOLA data matches JPL Horizons within 0.0071° over 5,469,984 hourly checks. Four Cloud Run services behind a load balancer, CDN and Cloud Armor, all in Terraform applied from GitHub Actions with no stored keys; canary deploys with automatic rollback; 2,020 tests in CI"
+        "Led the 6-person team behind a lunar landing-site planner (NASA Space Apps 2026): assigned work, reviewed pull requests, owned the architecture and built all the Google Cloud infrastructure, directing AI coding agents that wrote most of the code. Python pipeline on NASA SPICE/LOLA data matches JPL Horizons within 0.0071° over 5,469,984 hourly checks. Four Cloud Run services behind a load balancer, CDN and Cloud Armor, all in Terraform applied from GitHub Actions with no stored keys; canary deploys with automatic rollback; 2,020 tests in CI"
       ]
     },
     {
@@ -90,7 +90,7 @@
         "pytest"
       ],
       "bullets": [
-        "Sole author (77 of 79 commits, 6,586 lines, 61 tests). Monitors 24 storage nodes across 8 clusters on a 3-minute cycle and averages ~130 verified metadata-server failovers per month with no human involvement. Failover gated by a four-verdict standby-capacity assessment so it never moves into a worse node, outcomes verified against the cluster log to distinguish a real failover from a same-node reclaim. 7-table append-only event history, 19-panel Grafana dashboard, pytest in CI"
+        "Replaced a manual on-call recovery that took ~1.5 hours per storage failure, an outage for 40,000–60,000 subscribers about every two weeks on the newest satellite system, with automated failover inside one 3-minute cycle, across 24 storage nodes in 8 clusters. Failover gated by a four-verdict standby-capacity assessment so it never moves into a worse node, outcomes verified against the cluster log to distinguish a real failover from a same-node reclaim. Sole author (6,586 lines, 61 tests)"
       ]
     },
     {
@@ -103,7 +103,7 @@
         "PostgreSQL"
       ],
       "bullets": [
-        "Sole author (30 of 30 commits, 3,594 lines, 76 tests). Detects configuration drift across 18 gateways at 8 sites over SFTP and restarts the affected service, averaging ~295 remediations per month with 89% of episodes closing inside one 10-minute polling cycle. Modernized a blocking-I/O workload onto asyncio with semaphore-bounded fan-out rather than process pools"
+        "Closed an outage path that cut off 20,000–30,000 subscribers about once a month, when a modem failover landed on drifted configuration: detects drift across 18 gateways at 8 sites over SFTP and restarts the affected service, with 89% of episodes closing inside one 10-minute polling cycle. Modernized a blocking-I/O workload onto asyncio with semaphore-bounded fan-out rather than process pools. Sole author (3,594 lines, 76 tests)"
       ]
     },
     {

@@ -9,7 +9,8 @@ resumeId: config-integrity-self-heal
 
 A long-running service reads its configuration when it starts. If the files on a machine later
 stop matching what they should be, nothing fails loudly: the difference sits there until something
-downstream looks wrong. With many machines at several sites, finding that by hand is slow, and
+downstream looks wrong. Here that was a modem failover, which landed on the drifted
+configuration and took its share of subscribers offline. With many machines at several sites, finding that by hand is slow, and
 the fix is the same every time.
 
 ## The ideas behind it
