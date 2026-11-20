@@ -5,12 +5,12 @@
 <svg class="diagram" viewBox="0 0 800 290" role="img" aria-labelledby="ow-diagram-title ow-diagram-desc">
   <title id="ow-diagram-title">How Orbital Watch gets its data</title>
   <desc id="ow-diagram-desc">
-    A scheduled refresher on GitHub Actions is the only thing that calls Celestrak; it commits a
-    snapshot to the repository. A Cloudflare Worker on a schedule triggers a Cloudflare Pages build
-    every two hours and checks that the previous build produced fresh data. The build reads the
-    snapshot, fetches NOAA space weather, computes passes, judges the health of each source and
-    writes JSON. The result is static files. The browser reads those files and never calls an
-    upstream API.
+    Cloud Scheduler starts one Cloud Run job every ten minutes. The job fetches NOAA space weather
+    every run and Celestrak element sets at most once every two hours per group, keeping what it
+    fetched and when it last asked in a private Cloud Storage bucket. It computes passes, judges
+    the health of each source and publishes one document to a public bucket. The page is static
+    files on Firebase Hosting; the browser reads the published document and never calls an
+    upstream API. Cloud Monitoring alerts if a run fails or if none succeeds for thirty minutes.
   </desc>
   <defs>
     <marker id="ow-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -22,38 +22,48 @@
   <text class="label" x="22" y="46">Celestrak</text>
   <text class="sub" x="22" y="63">element sets</text>
 
-  <rect class="box" x="180" y="24" width="180" height="52" rx="4"></rect>
-  <text class="label" x="192" y="46">snapshot refresher</text>
-  <text class="sub" x="192" y="63">GitHub Actions, commits it</text>
-
   <rect class="box" x="10" y="120" width="130" height="52" rx="4"></rect>
   <text class="label" x="22" y="142">NOAA SWPC</text>
   <text class="sub" x="22" y="159">space weather</text>
 
-  <rect class="box" x="180" y="214" width="180" height="52" rx="4"></rect>
-  <text class="label" x="192" y="236">Cloudflare Worker</text>
-  <text class="sub" x="192" y="253">every 2 h · dead-man check</text>
+  <rect class="box" x="10" y="214" width="150" height="52" rx="4"></rect>
+  <text class="label" x="22" y="236">Cloud Scheduler</text>
+  <text class="sub" x="22" y="253">every 10 minutes</text>
 
-  <rect class="box accent" x="410" y="96" width="170" height="100" rx="4"></rect>
-  <text class="label" x="422" y="120">build</text>
-  <text class="sub" x="422" y="138">Cloudflare Pages</text>
-  <text class="sub" x="422" y="156">fetch · compute passes</text>
-  <text class="sub" x="422" y="171">judge each source</text>
-  <text class="sub" x="422" y="186">write JSON</text>
+  <rect class="box accent" x="210" y="86" width="180" height="120" rx="4"></rect>
+  <text class="label" x="222" y="110">job</text>
+  <text class="sub" x="222" y="128">Cloud Run</text>
+  <text class="sub" x="222" y="146">fetch what is due</text>
+  <text class="sub" x="222" y="161">compute passes</text>
+  <text class="sub" x="222" y="176">judge each source</text>
+  <text class="sub" x="222" y="191">publish one document</text>
 
-  <rect class="box" x="630" y="110" width="160" height="72" rx="4"></rect>
-  <text class="label" x="642" y="134">static files</text>
-  <text class="sub" x="642" y="152">HTML, data/health.json</text>
-  <text class="sub" x="642" y="167">and four more JSON files</text>
+  <rect class="box" x="210" y="24" width="180" height="40" rx="4"></rect>
+  <text class="sub" x="222" y="49">state: private bucket</text>
 
-  <rect class="box" x="650" y="222" width="120" height="52" rx="4"></rect>
-  <text class="label" x="662" y="244">browser</text>
-  <text class="sub" x="662" y="261">never calls upstream</text>
+  <rect class="box" x="440" y="110" width="150" height="72" rx="4"></rect>
+  <text class="label" x="452" y="134">latest.json</text>
+  <text class="sub" x="452" y="152">public bucket</text>
+  <text class="sub" x="452" y="167">written in one piece</text>
 
-  <path class="wire" d="M140 50H179" marker-end="url(#ow-arrow)"></path>
-  <path class="wire" d="M360 50H470V95" marker-end="url(#ow-arrow)"></path>
-  <path class="wire" d="M140 146H409" marker-end="url(#ow-arrow)"></path>
-  <path class="wire dashed" d="M360 240H470V197" marker-end="url(#ow-arrow)"></path>
-  <path class="wire" d="M580 146H629" marker-end="url(#ow-arrow)"></path>
-  <path class="wire" d="M710 182V221" marker-end="url(#ow-arrow)"></path>
+  <rect class="box" x="640" y="120" width="150" height="52" rx="4"></rect>
+  <text class="label" x="652" y="142">browser</text>
+  <text class="sub" x="652" y="159">never calls upstream</text>
+
+  <rect class="box" x="640" y="24" width="150" height="52" rx="4"></rect>
+  <text class="label" x="652" y="46">page</text>
+  <text class="sub" x="652" y="63">Firebase Hosting</text>
+
+  <rect class="box" x="440" y="214" width="350" height="52" rx="4"></rect>
+  <text class="label" x="452" y="236">Cloud Monitoring</text>
+  <text class="sub" x="452" y="253">a run failed · none succeeded for 30 minutes</text>
+
+  <path class="wire" d="M140 50H190V120H209" marker-end="url(#ow-arrow)"></path>
+  <path class="wire" d="M140 146H209" marker-end="url(#ow-arrow)"></path>
+  <path class="wire dashed" d="M160 240H300V207" marker-end="url(#ow-arrow)"></path>
+  <path class="wire" d="M300 86V65" marker-start="url(#ow-arrow)" marker-end="url(#ow-arrow)"></path>
+  <path class="wire" d="M390 146H439" marker-end="url(#ow-arrow)"></path>
+  <path class="wire" d="M590 146H639" marker-start="url(#ow-arrow)"></path>
+  <path class="wire" d="M715 76V119" marker-end="url(#ow-arrow)"></path>
+  <path class="wire dashed" d="M345 207V240H439" marker-end="url(#ow-arrow)"></path>
 </svg>

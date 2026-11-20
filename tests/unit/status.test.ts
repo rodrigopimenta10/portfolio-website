@@ -16,7 +16,7 @@ const answer: StatusResponse = {
       checked_at: '2026-11-18T19:14:19Z',
       fact: '7 of 7 data sources fresh',
       since: '2026-11-18T18:02:05Z',
-      since_label: 'data built',
+      since_label: 'data published',
     },
   ],
 };
@@ -96,7 +96,7 @@ describe('ages', () => {
   });
 
   it('writes the line under a fact', () => {
-    expect(metaLine(answer.systems[1]!, answer, 0, 0)).toBe('checked just now · data built 1 h 12 min ago');
+    expect(metaLine(answer.systems[1]!, answer, 0, 0)).toBe('checked just now · data published 1 h 12 min ago');
     expect(metaLine(answer.systems[0]!, answer, 0, 0)).toBe('checked 14 s ago');
   });
 

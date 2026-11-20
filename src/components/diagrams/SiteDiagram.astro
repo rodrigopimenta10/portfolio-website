@@ -9,7 +9,7 @@
     that one question and carries no traffic. The request then reaches Firebase Hosting, a CDN. Pages, styles, scripts, images and the
     resume PDF are static files. Requests under /api are passed to one Cloud Run service,
     portfolio-status, in us-east4, which runs between zero and two instances and asks three public
-    sources: Sightline's status endpoint, Orbital Watch's health file and GitHub's API. GitHub
+    sources: Sightline's status endpoint, Orbital Watch's published document and GitHub's API. GitHub
     Actions deploys both the static files and the service, signing in to Google Cloud without
     stored keys; each pull request gets a preview channel. Terraform declares all of it.
   </desc>
@@ -51,7 +51,7 @@
   <rect class="box" x="616" y="104" width="178" height="34" rx="4"></rect>
   <text class="sub" x="626" y="125">Sightline /api/status</text>
   <rect class="box" x="616" y="147" width="178" height="34" rx="4"></rect>
-  <text class="sub" x="626" y="168">Orbital Watch health.json</text>
+  <text class="sub" x="626" y="168">Orbital Watch latest.json</text>
   <rect class="box" x="616" y="190" width="178" height="34" rx="4"></rect>
   <text class="sub" x="626" y="211">GitHub API, last drill</text>
 

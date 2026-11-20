@@ -119,7 +119,7 @@ resume's words only.
 | Row | Source | Kept for |
 |---|---|---|
 | Sightline | `https://lunarsightline.com/api/status` (`revision`, `region`, Redis state) | 60 s |
-| Orbital Watch | `https://orbital.rodrigopimenta.com/data/health.json`, the file its own page reads | 60 s |
+| Orbital Watch | `latest.json` in its public Cloud Storage bucket, the document its own page reads | 60 s |
 | AWS platform | GitHub's public API: runs of `live-drill.yml` in `aws-platform-terraform` triggered after CI, and the jobs of the latest one that really drilled | 5 min |
 | This site | the service itself: its Cloud Run revision, region and start time | not kept |
 

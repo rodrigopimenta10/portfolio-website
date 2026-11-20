@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import httpx
 import pytest
@@ -28,12 +28,12 @@ from portfolio_status.sources.sightline import Sightline
 JOBS_URL = "https://api.github.com/repos/rodrigopimenta10/aws-platform-terraform/actions/runs/{}/jobs"
 
 
-def run_check(source, answers: dict[str, Callable]) -> tuple[Finding, Calls]:
+def run_check(source, answers: dict[str, Callable], *, now: datetime = RECORDED_AT) -> tuple[Finding, Calls]:
     calls = Calls(answers)
 
     async def go() -> Finding:
         async with httpx.AsyncClient(transport=httpx.MockTransport(calls)) as client:
-            return await source.check(client, RECORDED_AT)
+            return await source.check(client, now)
 
     return asyncio.run(go()), calls
 
@@ -82,21 +82,58 @@ def test_sightline_answering_404_is_a_failed_check_not_a_verdict():
 
 
 def test_orbital_watch_fresh():
-    finding, _ = run_check(OrbitalWatch(), {ORBITAL_URL: json_answer("recorded/orbital_health.json")})
+    finding, _ = run_check(
+        OrbitalWatch(), {ORBITAL_URL: json_answer("edited/orbital_latest_all_sources_fresh.json")}
+    )
 
     assert finding.state == "up"
     assert finding.fact == "7 of 7 data sources fresh"
-    assert finding.since.isoformat() == "2026-11-18T18:02:05.203816+00:00"
+    assert finding.since.isoformat() == "2026-11-18T19:02:05.203816+00:00"
+    assert finding.since_label == "data published"
+
+
+def test_orbital_watch_reads_a_document_as_the_job_really_publishes_it():
+    # Recorded on 20 November 2026, the day it moved to Google Cloud, while Celestrak was refusing
+    # requests: four sources fresh, two stale, one failed.
+    document = fixture_json("recorded/orbital_latest.json")
+    published = datetime.fromisoformat(document["generated_at"])
+    finding, _ = run_check(
+        OrbitalWatch(),
+        {ORBITAL_URL: json_answer("recorded/orbital_latest.json")},
+        now=published + timedelta(minutes=4),
+    )
+
+    assert finding.state == "degraded"
+    assert finding.fact == "4 of 7 data sources fresh"
+    assert finding.reason == (
+        "The page is up and says so itself: 1 of its 7 sources failed; 2 of its 7 sources are stale."
+    )
 
 
 def test_orbital_watch_with_failed_sources_says_how_many():
-    health = fixture_json("recorded/orbital_health.json")
-    health["counts"] = {"fresh": 0, "stale": 0, "failed": 7}
-    finding, _ = run_check(OrbitalWatch(), {ORBITAL_URL: lambda request: httpx.Response(200, json=health)})
+    document = fixture_json("edited/orbital_latest_all_sources_fresh.json")
+    document["health"]["counts"] = {"fresh": 0, "stale": 0, "failed": 7}
+    finding, _ = run_check(OrbitalWatch(), {ORBITAL_URL: lambda request: httpx.Response(200, json=document)})
 
     assert finding.state == "degraded"
     assert finding.fact == "0 of 7 data sources fresh"
     assert finding.reason == "The page is up and says so itself: 7 of its 7 sources failed."
+
+
+def test_orbital_watch_that_has_gone_quiet_is_degraded_whatever_its_counts_say():
+    document = fixture_json("edited/orbital_latest_all_sources_fresh.json")
+    published = datetime.fromisoformat(document["generated_at"])
+    answers = {ORBITAL_URL: lambda request: httpx.Response(200, json=document)}
+
+    on_time, _ = run_check(OrbitalWatch(), answers, now=published + timedelta(minutes=30))
+    late, _ = run_check(OrbitalWatch(), answers, now=published + timedelta(minutes=31))
+
+    assert on_time.state == "up"
+    assert late.state == "degraded"
+    assert late.reason == (
+        "The page is up and says so itself: it last published 31 minutes ago, "
+        "and it should publish every 10 minutes."
+    )
 
 
 def test_orbital_watch_without_counts_is_a_failed_check():
@@ -105,7 +142,7 @@ def test_orbital_watch_without_counts_is_a_failed_check():
             OrbitalWatch(),
             {
                 ORBITAL_URL: lambda request: httpx.Response(
-                    200, json={"generated_at": "2026-11-18T18:02:05+00:00"}
+                    200, json={"generated_at": "2026-11-18T19:02:05+00:00", "health": {}}
                 )
             },
         )
