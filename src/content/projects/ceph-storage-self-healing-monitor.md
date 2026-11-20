@@ -32,8 +32,8 @@ Each of these is one of the resume lines above, said plainly.
 - Automation that acts on its own needs a way to say no, and "no" has to be an outcome it
   reports, not an error.
 - "It ran" and "it worked" are different facts and need different evidence.
-- The count of about 130 failovers a month is worth quoting because each one was verified, not
-  assumed.
+- The number worth quoting is the outage it removed, not how often it acted: about an hour and a
+  half of manual recovery became one three-minute cycle.
 
 The second idea is one I can show. The simulation below uses made-up clusters and none of this
 system's code, names or numbers.

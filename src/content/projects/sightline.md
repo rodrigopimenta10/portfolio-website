@@ -3,7 +3,7 @@ kind: personal
 title: Sightline
 order: 1
 summary: A lunar landing-site planner. It shows when the Sun and Earth are in view from a landing site at the Moon's south pole, every hour from 2026 to 2049, and whether a landing date fits a mission's limits.
-role: I led the six-person team behind it (NASA Space Apps 2026) and owned the architecture decisions. AI coding agents wrote most of the code, under my direction and review.
+role: I led the six-person team behind it (NASA Space Apps 2026). I assigned the work, reviewed the team's pull requests, owned the architecture decisions and built all of the Google Cloud infrastructure. AI coding agents wrote most of the code, under my direction and review.
 stack:
   - Python
   - TypeScript and React
@@ -32,7 +32,7 @@ facts:
   - 0.0071° from JPL Horizons over 5,469,984 checks
   - 2,020 tests in CI; canary deploys that roll back
 sources:
-  - claim: Led the six-person team, owned the architecture decisions, directed AI coding agents that wrote most of the code.
+  - claim: Led the six-person team, assigned work and reviewed pull requests, owned the architecture decisions, built all the Google Cloud infrastructure, directed AI coding agents that wrote most of the code.
     where: Resume, Systems Built; the repository README names the team of six and its captain.
     href: https://github.com/shackleton-station/sightline#readme
   - claim: Matches JPL Horizons within 0.0071° over 5,469,984 hourly checks; 2,020 tests in CI; canary deploys with automatic rollback.

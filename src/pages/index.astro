@@ -21,12 +21,18 @@ const figures = [
 
 // Work that reaches past one system: each line is cut from the resume, and the build checks it.
 const scope = [
-  { kind: 'Design', line: resumeLine("Designed the platform's shared logging entry point, now used by every script and device module") },
-  { kind: 'Process', line: resumeLine('introduced continuous integration to the organization') },
+  {
+    kind: 'People',
+    line: resumeLine('review ~10 pull requests a week across every repository, own merges to main, and have mentored and onboarded 5 engineers'),
+  },
+  {
+    kind: 'Standards',
+    line: resumeLine("Defined the department's engineering standards and built the tooling behind them"),
+  },
   {
     kind: 'Incidents',
     line: resumeLine(
-      'Lead analyst on infrastructure failure investigations and 24/7 on-call against a 99.9% availability SLA; rollback owner in formal change control',
+      'Lead analyst on infrastructure failure investigations, on call 24/7 against a 99.9% SLA; rollback owner in change control',
     ),
   },
   {
@@ -39,8 +45,8 @@ const scope = [
 
 // The headline number of each system at work, from the same resume lines the page quotes below it.
 const headline: Record<string, { value: string; label: string }> = {
-  'ceph-storage-self-healing-monitor': { value: '~130', label: 'verified failovers a month, no human involved' },
-  'config-integrity-self-heal': { value: '~295', label: 'remediations a month, 89% inside one polling cycle' },
+  'ceph-storage-self-healing-monitor': { value: '90 → 3 min', label: 'to recover from a storage failure, with no human involved' },
+  'config-integrity-self-heal': { value: '20–30k', label: 'subscribers no longer cut off about once a month' },
 };
 ---
 
@@ -169,7 +175,7 @@ const headline: Record<string, { value: string; label: string }> = {
                     {project.data.title}
                   </a>
                 </h3>
-                <p class="soft">{words.sentences.slice(1, 3).join(' ')}</p>
+                <p class="soft">{words.sentences[0]}</p>
                 <ul class="chips">
                   {words.stack.map((item) => <li class="tag">{item}</li>)}
                 </ul>
