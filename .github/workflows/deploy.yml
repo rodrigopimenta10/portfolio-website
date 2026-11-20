@@ -4,7 +4,7 @@
 #   pull request    -> a preview channel on Firebase Hosting (pages only), which expires in 7 days
 #
 # It does nothing until the repository variables below exist: every job is skipped while
-# GCP_PROJECT_ID is empty. Set them only after the Terraform in portfolio-infra has been applied;
+# GCP_PROJECT_ID is empty. Set them only after the Terraform in infra/ has been applied;
 # its outputs are the values.
 #
 #   GCP_PROJECT_ID                  e.g. portfolio-prod-0p1ht
@@ -22,7 +22,10 @@ name: deploy
 on:
   push:
     branches: [main]
+    # Terraform is applied by hand; a change to it alone has nothing to deploy.
+    paths-ignore: [infra/**, .github/workflows/infra.yml]
   pull_request:
+    paths-ignore: [infra/**, .github/workflows/infra.yml]
   workflow_dispatch:
 
 permissions:

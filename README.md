@@ -4,7 +4,7 @@ Rodrigo Pimenta's portfolio: a static Astro site, and one small Python service b
 panel on its home page.
 
 **Status (18 November 2026):** live at [rodrigopimenta.com](https://rodrigopimenta.com), served by
-Firebase Hosting in the Google Cloud project that `portfolio-infra` describes. Every merge to `main`
+Firebase Hosting in the Google Cloud project that the Terraform in `infra/` describes. Every merge to `main`
 deploys. The domain is registered and its DNS is held at Cloudflare (DNS only, not proxied); nothing
 else of this site runs there.
 
@@ -152,13 +152,18 @@ the service name is public in Sightline's repository).
   address. It is the previous Pages workflow, renamed and cut down: instead of a copy of the site
   it publishes a page that sends visitors to rodrigopimenta.com, the resume PDF at the same path,
   and the privacy page.
-- The Terraform is in a separate repository, `portfolio-infra`.
+- `.github/workflows/infra.yml` (pull requests that touch `infra/`): `terraform fmt`, `validate`
+  and `test` against mocked providers. Nothing signs in to Google Cloud.
+- The Terraform is in `infra/` (its own README has what it creates, the costs and the bootstrap
+  steps). It is applied by hand, not by a workflow. Changes under `infra/` alone do not run the
+  site checks or a deploy.
 
 ## How it went live
 
 Kept as a record, in the order it was done on 18 November 2026.
 
-1. The Terraform in `portfolio-infra` was applied (its README has the bootstrap steps).
+1. The Terraform now in `infra/` was applied (its README has the bootstrap steps). It lived in a
+   separate repository then.
 2. The repository variables were set from its outputs: `GCP_PROJECT_ID`,
    `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT`, `GCP_PREVIEW_SERVICE_ACCOUNT`,
    `FIREBASE_HOSTING_SITE`.
