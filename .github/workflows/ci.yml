@@ -4,6 +4,8 @@ name: ci
 
 on:
   pull_request:
+    # The Terraform has its own checks (infra.yml); it cannot change the site or the service.
+    paths-ignore: [infra/**, .github/workflows/infra.yml]
   workflow_dispatch:
 
 permissions:
