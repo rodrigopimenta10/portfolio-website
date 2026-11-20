@@ -18,8 +18,8 @@ code: https://github.com/rodrigopimenta10/orbital-watch
 statusId: orbital-watch
 screenshot:
   src: ../../assets/screens/orbital-watch.webp
-  alt: The Orbital Watch dashboard. A header marked FRESH with the build time, an operational assessment reading geomagnetic conditions nominal, five space-weather tiles and a chart of recent planetary Kp values.
-  caption: orbital.rodrigopimenta.com on 19 November 2026 (UTC). Taken with headless Chrome at 1440 by 900, at twice the pixel density.
+  alt: The Orbital Watch dashboard. A header marked FRESH, 7 of 7 sources fresh, with the time the data was published; an operational assessment reading geomagnetic conditions nominal, five space-weather tiles and a chart of recent planetary Kp values.
+  caption: orbital.rodrigopimenta.com on 20 November 2026 at 18:01 UTC, the day it moved to Google Cloud. Taken with headless Chrome at 1440 by 900, at twice the pixel density.
 diagram:
   name: orbital-watch
   caption: One scheduled job fetches what is due, computes, judges its own sources and publishes one document. The browser reads that document and never calls an upstream API, so an upstream outage cannot take the page down.
