@@ -1,0 +1,771 @@
+---
+// A small simulation of the storage monitor: break a node and watch the monitor move its work, or
+// refuse to. The first picture is rendered here, at build time, from the same starting state and
+// the same wording the script uses, so it is on the page without JavaScript. The script is loaded
+// only when the simulation first scrolls into view, and it runs no timer while every node is
+// healthy.
+//
+// The full version sits inside a page section that supplies the width and the <h2>, so its title
+// is an <h3> unless told otherwise. `compact` is the home page's version: one cluster, no toolbar,
+// no missions and one log line, with an <h2> title because it follows the page's <h1>.
+// One of each can share a page. The ids below would repeat with two of the same kind.
+import { CHECK_EVERY_MS, initialState, longestTexts, view } from '../lib/storage-sim/engine';
+
+interface Props {
+  compact?: boolean;
+  /** The level of the title. The headings inside it are one level down. */
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { compact = false, headingLevel } = Astro.props;
+const Title = headingLevel ?? (compact ? 'h2' : 'h3');
+const Sub = Title === 'h2' ? 'h3' : 'h4';
+const id = compact ? 'storage-sim-compact' : 'storage-sim';
+
+const shown = view(initialState());
+const clusters = compact ? shown.clusters.slice(0, 1) : shown.clusters;
+const first = shown.log[0];
+
+// Text that changes while the simulation runs sits in a `.hold` with an unseen copy of the longest
+// thing it can ever say, so a node, the countdown or the compact log line is as tall from the start
+// as it will ever need to be, at any width, and nothing on the page moves when the words change.
+const longest = longestTexts(clusters.map((cluster) => cluster.id));
+---
+
+<section
+  class:list={['sim', { compact }]}
+  data-storage-sim={compact ? 'compact' : 'full'}
+  aria-labelledby={`${id}-title`}
+>
+  <header class="head">
+    <p class="eyebrow">
+      {compact ? 'Try it · a made-up cluster' : 'Simulation · made-up clusters, not a real system'}
+    </p>
+    <Title class="title" id={`${id}-title`}>
+      {compact ? 'Break a node. Watch it heal.' : 'Break a node. Watch the monitor heal it, or refuse to.'}
+    </Title>
+    <p class="intro soft">
+      <strong>Click a node once to slow it, again to fail it, a third time to repair it.</strong>
+      {
+        compact
+          ? 'A solid border is carrying work. A dashed border is the standby.'
+          : `A solid border is a node carrying work, and a dashed border is the standby. The monitor moves work only to a standby that is in better condition. One second here stands for one minute, so it looks every ${CHECK_EVERY_MS / 1000}.`
+      }
+    </p>
+    <noscript><p class="mono soft">The simulation needs JavaScript. This is its starting picture.</p></noscript>
+  </header>
+
+  {
+    !compact && (
+      <div class="toolbar surface">
+        <button class="button quiet monitor" type="button" data-monitor aria-pressed="true" disabled>
+          <span class="dot" aria-hidden="true" />
+          <span data-monitor-label>{shown.monitorLabel}</span>
+        </button>
+        <div class="countdown">
+          <p class="mono soft hold">
+            <span data-countdown-text>{shown.countdownText}</span>
+            <span class="sizer" aria-hidden="true">
+              {longest.countdown}
+            </span>
+          </p>
+          <svg class="countdown-bar" viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true">
+            <rect class="track" width="100" height="4" />
+            <rect class="fill" data-countdown-fill width="0" height="4" />
+          </svg>
+        </div>
+        <p class="counts mono soft">
+          <span>
+            healed by the monitor: <strong class="healed" data-healed>{shown.healed}</strong>
+          </span>
+          <span>
+            refused: <strong class="refused" data-refusals>{shown.refusals}</strong>
+          </span>
+        </p>
+        <button class="button quiet" type="button" data-reset disabled>
+          Reset
+        </button>
+      </div>
+    )
+  }
+
+  <div class="board">
+    <div class="clusters">
+      {
+        clusters.map((cluster) => (
+          <div
+            class:list={['cluster', { surface: !compact }]}
+            role="group"
+            aria-labelledby={`${id}-${cluster.id}`}
+            data-cluster={cluster.id}
+            data-tone={cluster.tone}
+          >
+            <div class="cluster-head">
+              <Sub class="cluster-name" id={`${id}-${cluster.id}`}>
+                {cluster.name}
+                {!compact && <span class="cluster-about mono soft">{cluster.about}</span>}
+              </Sub>
+              <p class="cluster-state mono" data-cluster-state>
+                {cluster.status}
+              </p>
+            </div>
+            <ul class="nodes">
+              {cluster.nodes.map((node) => (
+                <li>
+                  <button
+                    class="node"
+                    type="button"
+                    data-node={node.id}
+                    data-role={node.role}
+                    data-look={node.look}
+                    aria-pressed="false"
+                    aria-label={node.name}
+                    disabled
+                  >
+                    <span class="hold">
+                      <span class="node-top">
+                        <span class="node-id">{node.id}</span>{' '}
+                        <span class="node-label" data-node-label>
+                          {node.label}
+                        </span>
+                      </span>
+                      <span class="node-top sizer" aria-hidden="true">
+                        <span class="node-id">{node.id}</span>{' '}
+                        <span class="node-label">{longest.label}</span>
+                      </span>
+                    </span>
+                    <svg class="node-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
+                      <rect class="track" width="100" height="8" />
+                      <rect class="fill" data-node-fill width={node.bar} height="8" />
+                      <rect class="ghost" data-node-ghost data-fits="true" x={node.bar} width={node.ghost} height="8" />
+                    </svg>
+                    <span class="node-note hold">
+                      <span data-node-note data-tone={node.noteTone}>
+                        {node.note}
+                      </span>
+                      <span class="sizer" aria-hidden="true">
+                        {longest.note}
+                      </span>
+                    </span>
+                    <span class="node-action hold">
+                      <span data-node-action>{node.action}</span>
+                      <span class="sizer" aria-hidden="true">
+                        {longest.action}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+
+    {
+      !compact && (
+        <div class="side">
+          <div class="card surface">
+            <Sub class="eyebrow">Four things to try</Sub>
+            <ol class="missions">
+              {shown.missions.map((mission) => (
+                <li data-mission={mission.id} data-done="false">
+                  <span class="mark" aria-hidden="true">
+                    <svg viewBox="0 0 12 12">
+                      <path d="M2.5 6.4 5 8.9l4.5-5.6" />
+                    </svg>
+                  </span>
+                  <span class="mission-body">
+                    <span class="mission-text">
+                      <span class="visually-hidden" data-mission-done hidden>
+                        Done:{' '}
+                      </span>
+                      {mission.text}
+                    </span>
+                    <span class="mission-why soft">{mission.why}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="card surface">
+            <Sub class="eyebrow">What just happened</Sub>
+            <ol class="log" data-log>
+              {first && <li data-kind={first.kind}>{first.text}</li>}
+            </ol>
+          </div>
+        </div>
+      )
+    }
+  </div>
+
+  {
+    compact && first && (
+      <div class="compact-foot">
+        <div class="countdown">
+          <p class="mono soft hold">
+            <span data-countdown-text>{shown.countdownText}</span>
+            <span class="sizer" aria-hidden="true">
+              {longest.countdown}
+            </span>
+          </p>
+          <svg class="countdown-bar" viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true">
+            <rect class="track" width="100" height="4" />
+            <rect class="fill" data-countdown-fill width="0" height="4" />
+          </svg>
+        </div>
+        <div class="latest hold" data-latest data-kind={first.kind}>
+          <p data-latest-text>{first.text}</p>
+          {longest.lines.map((line) => (
+            <p class="sizer" aria-hidden="true">
+              {line}
+            </p>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  {/* Each new log line is read out from here, once. The lines on screen are not live themselves. */}
+  <p class="visually-hidden" role="status" data-announce></p>
+</section>
+
+<script>
+  // Load the simulation's code the first time it comes into view, and not before.
+  const sims = document.querySelectorAll<HTMLElement>('[data-storage-sim]');
+  if (sims.length > 0 && 'IntersectionObserver' in window) {
+    const starter = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          starter.unobserve(entry.target);
+          void import('../scripts/storage-sim-ui').then((module) => module.mount(entry.target as HTMLElement));
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    for (const sim of sims) starter.observe(sim);
+  }
+</script>
+
+<style>
+  .sim {
+    /* Its own width decides the layout, not the screen's: the compact version sits in a column. */
+    container: sim / inline-size;
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  /* The text on show and an unseen copy of the longest it can be, in one cell as tall as the taller. */
+  .hold {
+    display: grid;
+  }
+
+  .hold > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .sizer {
+    visibility: hidden;
+  }
+
+  .head {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 47.5rem;
+  }
+
+  .title {
+    font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+  }
+
+  .intro {
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
+
+  .intro strong {
+    color: var(--ink);
+  }
+
+  /* ---------- Toolbar ---------- */
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .dot {
+    flex: none;
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .monitor[aria-pressed='false'] {
+    border-color: var(--state-down);
+  }
+
+  .monitor[aria-pressed='false'] .dot {
+    background: var(--state-down);
+  }
+
+  .button:disabled,
+  .button:disabled:hover {
+    cursor: default;
+    transform: none;
+    border-color: var(--rule);
+    color: var(--ink-soft);
+  }
+
+  .countdown {
+    flex: 1 1 16rem;
+    min-width: 0;
+    display: grid;
+    gap: 0.375rem;
+  }
+
+  /* Where the idle line needs two rows, a shorter one stays next to the bar it describes. */
+  .countdown p {
+    align-items: end;
+    font-size: var(--text-xs);
+  }
+
+  .countdown-bar {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  .track {
+    fill: var(--rule-strong);
+  }
+
+  .countdown-bar .fill {
+    fill: var(--accent);
+  }
+
+  .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-5);
+    font-size: var(--text-xs);
+  }
+
+  .counts strong {
+    font-weight: 500;
+  }
+
+  .healed {
+    color: var(--accent);
+  }
+
+  .refused {
+    color: var(--state-degraded);
+  }
+
+  /* ---------- Clusters ---------- */
+
+  .board {
+    display: grid;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .clusters,
+  .side {
+    min-width: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .cluster {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    transition: border-color 150ms ease;
+  }
+
+  .cluster[data-tone='warn'] {
+    border-color: var(--state-degraded);
+  }
+
+  .cluster[data-tone='bad'] {
+    border-color: var(--state-down);
+  }
+
+  .cluster-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+  }
+
+  .cluster-name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    font-size: 1.125rem;
+    letter-spacing: -0.015em;
+  }
+
+  .cluster-about {
+    font-size: var(--text-xs);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  /* On its own line until the longest state fits beside the name, so the nodes never move down
+     when a short state becomes a long one. */
+  .cluster-state {
+    flex: 1 1 100%;
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+
+  .cluster[data-tone='warn'] .cluster-state {
+    color: var(--state-degraded);
+  }
+
+  .cluster[data-tone='bad'] .cluster-state {
+    color: var(--state-down);
+  }
+
+  .nodes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.375rem;
+  }
+
+  /* A node lays itself out by its own width, which is not the simulation's: three share a row. */
+  .nodes li {
+    container: node / inline-size;
+    display: grid;
+  }
+
+  /* A solid border is a node carrying work and a dashed one is the standby, whatever state either
+     is in. The colour says how it is doing, and the label says the same in words. */
+  .node {
+    --tone: var(--accent);
+    --edge: var(--accent);
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 0;
+    padding: 0.375rem;
+    border: 2px solid var(--edge);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunk);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .node[data-role='standby'] {
+    --tone: var(--ink-soft);
+    --edge: var(--rule-strong);
+    border-style: dashed;
+  }
+
+  .node[data-look='slow'],
+  .node[data-look='over'] {
+    --tone: var(--state-degraded);
+    --edge: var(--state-degraded);
+  }
+
+  .node[data-look='down'] {
+    --tone: var(--state-down);
+    --edge: var(--state-down);
+  }
+
+  .node:disabled {
+    cursor: default;
+  }
+
+  .node:not(:disabled):hover {
+    background: color-mix(in srgb, var(--ink) 7%, var(--paper-sunk));
+  }
+
+  .node:focus-visible {
+    border-radius: var(--radius-sm);
+  }
+
+  /* In a narrow node the id and the label run on like a sentence, so a long label wraps after
+     its comma. */
+  .node-top,
+  .node-note {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .node-id {
+    font-size: var(--text-base);
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .node-label {
+    color: var(--tone);
+  }
+
+  .node-bar {
+    flex: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 3px;
+  }
+
+  .node-bar .fill {
+    fill: var(--tone);
+    transition: width 400ms ease;
+  }
+
+  /* What the standby would take on, while the monitor weighs the move. */
+  .ghost {
+    fill: var(--accent);
+    opacity: 0.55;
+  }
+
+  .ghost[data-fits='false'] {
+    fill: var(--state-degraded);
+  }
+
+  .node-note {
+    color: var(--ink-soft);
+  }
+
+  .node-note [data-tone='good'] {
+    color: var(--accent);
+  }
+
+  .node-note [data-tone='warn'] {
+    color: var(--state-degraded);
+  }
+
+  .node-note [data-tone='bad'] {
+    color: var(--state-down);
+  }
+
+  .node-action {
+    margin-top: auto;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ink-soft);
+  }
+
+  .node[data-look='slow'] .node-action,
+  .node[data-look='down'] .node-action {
+    color: var(--ink);
+  }
+
+  /* Until the script is in, a click does nothing, so the node does not promise one. */
+  .node:disabled .node-action {
+    visibility: hidden;
+  }
+
+  @container node (min-width: 7rem) {
+    .node {
+      gap: var(--space-2);
+      padding: var(--space-2);
+    }
+  }
+
+  /* Room for the id and the longest label on one line: the label moves to the right. */
+  @container node (min-width: 13rem) {
+    .node {
+      padding: var(--space-3);
+    }
+
+    .node-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+  }
+
+  /* ---------- Things to try, and the log ---------- */
+
+  .card {
+    display: grid;
+    gap: var(--space-3);
+    padding: 1.125rem;
+  }
+
+  .card .eyebrow {
+    font-size: 0.75rem;
+  }
+
+  .missions {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .missions li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .mark {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.375rem;
+    height: 1.375rem;
+    margin-top: 0.0625rem;
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 50%;
+    color: var(--accent-ink);
+  }
+
+  .mark svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    visibility: hidden;
+  }
+
+  [data-done='true'] .mark {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  [data-done='true'] .mark svg {
+    visibility: visible;
+  }
+
+  .mission-body {
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .mission-text {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  [data-done='true'] .mission-text {
+    color: var(--ink-soft);
+  }
+
+  .mission-why {
+    font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+
+  .log {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  /* The lines are written by the script, so they are styled from here. The newest is on top. */
+  .log :global(li),
+  .latest {
+    padding-left: var(--space-3);
+    border-left: 2px solid var(--rule-strong);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    /* Every digit as wide as the next, so "105%" takes the room "110%" was given. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .log :global(li) {
+    color: var(--ink-soft);
+  }
+
+  .log :global(li:first-child) {
+    color: var(--ink);
+  }
+
+  .log :global([data-kind='heal']),
+  .latest[data-kind='heal'] {
+    border-left-color: var(--accent);
+  }
+
+  .log :global([data-kind='forced']),
+  .log :global([data-kind='refuse']),
+  .latest[data-kind='forced'],
+  .latest[data-kind='refuse'] {
+    border-left-color: var(--state-degraded);
+  }
+
+  .log :global([data-kind='you']),
+  .latest[data-kind='you'] {
+    border-left-color: var(--ink);
+  }
+
+  /* ---------- Compact: one cluster, one log line ---------- */
+
+  .compact {
+    gap: var(--space-3);
+  }
+
+  .compact .head {
+    gap: var(--space-2);
+  }
+
+  .compact .title {
+    font-size: var(--text-lg);
+  }
+
+  .compact .intro {
+    font-size: 0.9375rem;
+  }
+
+  .compact .countdown p {
+    font-size: 0.75rem;
+  }
+
+  .compact .cluster {
+    padding: 0;
+  }
+
+  .compact-foot {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  /* ---------- Wider ---------- */
+
+  @container sim (min-width: 24rem) {
+    .compact .cluster-state {
+      flex: 0 1 auto;
+    }
+  }
+
+  @container sim (min-width: 36rem) {
+    .cluster-state {
+      flex: 0 1 auto;
+    }
+
+    .surface.cluster {
+      padding: 1.125rem;
+    }
+
+    .nodes {
+      gap: 0.625rem;
+    }
+  }
+
+  @container sim (min-width: 58rem) {
+    .board {
+      grid-template-columns: minmax(0, 1fr) clamp(20rem, 32%, 24rem);
+    }
+  }
+</style>

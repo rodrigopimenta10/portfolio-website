@@ -5,6 +5,12 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "redirects": [
+      { "source": "/resume", "destination": "/rodrigo_pimenta_resume.pdf", "type": 302 },
+      { "source": "/experience", "destination": "/rodrigo_pimenta_resume.pdf", "type": 302 },
+      { "source": "/projects/ceph-storage-self-healing-monitor", "destination": "/self-healing/storage", "type": 301 },
+      { "source": "/projects/config-integrity-self-heal", "destination": "/self-healing/config-drift", "type": 301 }
+    ],
     "rewrites": [
       {
         "source": "/api/**",
@@ -32,11 +38,11 @@
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }]
       },
       {
-        "source": "/@(projects|experience|how-this-site-runs|resume|404.html)",
+        "source": "/@(on-call|tools|self-healing|projects|how-this-site-runs|404.html)",
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }]
       },
       {
-        "source": "/projects/**",
+        "source": "/@(projects|self-healing)/**",
         "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }]
       },
       {

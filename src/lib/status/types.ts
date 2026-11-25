@@ -28,7 +28,11 @@ export interface StatusResponse {
   systems: SystemStatus[];
 }
 
-/** The rows the panel shows before any answer arrives, in the order the service returns them. */
+/**
+ * The rows the panel shows before any answer arrives, in the order the service returns them. The
+ * service also reports on this site itself. The panel leaves that out: a visitor who can read the
+ * panel already knows the site is up.
+ */
 export const SYSTEMS = [
   { id: 'sightline', name: 'Sightline', url: 'https://lunarsightline.com' },
   { id: 'orbital-watch', name: 'Orbital Watch', url: 'https://orbital.rodrigopimenta.com' },
@@ -37,7 +41,4 @@ export const SYSTEMS = [
     name: 'AWS platform',
     url: 'https://github.com/rodrigopimenta10/aws-platform-terraform/actions/workflows/live-drill.yml',
   },
-  { id: 'this-site', name: 'This site', url: '/how-this-site-runs' },
 ] as const;
-
-export type SystemId = (typeof SYSTEMS)[number]['id'];

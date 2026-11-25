@@ -9,7 +9,7 @@ import Base from '../layouts/Base.astro';
       <p class="eyebrow">404 · state: down</p>
       <h1>There is no page at this address</h1>
       <p class="lede">
-        Nothing is broken; the link is wrong or the page has moved. The old one-page site was
+        Nothing is broken. The link is wrong or the page has moved. The old one-page site was
         replaced, so a link into one of its sections now lands here.
       </p>
     </header>
@@ -18,7 +18,7 @@ import Base from '../layouts/Base.astro';
       {
         nav.map((item) => (
           <li>
-            <a href={item.href}>{'title' in item ? item.title : item.label}</a>
+            <a href={item.href}>{item.label}</a>
           </li>
         ))
       }

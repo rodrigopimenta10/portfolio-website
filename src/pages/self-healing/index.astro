@@ -1,0 +1,220 @@
+---
+// The Self-healing tab: automation that came out of on-call issues. Two of them can be played with
+// here, each under the short version of its story, and two more are told without a simulation.
+import DriftSim from '../../components/DriftSim.astro';
+import Onward from '../../components/Onward.astro';
+import StorageSim from '../../components/StorageSim.astro';
+import Base from '../../layouts/Base.astro';
+---
+
+<Base
+  title="Self-healing: issues that fix themselves before an outage"
+  path="/self-healing"
+  description="Automation I built at Hughes that runs on a schedule, decides whether it is safe to act, makes the repair and records it. Two are simulated here with made-up systems."
+>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">Automation I built at Hughes · two you can play with</p>
+      <h1>Issues that now fix themselves before they become outages. Break a node and watch.</h1>
+      <p class="lede">
+        These run on a schedule, decide whether it is safe to act, make the repair and record it. Two are simulated
+        here with made-up systems.
+      </p>
+      <nav class="on-this-page" aria-label="On this page">
+        <span class="eyebrow">On this page</span>
+        <a href="#storage">Storage monitor, with a simulation</a>
+        <a href="#drift">Config drift, with a simulation</a>
+        <a href="#more">Two more</a>
+      </nav>
+    </header>
+
+    <section class="section" id="storage" aria-labelledby="storage-title">
+      <div class="section-head">
+        <p class="eyebrow">01 · Storage self-healing monitor</p>
+        <h2 id="storage-title">A 90-minute manual recovery, now zero touch</h2>
+      </div>
+      <article class="case surface">
+        <h3>A storage failure, about every two weeks</h3>
+        <dl class="facts">
+          <div class="bad">
+            <dt>The outage</dt>
+            <dd>
+              About 40,000 to 60,000 users offline on the newest satellite system, depending on which SNC rack was
+              affected.
+            </dd>
+          </div>
+          <div class="warn">
+            <dt>By hand</dt>
+            <dd>About an hour and a half of manual recovery each time.</dd>
+          </div>
+          <div>
+            <dt>What I built</dt>
+            <dd>A monitor that moves the work to a standby when the standby has room, and refuses when it does not.</dd>
+          </div>
+          <div class="good">
+            <dt>Now</dt>
+            <dd>
+              <strong>Caught on a 3-minute check and fixed before customers lose service, with no human involved.</strong>
+            </dd>
+          </div>
+        </dl>
+        <a class="go" href="/self-healing/storage">How it decides, in detail <span aria-hidden="true">&nbsp;→</span></a>
+      </article>
+      <div class="play">
+        <StorageSim />
+      </div>
+    </section>
+
+    <section class="section" id="drift" aria-labelledby="drift-title">
+      <div class="section-head">
+        <p class="eyebrow">02 · Config drift self-heal</p>
+        <h2 id="drift-title">Two racks that must agree, checked every ten minutes</h2>
+      </div>
+      <article class="case surface">
+        <h3>A modem failover while two racks disagreed, about once a month</h3>
+        <dl class="facts">
+          <div class="bad">
+            <dt>The outage</dt>
+            <dd>
+              The SNC rack had new configuration and the RF gateway rack, which holds the modems, still had the old
+              one. A modem failed over onto that mismatch and about 20,000 to 30,000 residential HughesNet customers
+              lost their internet service.
+            </dd>
+          </div>
+          <div class="warn">
+            <dt>By hand</dt>
+            <dd>Two hours to find and fix by hand each time.</dd>
+          </div>
+          <div>
+            <dt>What I built</dt>
+            <dd>
+              A checker that compares the two racks’ configuration every ten minutes and restarts the affected service
+              when they disagree.
+            </dd>
+          </div>
+          <div class="good">
+            <dt>Now</dt>
+            <dd><strong>89% of episodes close inside one cycle.</strong></dd>
+          </div>
+        </dl>
+        <a class="go" href="/self-healing/config-drift">How it works, in detail <span aria-hidden="true">&nbsp;→</span></a>
+      </article>
+      <div class="play">
+        <DriftSim />
+      </div>
+    </section>
+
+    <section class="section" id="more" aria-labelledby="more-title">
+      <div class="section-head">
+        <p class="eyebrow">Two more, without a simulation</p>
+        <h2 id="more-title">The same habit, twice more</h2>
+      </div>
+      <article class="case surface">
+        <h3>Heavy weather forces a failover to the spare RF gateway</h3>
+        <dl class="facts">
+          <div class="bad">
+            <dt>The outage</dt>
+            <dd>
+              An RF gateway is the large antenna that talks to the satellite. In heavy weather its traffic fails over
+              to a diverse (spare) gateway, whose modems must be rebooted to carry it. If they are not, 20,000 to
+              30,000 customers lose service.
+            </dd>
+          </div>
+          <div class="warn">
+            <dt>By hand</dt>
+            <dd>
+              Around an hour for engineers to work out what had happened, get to the affected modems and reboot them
+              one by one, by logging in and running ‘reboot’ or pressing the button on each modem’s web page.
+            </dd>
+          </div>
+          <div>
+            <dt>What I built</dt>
+            <dd>
+              A check that runs every minute. One API tells it a gateway failover has happened. A second reboots the
+              modems on the spare gateway’s rack. Every action is written to PostgreSQL.
+            </dd>
+          </div>
+          <div class="good">
+            <dt>Now</dt>
+            <dd><strong>A failover is noticed within a minute and the modems are rebooted automatically.</strong></dd>
+          </div>
+        </dl>
+        <p class="made-with mono soft">asyncio · httpx · SQLAlchemy + psycopg2 · PostgreSQL · loguru</p>
+      </article>
+      <article class="case surface">
+        <h3>Logs filling the storage, then log messages going missing</h3>
+        <dl class="facts">
+          <div class="bad">
+            <dt>The problem</dt>
+            <dd>Storage use was high because of the sheer volume of logs.</dd>
+          </div>
+          <div class="warn">
+            <dt>What I found</dt>
+            <dd>
+              Every automation wrote its logs into its own script folder instead of one shared place. The first fix,
+              rotation and retention configured inside loguru, brought a second problem: log messages were seen going
+              missing.
+            </dd>
+          </div>
+          <div>
+            <dt>What I did</dt>
+            <dd>
+              Made loguru the standard, with every automation logging to
+              <code>/var/log/Automations/&lt;name&gt;.log</code>. I took rotation and retention out of the loguru setup
+              and gave both to a logrotate rule with <code>copytruncate</code>, which loguru cannot do itself and which
+              rotates a file without losing messages.
+            </dd>
+          </div>
+          <div class="good">
+            <dt>Now</dt>
+            <dd><strong>Log footprint down from 19.68 GB to 58 MB.</strong></dd>
+          </div>
+        </dl>
+      </article>
+      <p class="stack mono soft" id="stack">
+        How each automation is built: Python run with uv. asyncio with asyncssh to read from devices and run healing
+        commands over SSH, httpx for APIs, SQLAlchemy and psycopg2 for PostgreSQL, loguru for logs.
+      </p>
+    </section>
+
+    <Onward
+      links={[
+        { label: 'Where it started', text: 'One 2 AM incident, step by step', href: '/on-call' },
+        { label: 'Before this', text: 'The scripts an engineer ran by hand', href: '/tools' },
+        { label: 'Outside work', text: 'Three side projects you can open and check', href: '/projects' },
+      ]}
+    />
+  </div>
+</Base>
+
+<style>
+  /* The heading here is two sentences, not a title: it gets a longer line than the shared 20ch. */
+  .page-head h1 {
+    max-width: 32ch;
+  }
+
+  /* Inside the page head an eyebrow takes the accent, which is for the page's own label, not this one. */
+  .on-this-page .eyebrow {
+    color: var(--ink-soft);
+  }
+
+  /* The simulation is its own piece under the story, so it stands further off than a card does. */
+  .play {
+    margin-top: var(--space-7);
+  }
+
+  .case + .case,
+  .stack {
+    margin-top: var(--space-5);
+  }
+
+  /* What a card's automation is made of, as its last line. */
+  .made-with {
+    padding: var(--space-3) 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .stack {
+    max-width: 51rem;
+  }
+</style>

@@ -5,7 +5,7 @@
 // Needs the built site served (npm run preview) with the status service behind it. Uses the
 // Google Chrome installed on this machine. Writes JPEGs: every page at 1440x900 and 390x844,
 // light and dark, full length; the home page's first screen; the status panel in each of its
-// states; and the failover simulation after a failover and after a refusal.
+// states; and the storage simulation after a heal and after a refusal.
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -23,15 +23,16 @@ const failingApi = option('failing-api', null);
 
 const pages = [
   ['home', '/'],
+  ['on-call', '/on-call'],
+  ['tools', '/tools'],
+  ['self-healing', '/self-healing'],
+  ['self-healing-storage', '/self-healing/storage'],
+  ['self-healing-config-drift', '/self-healing/config-drift'],
   ['projects', '/projects'],
   ['project-sightline', '/projects/sightline'],
   ['project-aws-platform-terraform', '/projects/aws-platform-terraform'],
   ['project-orbital-watch', '/projects/orbital-watch'],
-  ['project-ceph-storage-self-healing-monitor', '/projects/ceph-storage-self-healing-monitor'],
-  ['project-config-integrity-self-heal', '/projects/config-integrity-self-heal'],
-  ['experience', '/experience'],
   ['how-this-site-runs', '/how-this-site-runs'],
-  ['resume', '/resume'],
   ['404', '/no-such-page'],
 ];
 const viewports = [
@@ -107,13 +108,13 @@ if (!only || only === 'states') {
   for (const [size, viewport] of viewports) {
     for (const theme of themes) {
       for (const [state, prepare, wait] of states) {
-        const { context, page } = await open(viewport, theme, '/', prepare);
+        const { context, page } = await open(viewport, theme, '/projects', prepare);
         await page.waitForTimeout(wait);
         await page.locator('[data-status-panel]').scrollIntoViewIfNeeded();
         await shot(page, `status-${state}-${size}-${theme}`, false);
         await context.close();
       }
-      const { context, page } = await open(viewport, theme, '/');
+      const { context, page } = await open(viewport, theme, '/projects');
       await settle(page);
       await page.locator('[data-status-panel]').scrollIntoViewIfNeeded();
       await shot(page, `status-all-up-${size}-${theme}`, false);
@@ -125,16 +126,17 @@ if (!only || only === 'states') {
 if (!only || only === 'sim') {
   for (const [size, viewport] of viewports) {
     for (const theme of themes) {
-      const { context, page } = await open(viewport, theme, '/projects/ceph-storage-self-healing-monitor');
-      const sim = page.locator('[data-failover]');
+      const { context, page } = await open(viewport, theme, '/self-healing');
+      const sim = page.locator('#storage [data-storage-sim="full"]');
       await sim.scrollIntoViewIfNeeded();
-      await page.locator('[data-node="a1"]:not([disabled])').click();
-      await page.locator('[data-log]').getByText('verified, a3 is serving').waitFor({ timeout: 15000 });
-      await sim.scrollIntoViewIfNeeded();
-      await shot(page, `simulation-failover-${size}-${theme}`, false);
-      await page.locator('[data-node="c1"]').click();
-      await page.locator('[data-log]').getByText('Refusing to fail over').waitFor({ timeout: 15000 });
-      await page.locator('[data-log]').scrollIntoViewIfNeeded();
+      // One click slows a1. Cluster A's standby has room, so the monitor moves the work.
+      await sim.locator('[data-node="a1"]:not([disabled])').click();
+      await sim.locator('[data-log] li').first().getByText('had room').waitFor({ timeout: 15000 });
+      await shot(page, `simulation-heal-${size}-${theme}`, false);
+      // One click slows b1. Cluster B's standby is busy, so the monitor refuses.
+      await sim.locator('[data-node="b1"]').click();
+      await sim.locator('[data-log] li').first().getByText('called a person').waitFor({ timeout: 15000 });
+      await sim.locator('[data-log]').scrollIntoViewIfNeeded();
       await shot(page, `simulation-refusal-${size}-${theme}`, false);
       await context.close();
     }

@@ -64,7 +64,7 @@ class AwsDrill:
         passed = latest.get("conclusion") == "success"
         return Finding(
             state="up" if passed else "degraded",
-            fact=f"Latest run after CI {'passed' if passed else 'did not pass'}; no stack needed a drill "
+            fact=f"Latest run after CI {'passed' if passed else 'did not pass'}, and no stack needed a drill "
             f"(run {latest.get('run_number')})",
             reason=None if passed else f"The run ended as {latest.get('conclusion')!r}.",
             since=parse_time(latest.get("updated_at"), "the run's end time"),
@@ -78,7 +78,7 @@ class AwsDrill:
         failed = [stack for stack, conclusion in drilled if conclusion != "success"]
         number = run.get("run_number")
         since = parse_time(run.get("updated_at"), "the run's end time")
-        suffix = "; another is running now" if running else ""
+        suffix = ", and another is running now" if running else ""
         if not failed and run.get("conclusion") == "success":
             quiet = now - since > QUIET_AFTER and not running
             lead = (
@@ -94,7 +94,7 @@ class AwsDrill:
         what = f"{join_words(failed)} failed" if failed else f"the run ended as {run.get('conclusion')!r}"
         passed = [stack for stack in stacks if stack not in failed]
         if failed and passed:
-            what += f"; {join_words(passed)} passed"
+            what += f", and {join_words(passed)} passed"
         return Finding(
             state="degraded",
             fact=f"Last live drill failed (run {number}){suffix}",
@@ -133,7 +133,7 @@ class AwsDrill:
             if reset.isdigit():
                 resets_at = datetime.fromtimestamp(int(reset), tz=UTC)
                 retry_after = max(0.0, (resets_at - now).total_seconds())
-                when = f"; it resets at {resets_at:%H:%M} UTC"
+                when = f", and it resets at {resets_at:%H:%M} UTC"
             raise CheckFailed(
                 f"GitHub's hourly limit on anonymous API calls is used up{when}", retry_after=retry_after
             )

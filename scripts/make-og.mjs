@@ -1,6 +1,6 @@
 // Draws the pictures other sites and devices show for this one:
 //   public/og.png, og-*.png      the 1200x630 cards shown when a link is shared (LinkedIn, Slack, iMessage):
-//                                the site's, the resume's and one for each project with a screenshot
+//                                the site's and one for each project with a screenshot
 //   public/apple-touch-icon.png  the icon a phone shows on its home screen
 //   public/favicon-48.png, public/icon-192.png   the tab icon as PNG, for browsers and search results
 //                                that do not take the SVG
@@ -70,7 +70,6 @@ const projectCard = async (title, line, screen) => `<!doctype html><meta charset
 
 const cards = [
   ['og.png', await card('Rodrigo Pimenta', 'Systems that keep themselves running.')],
-  ['og-resume.png', await card('Resume', 'Read it online or download the PDF', 'Rodrigo Pimenta')],
   ['og-sightline.png', await projectCard('Sightline', 'A lunar landing-site planner on Google Cloud', 'src/assets/screens/sightline.webp')],
   ['og-aws-platform-terraform.png', await projectCard('aws-platform-terraform', 'An AWS platform in Terraform, drilled in a real account', 'src/assets/screens/aws-platform-terraform.webp')],
   ['og-orbital-watch.png', await projectCard('Orbital Watch', 'Satellite passes and space weather that reports its own freshness', 'src/assets/screens/orbital-watch.webp')],

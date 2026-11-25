@@ -1,0 +1,77 @@
+---
+// One line for the home page that leads to the status panel on the Side projects page. It says how
+// many systems are up only once /api/status has said so. Before that, with JavaScript off, or
+// when the service does not answer, it is the plain link.
+//
+// The longest thing the line can say is in the HTML from the start, unseen, and sets the line's
+// size. The words that arrive later fit inside it, so nothing on the page moves.
+import { LINE_LINK, LINE_WIDEST } from '../lib/status/line';
+---
+
+<a class="status-line" href="/projects#status" data-status-line data-state="unread">
+  <span class="words">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="widest" aria-hidden="true">{LINE_WIDEST}</span>
+    <span data-status-line-text role="status">{LINE_LINK}</span>
+  </span>
+</a>
+
+<script>
+  import '../scripts/status-line';
+</script>
+
+<style>
+  .status-line {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    justify-self: start;
+    min-height: 2.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .status-line:hover [data-status-line-text] {
+    text-decoration: underline;
+  }
+
+  /* Both texts share one cell. The unseen one is the longest, so it decides the size. */
+  .words {
+    position: relative;
+    display: grid;
+    padding-left: 1.125rem;
+    line-height: 1.6;
+  }
+
+  .words > :not(.dot) {
+    grid-area: 1 / 1;
+  }
+
+  .widest {
+    visibility: hidden;
+  }
+
+  /* Beside the first line of the words, however many lines they take. Hollow until something
+     was read: a filled green dot would be a claim. */
+  .dot {
+    position: absolute;
+    left: 0;
+    top: calc(0.8em - 0.25rem);
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1.5px solid var(--state-unknown);
+    border-radius: 50%;
+  }
+
+  [data-state='all-up'] .dot {
+    border-color: var(--state-up);
+    background: var(--state-up);
+  }
+
+  [data-state='some-up'] .dot {
+    border-color: var(--state-degraded);
+    background: var(--state-degraded);
+  }
+</style>

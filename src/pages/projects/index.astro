@@ -1,56 +1,85 @@
 ---
+// The Side projects tab: the live status panel first, then the three projects as full rows, each
+// with its picture, what it is, the one thing to remember about it, and every way in.
 import { Image } from 'astro:assets';
+import Onward from '../../components/Onward.astro';
+import StatusPanel from '../../components/StatusPanel.astro';
+import { site } from '../../data/site';
 import Base from '../../layouts/Base.astro';
-import { allProjects, isPersonal, isWork, resumeWords } from '../../lib/projects';
+import { allProjects } from '../../lib/projects';
 
 const projects = await allProjects();
-const personal = projects.filter(isPersonal);
-const work = projects.filter(isWork);
 ---
 
-<Base title="Projects" path="/projects" description="Sightline, aws-platform-terraform and Orbital Watch, with code and live sites to check, and two production systems at Hughes Network Systems.">
+<Base
+  title="Side projects"
+  path="/projects"
+  description="Three side projects you can open and check: Sightline, Orbital Watch and aws-platform-terraform. Each one is live or public, and a panel checks them as you read."
+>
   <div class="wrap">
     <header class="page-head">
-      <p class="eyebrow">Projects</p>
-      <h1>Three you can open and check. Two that run in production.</h1>
-      <p class="lede">
-        The first three have public code and, where there is one, a live site. The last two run in
-        production at Hughes Network Systems; that code is my employer’s.
-      </p>
+      <p class="eyebrow">Outside work</p>
+      <h1>Three you can open and check</h1>
+      <p class="lede">Each one is live or public. The panel below checks them as you read this.</p>
     </header>
 
-    <ol class="list">
+    <StatusPanel />
+
+    <ol class="projects">
       {
-        personal.map((project, index) => (
+        projects.map(({ id, data }, index) => (
           <li>
-            <article class="item surface">
-              <div class="thumb">
+            <article class="project surface">
+              <a class="shot" href={data.live ?? data.code}>
                 <Image
-                  src={project.data.screenshot.src}
-                  alt=""
+                  src={data.screenshot.src}
+                  alt={data.card.alt}
                   widths={[360, 480, 720, 1080, 1440]}
-                  sizes="(min-width: 52rem) 22rem, calc(100vw - 2.25rem)"
+                  sizes="(min-width: 52rem) 36rem, calc(100vw - 2.25rem)"
                   loading={index === 0 ? 'eager' : 'lazy'}
                 />
-              </div>
+              </a>
               <div class="text">
-                <p class="eyebrow">{String(index + 1).padStart(2, '0')}</p>
-                <h2>
-                  <a class="stretch" href={`/projects/${project.id}`}>
-                    {project.data.title}
-                  </a>
-                </h2>
-                <p class="soft">{project.data.summary}</p>
-                <ul class="chips">
-                  {project.data.stack.map((item) => <li class="tag">{item}</li>)}
-                </ul>
-                <p class="doors">
-                  <span class="go" aria-hidden="true">
-                    Read more <span>→</span>
-                  </span>
-                  {project.data.live && <a href={project.data.live}>Live site</a>}
-                  <a href={project.data.code}>Code</a>
+                <header class="top">
+                  <span class="number mono">{String(index + 1).padStart(2, '0')}</span>
+                  <h2>{data.title}</h2>
+                  {data.live ? <span class="kind live mono">live</span> : <span class="kind mono">public code</span>}
+                </header>
+                <p class="soft">{data.card.summary}</p>
+                <p class="proof">
+                  <strong>{data.card.claim}</strong> {data.card.detail}
                 </p>
+                <ul class="chips">
+                  {data.card.tags.map((tag) => <li class="tag">{tag}</li>)}
+                </ul>
+                {/* Each link also names its project for a screen reader, which hears the links out of context. */}
+                <ul class="doors">
+                  <li>
+                    <a class="go" href={`/projects/${id}`}>
+                      Case study<span class="visually-hidden">: {data.title}</span>
+                      <span aria-hidden="true">&nbsp;→</span>
+                    </a>
+                  </li>
+                  {data.live && (
+                    <li>
+                      <a href={data.live}>
+                        Live site<span class="visually-hidden">: {data.title}</span>
+                      </a>
+                    </li>
+                  )}
+                  <li>
+                    <a href={data.code}>
+                      Code<span class="visually-hidden">: {data.title}</span>
+                    </a>
+                  </li>
+                  {data.video && (
+                    <li>
+                      <a href={data.video}>
+                        Demo video<span class="visually-hidden">: {data.title}</span>
+                      </a>
+                    </li>
+                  )}
+                </ul>
               </div>
             </article>
           </li>
@@ -58,181 +87,134 @@ const work = projects.filter(isWork);
       }
     </ol>
 
-    <section class="section work" aria-labelledby="work-title">
-      <div class="section-head">
-        <p class="eyebrow">At Hughes Network Systems</p>
-        <h2 id="work-title">In production, not public</h2>
-      </div>
-      <ol class="work-list">
-        {
-          work.map((project, index) => {
-            const words = resumeWords(project);
-            return (
-              <li>
-                <article class="surface">
-                  <p class="eyebrow">{String(personal.length + index + 1).padStart(2, '0')}</p>
-                  <h3>
-                    <a class="stretch" href={`/projects/${project.id}`}>
-                      {project.data.title}
-                    </a>
-                  </h3>
-                  <p class="soft">{words.sentences.slice(0, 2).join(' ')}</p>
-                  <ul class="chips">
-                    {words.stack.map((item) => <li class="tag">{item}</li>)}
-                  </ul>
-                  <p class="go" aria-hidden="true">
-                    Read how it works <span>→</span>
-                  </p>
-                </article>
-              </li>
-            );
-          })
-        }
-      </ol>
-    </section>
+    <Onward
+      links={[
+        { label: 'At work', text: 'Issues that now fix themselves', href: '/self-healing' },
+        { label: 'This site', text: 'How this site runs', href: '/how-this-site-runs' },
+        { label: 'Resume', text: 'The resume (PDF)', href: site.resumePdf },
+      ]}
+    />
   </div>
 </Base>
 
 <style>
-  .list {
-    display: grid;
-    gap: var(--space-5);
-    padding-bottom: var(--space-8);
+  /* The heading is one short line on a wide screen, so it gets more than the shared 20ch. */
+  .page-head h1 {
+    max-width: 30ch;
   }
 
-  /* A card is never wider than its column, whatever is inside it. */
-  .list > li,
-  .work-list > li {
+  .projects {
+    display: grid;
+    gap: var(--space-5);
+    margin-block: var(--space-6) var(--space-8);
+  }
+
+  /* A row is never wider than its column, whatever is inside it. */
+  .projects > li {
     min-width: 0;
   }
 
-  .item,
-  .work-list article {
+  /* Picture beside the words where both fit, above them where they do not. */
+  .project {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+  }
+
+  .shot {
     position: relative;
-    display: grid;
-    overflow: hidden;
-    transition:
-      transform 180ms ease,
-      box-shadow 180ms ease,
-      border-color 180ms ease;
-  }
-
-  .item:hover,
-  .work-list article:hover {
-    transform: translateY(-3px);
-    border-color: var(--rule-strong);
-    box-shadow: var(--shadow-lift);
-  }
-
-  .thumb {
-    overflow: hidden;
-    aspect-ratio: 16 / 10;
+    flex: 1 1 21.25rem;
+    min-width: 0;
+    min-height: 13.75rem;
     background: var(--paper-sunk);
-    border-bottom: 1px solid var(--rule);
   }
 
-  .thumb :global(img) {
+  /* The picture fills whatever height the words beside it need, kept to its top left corner. */
+  .shot :global(img) {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: top left;
-    transition: transform 400ms ease;
-  }
-
-  .item:hover .thumb :global(img) {
-    transform: scale(1.025);
+    object-position: left top;
   }
 
   .text {
-    display: grid;
+    flex: 1 1 23.75rem;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-3);
-    align-content: center;
     padding: var(--space-5);
   }
 
-  h2 a,
-  h3 a {
-    text-decoration: none;
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-3);
   }
 
-  /* The whole card is the link: the title's link is stretched over it. */
-  .stretch::after {
+  .top h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .number,
+  .kind {
+    font-size: var(--text-xs);
+    color: var(--ink-soft);
+  }
+
+  .kind.live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent);
+  }
+
+  .kind.live::before {
     content: '';
-    position: absolute;
-    inset: 0;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: currentColor;
   }
 
+  .proof {
+    padding: var(--space-3) 0.875rem;
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunk);
+    font-size: 0.9375rem;
+  }
 
   .doors {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-1) var(--space-5);
-    font-size: 0.9375rem;
-    font-weight: 600;
+    gap: 0 var(--space-5);
+    margin-top: auto;
   }
 
-  .go {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--accent);
-  }
-
-  .go span {
-    display: inline-block;
-    transition: transform 160ms ease;
-  }
-
-  .item:hover .go span,
-  .work-list article:hover .go span {
-    transform: translateX(4px);
-  }
-
-  /* The other links sit above the stretched one, so they still go where they say. */
   .doors a {
-    position: relative;
-    z-index: 1;
     display: inline-flex;
     align-items: center;
+    min-width: 2.75rem;
     min-height: 2.75rem;
+  }
+
+  .doors a:not(.go) {
     color: var(--ink-soft);
     text-decoration-color: var(--rule-strong);
   }
 
-  .doors a:hover {
+  .doors a:not(.go):hover {
     color: var(--ink);
     text-decoration-color: var(--accent);
   }
 
-  .work-list {
-    display: grid;
-    gap: var(--space-5);
-  }
-
-  .work-list article {
-    gap: var(--space-3);
-    align-content: start;
-    padding: var(--space-6);
-  }
-
   @media (min-width: 52rem) {
-    .item {
-      grid-template-columns: 24rem minmax(0, 1fr);
-    }
-
-    .thumb {
-      aspect-ratio: auto;
-      min-height: 100%;
-      border-bottom: 0;
-      border-right: 1px solid var(--rule);
-    }
-
     .text {
       padding: var(--space-6);
-    }
-
-    .work-list {
-      grid-template-columns: 1fr 1fr;
     }
   }
 </style>

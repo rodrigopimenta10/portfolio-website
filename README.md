@@ -1,7 +1,12 @@
 # rodrigopimenta.com
 
 Rodrigo Pimenta's portfolio: a static Astro site, and one small Python service behind the status
-panel on its home page.
+panel on its Side projects page.
+
+The four tabs read as one story, in order: **On call** (one incident, minute by minute),
+**Tools** (the scripts and dashboard written to answer those calls faster), **Self-healing** (the
+automation that made the calls stop, with two simulations to play with) and **Side projects**
+(what is built outside work, with a live status panel).
 
 **Status (18 November 2026):** live at [rodrigopimenta.com](https://rodrigopimenta.com), served by
 Firebase Hosting in the Google Cloud project that the Terraform in `infra/` describes. Every merge to `main`
@@ -12,19 +17,21 @@ else of this site runs there.
 
 ```
 src/
-  pages/              Home, Projects, one page per project, Experience, How this site runs, Resume, 404
-  content/projects/   one Markdown file per project (add a file to add a project)
+  pages/              Home, On call, Tools, Self-healing (and its two detail pages), Side projects,
+                      one page per side project, How this site runs, 404
+  content/projects/   one Markdown file per side project (add a file to add a project)
   data/resume.json    the resume as data, imported from its LaTeX source
-  components/         StatusPanel, FailoverSim, the diagrams (inline SVG)
-  lib/                logic with no DOM: status client and wording, the failover engine
-  scripts/            the two small browser scripts (status panel, failover UI)
-  styles/global.css   design tokens and base styles, hand-written
+  components/         StatusPanel, StatusLine, StorageSim, DriftSim, Onward, the diagrams
+  lib/                logic with no DOM: status client and wording, the two simulation engines,
+                      the Tools page's walkthroughs and dashboard
+  scripts/            the small browser scripts (status panel and line, the simulations, Tools)
+  styles/global.css   design tokens, base styles and the patterns the story pages share, hand-written
 status/               the status service: Python 3.12, FastAPI, httpx (its own README section below)
 legacy/               the page for the old GitHub Pages address
 scripts/              local server, screenshots, resume import, output check
-tests/unit/           Vitest: engine, status wording, resume import, firebase.json
-tests/e2e/            Playwright: every page, the panel in each state, the simulation
-firebase.json         hosting rules
+tests/unit/           Vitest: both simulation engines, Tools logic, status wording, resume import, firebase.json
+tests/e2e/            Playwright: every page, the panel in each state, both simulations
+firebase.json         hosting rules, and redirects for the addresses of pages that are gone
 .github/workflows/    ci.yml, deploy.yml, pages-legacy.yml
 docs/screens/         screenshots of every page, taken before this branch was handed over
 ```
@@ -56,7 +63,8 @@ npm run check                          # astro check, TypeScript strictest
 npm test                               # unit tests
 (cd status && uv run ruff check . && uv run ruff format --check . && uv run pytest)
 npm run build && node scripts/check-output.mjs
-PW_CHANNEL=chrome npm run test:e2e     # browser smoke tests, using the installed Google Chrome
+npx playwright install firefox webkit  # once
+PW_CHANNEL=chrome npm run test:e2e     # browser tests: Chrome at two sizes, Firefox, Safari's engine
 ```
 
 The browser tests start the status service on recorded responses
@@ -69,9 +77,9 @@ service running) and run `npm run lighthouse`.
 ## Dependencies, and why each is here
 
 Runtime (what ships to visitors): **none**. The pages are HTML and CSS. The home page loads
-about 3.5 kB of compressed JavaScript (the status panel, the theme toggle and a loader), and
-about 3.3 kB more for the simulation when it scrolls into view. No UI framework: the two
-interactive pieces are plain TypeScript.
+about 2 kB of compressed JavaScript (the theme toggle, the status line and a loader), and about
+4 kB more for the simulation when it scrolls into view. No page loads more than about 8 kB. No UI
+framework: the interactive pieces are plain TypeScript.
 
 | Package | Why |
 |---|---|
@@ -91,10 +99,9 @@ published at `/licenses/`. Text is never blocked on them (`font-display: swap`).
 ## Add a project
 
 Add `src/content/projects/<name>.md`. The frontmatter schema is in `src/content.config.ts` and a
-build fails on a missing field. A project that is public (`kind: personal`) needs a summary, his
-part, the stack, a result, a screenshot, a diagram and a list of where each claim was checked. A
-system built at work (`kind: work`) has no text of its own: it names an entry in the resume and
-the site shows the resume's words.
+build fails on a missing field. The body needs one `<!-- architecture -->` line where the
+architecture figure goes. This collection holds side projects only: the work at Hughes is written
+by hand in `src/pages/on-call.astro`, `tools.astro` and `self-healing/`.
 
 Screenshots of live sites: `node scripts/capture-project-screens.mjs out/`, then
 `cwebp -q 86 -m 6 out/<name>.png -o src/assets/screens/<name>.webp`.
@@ -105,12 +112,19 @@ The resume's source is LaTeX in a separate repository. Two things come from it:
 
 - `public/rodrigo_pimenta_resume.pdf`: copy the built PDF over it. Never rename it; the path is
   in messages already sent.
-- `src/data/resume.json`: `npm run resume:import -- ../resume/rodrigo_pimenta_resume.tex`. The
-  Resume and Experience pages, and the two work systems, are rendered from this file, so the site
-  cannot disagree with the resume. The importer stops on LaTeX it does not recognise.
+- `src/data/resume.json`: `npm run resume:import -- ../resume/rodrigo_pimenta_resume.tex`. Contact
+  details come from this file, and the home page checks its numbers against it at build time
+  (`resumeLine`), so the site cannot disagree with the resume. The importer stops on LaTeX it
+  does not recognise.
 
-Nothing internal to his employer may appear on the site. The work systems are described in the
-resume's words only.
+There is no resume page: `/resume` and `/experience` redirect to the PDF.
+
+## What may be said about work
+
+The code written at Hughes is the employer's and none of it is here. The work pages describe what
+it does in his own words, and both simulations run on made-up clusters, racks and numbers. Names
+of satellites, sites and beams are made up (AURORA-2, northgate, beam 42), and so are the script
+names. No cost of any cloud service is shown anywhere on the site.
 
 ## The status service (`status/`)
 

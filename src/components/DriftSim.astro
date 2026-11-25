@@ -1,0 +1,534 @@
+---
+// A small simulation of configuration drift between two racks. The first picture is rendered here,
+// at build time, from the same starting state the script uses, so it is on the page without
+// JavaScript. The script is loaded only when the simulation first scrolls into view, and it runs
+// no timer until the visitor pushes an update.
+//
+// It sits inside a page section that supplies the width and the <h2>, so its own title is an <h3>.
+import { FILES, initialState, view } from '../lib/drift-sim/engine';
+
+const start = initialState();
+const shown = view(start);
+---
+
+<section
+  class="drift"
+  data-drift-sim
+  data-status={shown.status}
+  data-comparing="false"
+  data-fixed="false"
+  aria-labelledby="drift-sim-title"
+>
+  <header class="head">
+    <p class="eyebrow">Simulation · a made-up gateway, not a real system</p>
+    <h3 id="drift-sim-title">Two racks that must agree. Push an update and see if they still do.</h3>
+    <p class="intro soft">
+      An update reaches the SNC rack first. Until the RF gateway rack gets the same files, the two disagree, and
+      nothing looks wrong until a modem failover lands on the mismatch.
+    </p>
+  </header>
+
+  <div class="controls">
+    <button class="button push" type="button" data-push data-out="push-label" disabled>{shown.pushLabel}</button>
+    <button class="button quiet checker" type="button" data-checker aria-pressed="true" disabled>
+      <span class="dot" aria-hidden="true"></span>
+      <span data-out="checker-label">{shown.checkerLabel}</span>
+    </button>
+    <p class="mono soft checker-note" data-out="checker-note">{shown.checkerNote}</p>
+    <button class="button quiet" type="button" data-reset disabled>Reset</button>
+  </div>
+  <noscript><p class="mono soft">The simulation needs JavaScript. This is its starting picture.</p></noscript>
+
+  <div class="racks">
+    <section class="rack snc" aria-labelledby="drift-snc-title">
+      <header>
+        <h4 id="drift-snc-title">SNC rack</h4>
+        <p class="mono rack-note">gets updates first</p>
+      </header>
+      <p class="version" data-out="snc-version">{shown.sncVersion}</p>
+      <ul class="files mono">
+        {
+          FILES.map((name) => (
+            <li>
+              <span class="soft">{name}</span>
+              <span data-out="snc-version">{shown.sncVersion}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <div class="verdict">
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9h16M4 15h16"></path>
+        <path class="not" d="M16 3 8 21"></path>
+      </svg>
+      <p class="verdict-text" data-out="verdict-text">{shown.verdict.text}</p>
+      <p class="mono soft verdict-note" data-out="verdict-note">{shown.verdict.note}</p>
+    </div>
+
+    <section class="rack rf" aria-labelledby="drift-rf-title">
+      <header>
+        <h4 id="drift-rf-title">RF gateway rack</h4>
+        <p class="mono rack-note" data-out="rf-tag">{shown.rfTag}</p>
+      </header>
+      <p class="version" data-out="rf-version">{shown.rfVersion}</p>
+      <ul class="files mono">
+        {
+          FILES.map((name) => (
+            <li>
+              <span class="soft">{name}</span>
+              <span class="file-version" data-out="rf-version">{shown.rfVersion}</span>
+            </li>
+          ))
+        }
+      </ul>
+      {/* Always shown, and disabled while the racks agree, so the racks keep their height. */}
+      <button class="button quiet by-hand" type="button" data-by-hand disabled>
+        Push the files here by hand
+      </button>
+    </section>
+  </div>
+
+  <div class="impact">
+    <div class="impact-top">
+      <p class="impact-text" data-out="impact">{shown.impact}</p>
+      <p class="mono soft counts">
+        caught in time: <strong class="good" data-out="caught">{start.caught}</strong> · outages:
+        <strong class="bad" data-out="outages">{start.outages}</strong>
+      </p>
+    </div>
+    <svg class="fuse" viewBox="0 0 100 2" preserveAspectRatio="none" aria-hidden="true">
+      <rect class="track" width="100" height="2"></rect>
+      <rect class="fill" data-fuse-fill width={shown.fusePercent} height="2"></rect>
+    </svg>
+    <p class="message soft" role="status" data-out="message">{start.message}</p>
+  </div>
+
+  <section class="missions" aria-label="Things to try">
+    <ul>
+      {
+        shown.missions.map((mission) => (
+          <li data-mission data-done="false">
+            <span class="check" aria-hidden="true">
+              <svg viewBox="0 0 16 16">
+                <path d="m3.5 8.5 3 3 6-7" />
+              </svg>
+            </span>
+            <p>
+              <span class="visually-hidden" data-mission-state>Not done yet:</span>
+              <span class="what">{mission.text}</span>
+              <span class="why soft">{mission.why}</span>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</section>
+
+<script>
+  // Load the simulation's code the first time it comes into view, and not before.
+  const sims = document.querySelectorAll<HTMLElement>('[data-drift-sim]');
+  if (sims.length > 0 && 'IntersectionObserver' in window) {
+    const starter = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          starter.unobserve(entry.target);
+          void import('../scripts/drift-sim-ui').then((module) => module.mount(entry.target as HTMLElement));
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    for (const sim of sims) starter.observe(sim);
+  }
+</script>
+
+<style>
+  .drift {
+    display: grid;
+    gap: var(--space-5);
+    /* What the RF gateway rack is in: nothing, a mismatch nobody has hit yet, or an outage. */
+    --tone: var(--accent);
+  }
+
+  .drift[data-status='behind'] {
+    --tone: var(--state-degraded);
+  }
+
+  .drift[data-status='offline'] {
+    --tone: var(--state-down);
+  }
+
+  .head {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 47.5rem;
+  }
+
+  h3 {
+    font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+  }
+
+  .intro {
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
+
+  /* ---------- Controls ---------- */
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+  }
+
+  /* Wide enough for its longest label, so the buttons beside it stay where they are. */
+  .push {
+    flex: 1 1 17.5rem;
+  }
+
+  .checker {
+    flex: 1 1 10.5rem;
+  }
+
+  /* Under the buttons on a narrow screen, between them on a wide one. */
+  .checker-note {
+    order: 1;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .dot {
+    flex: none;
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .checker[aria-pressed='false'] {
+    border-color: var(--state-down);
+  }
+
+  .checker[aria-pressed='false'] .dot {
+    background: var(--state-down);
+  }
+
+  .button:disabled,
+  .button:disabled:hover {
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .push:disabled,
+  .push:disabled:hover {
+    background: var(--paper-sunk);
+    color: var(--ink-soft);
+    border-color: var(--rule);
+  }
+
+  .quiet:disabled,
+  .quiet:disabled:hover {
+    border-color: var(--rule);
+    color: var(--ink-soft);
+  }
+
+  /* ---------- The two racks and the verdict between them ---------- */
+
+  .racks {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .rack {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: 1.25rem;
+    border: 2px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+    transition: border-color 150ms ease;
+    container-type: inline-size;
+  }
+
+  /* The name over its note. Side by side once the rack is wide enough for the longest note, so the
+     header never changes height as the note changes. */
+  .rack header {
+    display: flex;
+    flex-direction: column;
+    gap: 0 var(--space-3);
+  }
+
+  @container (min-width: 24rem) {
+    .rack header {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+  }
+
+  h4 {
+    font-size: var(--text-lg);
+    letter-spacing: -0.015em;
+  }
+
+  .rack-note {
+    font-size: var(--text-xs);
+    color: var(--ink-soft);
+  }
+
+  .version {
+    font-family: var(--font-mono);
+    font-size: 2.75rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .files {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .files li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunk);
+  }
+
+  .drift[data-comparing='true'] .snc,
+  .drift[data-fixed='true'] .rf {
+    border-color: var(--accent);
+  }
+
+  .drift[data-fixed='true'] .rf .rack-note {
+    color: var(--accent);
+  }
+
+  .drift:not([data-status='agree']) .rf {
+    border-color: var(--tone);
+  }
+
+  .drift:not([data-status='agree']) .rf :is(.rack-note, .version, .file-version) {
+    color: var(--tone);
+  }
+
+  .drift[data-status='behind'] .rf {
+    border-style: dashed;
+  }
+
+  .by-hand {
+    margin-top: auto;
+    min-height: 2.75rem;
+    font-size: var(--text-sm);
+  }
+
+  .verdict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1) var(--space-3);
+    text-align: center;
+  }
+
+  .mark {
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    fill: none;
+    stroke: var(--tone);
+    stroke-width: 2.25;
+    stroke-linecap: round;
+  }
+
+  .drift[data-status='agree'] .mark .not {
+    display: none;
+  }
+
+  .verdict-text {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--tone);
+  }
+
+  .verdict-note {
+    font-size: 0.75rem;
+  }
+
+  /* ---------- What subscribers see, and the last thing that happened ---------- */
+
+  .impact {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4) 1.125rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+  }
+
+  .drift[data-status='offline'] .impact {
+    border-color: var(--state-down);
+  }
+
+  .impact-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-5);
+  }
+
+  .impact-text {
+    font-weight: 600;
+    color: var(--tone);
+    text-wrap: balance;
+  }
+
+  .counts {
+    font-size: var(--text-xs);
+  }
+
+  .counts strong {
+    font-weight: 500;
+  }
+
+  .counts .good {
+    color: var(--accent);
+  }
+
+  .counts .bad {
+    color: var(--state-down);
+  }
+
+  /* The time left before a failover lands on the mismatch. It keeps its place when nothing is burning. */
+  .fuse {
+    width: 100%;
+    height: 0.5rem;
+    border-radius: 0.25rem;
+  }
+
+  .fuse .track {
+    fill: transparent;
+  }
+
+  .drift[data-status='behind'] .fuse .track {
+    fill: var(--rule-strong);
+  }
+
+  .fuse .fill {
+    fill: var(--state-degraded);
+    transition: width 500ms linear;
+  }
+
+  .message {
+    font-size: 0.9375rem;
+    /* Room for two lines, so the things to try below move as little as possible when the text changes. */
+    min-height: 3.2em;
+  }
+
+  /* ---------- Things to try ---------- */
+
+  .missions ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: var(--space-3);
+  }
+
+  .missions li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: 0.875rem var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+  }
+
+  .check {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.375rem;
+    height: 1.375rem;
+    margin-top: 0.0625rem;
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 50%;
+  }
+
+  .check svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    fill: none;
+    stroke: var(--accent-ink);
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    visibility: hidden;
+  }
+
+  .missions [data-done='true'] .check {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .missions [data-done='true'] .check svg {
+    visibility: visible;
+  }
+
+  .missions p {
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .what {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  .missions [data-done='true'] .what {
+    color: var(--ink-soft);
+  }
+
+  .why {
+    font-size: var(--text-xs);
+    line-height: 1.45;
+  }
+
+  @media (min-width: 52rem) {
+    .push,
+    .checker {
+      flex-grow: 0;
+    }
+
+    .checker-note {
+      order: 0;
+      flex: 1 1 10rem;
+    }
+
+    .racks {
+      grid-template-columns: minmax(0, 1fr) 9.5rem minmax(0, 1fr);
+    }
+
+    .verdict {
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+  }
+
+  /* From here every message fits on one line. */
+  @media (min-width: 72rem) {
+    .message {
+      min-height: 0;
+    }
+  }
+</style>

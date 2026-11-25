@@ -1,76 +1,340 @@
 ---
-// How this site is served. Matches firebase.json, .github/workflows/ and the Terraform in infra/.
+// How this site is served, as a board of boxes and arrows. Matches firebase.json,
+// .github/workflows/ and the Terraform in infra/.
+//
+// The words are here, the positions are in the stylesheet below (one rule per box, in board
+// units), and the arrows are a drawing laid over the boxes. A complete figure: it brings its own
+// frame, scrolls sideways inside it when the screen is narrower than the board, and takes more
+// caption text in its slot.
+import { site } from '../../data/site';
+
+interface Box {
+  id: string;
+  name: string;
+  what?: string;
+  /** Code in this repository, as opposed to a managed or outside service. */
+  ours?: boolean;
+}
+
+interface Area {
+  id: string;
+  name: string;
+  boxes: Box[];
+  note?: string;
+}
+
+const areas: Area[] = [
+  {
+    id: 'edge',
+    name: 'Edge',
+    boxes: [
+      {
+        id: 'browser',
+        name: 'Visitor’s browser',
+        what: 'Loads plain HTML first, then asks /api/status once the page has painted.',
+      },
+      { id: 'dns', name: 'Cloudflare DNS', what: 'Answers where rodrigopimenta.com is. Carries no traffic.' },
+      {
+        id: 'hosting',
+        name: 'Firebase Hosting · CDN',
+        what: 'Serves the static files over HTTPS and passes /api/** to the status service.',
+      },
+      {
+        id: 'files',
+        name: 'Static files · Astro',
+        what: 'Every page is built to plain HTML. Styles, scripts, images and the resume PDF are cached at the edge.',
+        ours: true,
+      },
+    ],
+  },
+  {
+    id: 'request',
+    name: 'Request path · Cloud Run, us-east4',
+    boxes: [
+      {
+        id: 'status',
+        name: 'portfolio-status',
+        what: 'FastAPI on Cloud Run. Zero to two instances, so it is allowed to sleep. Asks three public sources at once and keeps each answer for a minute.',
+        ours: true,
+      },
+      { id: 'sightline', name: 'Sightline', what: '/api/status names the live revision.' },
+      { id: 'orbital-watch', name: 'Orbital Watch', what: 'latest.json says how fresh its data is.' },
+      { id: 'github-api', name: 'GitHub API', what: 'The AWS platform’s last live drill.' },
+      {
+        id: 'failed-check',
+        name: 'When a check fails',
+        what: 'It never becomes an error page and never becomes “up”. The row says “could not check”, with the reason and the last known answer.',
+        ours: true,
+      },
+    ],
+  },
+  {
+    id: 'deploy',
+    name: 'Build and deploy',
+    boxes: [
+      {
+        id: 'github',
+        name: 'GitHub',
+        what: 'rodrigopimenta10/portfolio-website. Every change is a pull request.',
+      },
+      {
+        id: 'actions',
+        name: 'GitHub Actions',
+        what: 'Checks every pull request. On merge, deploys the files and the service, signing in to Google Cloud with no stored key.',
+      },
+      { id: 'registry', name: 'Artifact Registry', what: 'One image for the status service.' },
+      {
+        id: 'previews',
+        name: 'Preview channels',
+        what: 'Each pull request gets its own address before it merges.',
+      },
+    ],
+  },
+  {
+    id: 'key',
+    name: 'Key',
+    boxes: [
+      { id: 'key-ours', name: 'Code', ours: true },
+      { id: 'key-managed', name: 'Managed or outside service' },
+    ],
+    note: 'A dashed arrow is a deploy. A dotted arrow is a name lookup.',
+  },
+  {
+    id: 'checks',
+    name: 'Checks',
+    boxes: [
+      {
+        id: 'pull-request-checks',
+        name: 'Checks on every pull request',
+        what: 'Type-checked, unit-tested, smoke-tested in a browser and held to a Lighthouse floor of 95 in all four categories.',
+        ours: true,
+      },
+    ],
+  },
+  {
+    id: 'infrastructure',
+    name: 'Infrastructure',
+    boxes: [
+      {
+        id: 'terraform',
+        name: 'Terraform',
+        what: 'Declares the hosting, the registry, the service and the keyless sign-in. State is kept in a Cloud Storage bucket.',
+        ours: true,
+      },
+    ],
+  },
+];
+
+// Drawn in the same units as the boxes, from the edge of one to the edge of another. Moving a box
+// means moving the ends of its arrows here too.
+const arrows = [
+  { kind: 'lookup', d: 'M144 124 V139' }, // browser to DNS
+  { kind: 'request', d: 'M14 84 H5 V284 H13' }, // browser to Hosting, around DNS
+  { kind: 'request', d: 'M144 332 V347' }, // Hosting to the static files
+  { kind: 'request', d: 'M274 270 C296 270 296 124 317 124' }, // Hosting to portfolio-status
+  { kind: 'request', d: 'M508 84 H521' }, // portfolio-status to Sightline
+  { kind: 'request', d: 'M508 124 C515 124 515 174 521 174' }, // portfolio-status to Orbital Watch
+  { kind: 'request', d: 'M508 164 C515 164 515 264 521 264' }, // portfolio-status to the GitHub API
+  { kind: 'request', d: 'M876 124 V139' }, // GitHub to GitHub Actions
+  { kind: 'request', d: 'M876 256 V271' }, // GitHub Actions to Artifact Registry
+  { kind: 'deploy', d: 'M742 304 H723 V318 H413 V201' }, // Artifact Registry to portfolio-status
+  { kind: 'deploy', d: 'M742 198 H717 V474 H296 V300 H275' }, // GitHub Actions to Hosting
+];
 ---
 
-<svg class="diagram" viewBox="0 0 800 340" role="img" aria-labelledby="site-diagram-title site-diagram-desc">
-  <title id="site-diagram-title">How this site is served</title>
-  <desc id="site-diagram-desc">
-    The visitor's browser first asks Cloudflare DNS where rodrigopimenta.com is; Cloudflare answers
-    that one question and carries no traffic. The request then reaches Firebase Hosting, a CDN. Pages, styles, scripts, images and the
-    resume PDF are static files. Requests under /api are passed to one Cloud Run service,
-    portfolio-status, in us-east4, which runs between zero and two instances and asks three public
-    sources: Sightline's status endpoint, Orbital Watch's published document and GitHub's API. GitHub
-    Actions deploys both the static files and the service, signing in to Google Cloud without
-    stored keys; each pull request gets a preview channel. Terraform declares all of it.
-  </desc>
-  <defs>
-    <marker id="site-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path class="arrowhead" d="M0 0 8 4 0 8z"></path>
-    </marker>
-  </defs>
+<figure class="site-diagram" aria-label="How this site is served">
+  {/* The arrows cannot be heard, so this says what they say. The boxes below are read as they are. */}
+  <p class="visually-hidden">
+    The visitor’s browser asks Cloudflare DNS where rodrigopimenta.com is, then sends its requests to Firebase Hosting, a
+    CDN. Firebase Hosting serves the static files that Astro built and passes /api requests to portfolio-status, one
+    service on Cloud Run in us-east4, which asks three public sources: Sightline, Orbital Watch and the GitHub API. On
+    the deploy side, every change goes from GitHub to GitHub Actions. GitHub Actions deploys the files to Firebase
+    Hosting and puts the service’s image in Artifact Registry, and from there the image is deployed to portfolio-status.
+    Terraform declares the hosting, the registry, the service and the keyless sign-in.
+  </p>
+  <p class="eyebrow scroll-hint">Scroll sideways for all of it <span aria-hidden="true">→</span></p>
+  <div class="frame diagram-scroll" tabindex="0" role="group" aria-label="The diagram. It scrolls sideways on a small screen.">
+    <div class="board">
+      {
+        areas.map((area) => (
+          <div role="group" aria-labelledby={`site-diagram-${area.id}`}>
+            <p class="area" id={`site-diagram-${area.id}`} data-area={area.id}>
+              {area.name}
+            </p>
+            <ul>
+              {area.boxes.map((box) => (
+                <li class:list={['box', { ours: box.ours, 'name-only': !box.what }]} data-box={box.id}>
+                  <strong>{box.name}</strong>
+                  {box.what && <span>{box.what}</span>}
+                </li>
+              ))}
+            </ul>
+            {area.note && <p class="note">{area.note}</p>}
+          </div>
+        ))
+      }
+      <svg class="arrows" viewBox="0 0 1024 662" aria-hidden="true">
+        <defs>
+          <marker id="site-diagram-tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path class="tip" d="M0 0 L10 5 L0 10 z"></path>
+          </marker>
+        </defs>
+        {arrows.map((arrow) => <path class:list={['arrow', arrow.kind]} d={arrow.d} marker-end="url(#site-diagram-tip)" />)}
+        <text class="path-name" x="282" y="200">/api</text>
+      </svg>
+    </div>
+  </div>
+  <figcaption>
+    {site.hosting.live ? 'How a request is served.' : 'How a request will be served once this is deployed.'}
+    <slot />
+  </figcaption>
+</figure>
 
-  <rect class="box" x="10" y="34" width="80" height="52" rx="4"></rect>
-  <text class="label" x="50" y="65" text-anchor="middle">visitor</text>
+<style>
+  /* A container, so the hint below can ask whether the board fits, wherever the figure is put.
+     It also means the board can never widen the page: only the frame scrolls. */
+  .site-diagram {
+    container-type: inline-size;
+  }
 
-  <rect class="box" x="10" y="124" width="126" height="56" rx="4"></rect>
-  <text class="label" x="20" y="147">Cloudflare DNS</text>
-  <text class="sub" x="20" y="165">name lookup only</text>
-  <path class="wire" d="M50 86V123" marker-end="url(#site-arrow)"></path>
+  .scroll-hint {
+    margin-bottom: var(--space-2);
+  }
 
-  <rect class="box accent" x="130" y="24" width="200" height="72" rx="4"></rect>
-  <text class="label" x="142" y="48">Firebase Hosting</text>
-  <text class="sub" x="142" y="65">CDN · HTTPS</text>
-  <text class="sub" x="142" y="80">rodrigopimenta.com</text>
+  /* The board (64rem) plus the frame's padding and border. Narrower than that, it scrolls. */
+  @container (max-width: 66.1rem) {
+    .scroll-hint {
+      display: block;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+  }
 
-  <rect class="box" x="390" y="24" width="190" height="72" rx="4"></rect>
-  <text class="label" x="402" y="48">static files</text>
-  <text class="sub" x="402" y="65">pages, styles, scripts,</text>
-  <text class="sub" x="402" y="80">images, the resume PDF</text>
+  /* The board is drawn on a grid of 1024 by 662 units, and everything on it is placed in those
+     units. A unit is a pixel at the usual text size and grows with the reader's. */
+  .board {
+    --unit: 0.0625rem;
+    position: relative;
+    width: calc(1024 * var(--unit));
+    height: calc(662 * var(--unit));
+    margin-inline: auto;
+    font-size: 0.78125rem;
+    line-height: 1.4;
+    color: var(--ink-soft);
+  }
 
-  <path class="wire" d="M90 60H129" marker-end="url(#site-arrow)"></path>
-  <path class="wire" d="M330 60H389" marker-end="url(#site-arrow)"></path>
+  .area,
+  .box,
+  .note {
+    position: absolute;
+    left: calc(var(--x) * var(--unit));
+    top: calc(var(--y) * var(--unit));
+    width: calc(var(--w) * var(--unit));
+  }
 
-  <text class="sub" x="246" y="130">/api/**</text>
-  <path class="wire" d="M230 96V164H389" marker-end="url(#site-arrow)"></path>
+  .area,
+  .box {
+    height: calc(var(--h) * var(--unit));
+  }
 
-  <rect class="box accent" x="390" y="128" width="190" height="72" rx="4"></rect>
-  <text class="label" x="402" y="152">Cloud Run</text>
-  <text class="sub" x="402" y="169">portfolio-status, us-east4</text>
-  <text class="sub" x="402" y="184">0 to 2 instances</text>
+  /* An area is its dashed outline and its name in the corner. */
+  .area {
+    padding: 0.75rem 0.8125rem;
+    border: 1px dashed var(--rule-strong);
+    border-radius: 0.875rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
 
-  <rect class="box" x="616" y="104" width="178" height="34" rx="4"></rect>
-  <text class="sub" x="626" y="125">Sightline /api/status</text>
-  <rect class="box" x="616" y="147" width="178" height="34" rx="4"></rect>
-  <text class="sub" x="626" y="168">Orbital Watch latest.json</text>
-  <rect class="box" x="616" y="190" width="178" height="34" rx="4"></rect>
-  <text class="sub" x="626" y="211">GitHub API, last drill</text>
+  .box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+    padding: 0.5625rem 0.75rem;
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 0.625rem;
+    background: var(--paper);
+  }
 
-  <path class="wire" d="M580 152H598V121H615" marker-end="url(#site-arrow)"></path>
-  <path class="wire" d="M580 164H615" marker-end="url(#site-arrow)"></path>
-  <path class="wire" d="M580 176H598V207H615" marker-end="url(#site-arrow)"></path>
+  .box strong {
+    font-size: 0.875rem;
+    line-height: 1.25;
+    color: var(--ink);
+  }
 
-  <rect class="box" x="10" y="254" width="220" height="72" rx="4"></rect>
-  <text class="label" x="22" y="278">GitHub Actions</text>
-  <text class="sub" x="22" y="295">signs in without stored keys</text>
-  <text class="sub" x="22" y="310">pull request: preview channel</text>
+  .box.ours {
+    border-color: var(--accent-2);
+    background: color-mix(in srgb, var(--accent-2) 11%, var(--paper));
+  }
 
-  <path class="wire dashed" d="M150 254V97" marker-end="url(#site-arrow)"></path>
-  <path class="wire dashed" d="M230 290H480V201" marker-end="url(#site-arrow)"></path>
-  <text class="sub" x="158" y="236">deploys</text>
-  <text class="sub" x="488" y="236">deploys</text>
+  .box.name-only {
+    justify-content: center;
+  }
 
-  <rect class="box ghost" x="540" y="254" width="250" height="72" rx="4"></rect>
-  <text class="label" x="552" y="278">Terraform</text>
-  <text class="sub" x="552" y="295">declares all of it, and a</text>
-  <text class="sub" x="552" y="310">budget alert at $10 a month</text>
-</svg>
+  .arrows {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .arrow {
+    fill: none;
+    stroke: var(--ink-soft);
+    stroke-width: 1.5;
+  }
+
+  .arrow.deploy {
+    stroke-dasharray: 6 4;
+  }
+
+  .arrow.lookup {
+    stroke-dasharray: 2 4;
+  }
+
+  .tip,
+  .path-name {
+    fill: var(--ink-soft);
+  }
+
+  /* Inside the drawing a pixel is a board unit, so this is the size of the area names. */
+  .path-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Where each piece sits: x and y of its top left corner, then width and height, in board units. */
+  [data-area='edge'] { --x: 0; --y: 0; --w: 288; --h: 466; }
+  [data-area='request'] { --x: 304; --y: 0; --w: 408; --h: 466; }
+  [data-area='deploy'] { --x: 728; --y: 0; --w: 296; --h: 466; }
+  [data-area='key'] { --x: 0; --y: 486; --w: 288; --h: 176; }
+  [data-area='checks'] { --x: 304; --y: 486; --w: 408; --h: 176; }
+  [data-area='infrastructure'] { --x: 728; --y: 486; --w: 296; --h: 176; }
+
+  [data-box='browser'] { --x: 14; --y: 44; --w: 260; --h: 80; }
+  [data-box='dns'] { --x: 14; --y: 140; --w: 260; --h: 80; }
+  [data-box='hosting'] { --x: 14; --y: 236; --w: 260; --h: 96; }
+  [data-box='files'] { --x: 14; --y: 348; --w: 260; --h: 104; }
+
+  [data-box='status'] { --x: 318; --y: 44; --w: 190; --h: 156; }
+  [data-box='sightline'] { --x: 522; --y: 44; --w: 176; --h: 80; }
+  [data-box='orbital-watch'] { --x: 522; --y: 134; --w: 176; --h: 80; }
+  [data-box='github-api'] { --x: 522; --y: 224; --w: 176; --h: 80; }
+  [data-box='failed-check'] { --x: 318; --y: 348; --w: 380; --h: 104; }
+
+  [data-box='github'] { --x: 742; --y: 44; --w: 268; --h: 80; }
+  [data-box='actions'] { --x: 742; --y: 140; --w: 268; --h: 116; }
+  [data-box='registry'] { --x: 742; --y: 272; --w: 268; --h: 64; }
+  [data-box='previews'] { --x: 742; --y: 352; --w: 268; --h: 80; }
+
+  [data-box='key-ours'] { --x: 14; --y: 526; --w: 260; --h: 38; }
+  [data-box='key-managed'] { --x: 14; --y: 572; --w: 260; --h: 38; }
+  .note { --x: 14; --y: 620; --w: 260; }
+
+  [data-box='pull-request-checks'] { --x: 318; --y: 526; --w: 380; --h: 104; }
+  [data-box='terraform'] { --x: 742; --y: 526; --w: 268; --h: 104; }
+</style>

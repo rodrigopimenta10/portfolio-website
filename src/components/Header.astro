@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import portrait from '../assets/rodrigo.jpg';
 import { nav, site } from '../data/site';
 import ThemeToggle from './ThemeToggle.astro';
 
@@ -13,7 +15,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
 <header class="site-header">
   <div class="wrap bar">
     <a class="site-name" href="/" aria-current={path === '/' ? 'page' : undefined}>
-      <span class="mark" aria-hidden="true">RP</span>
+      <Image class="portrait" src={portrait} alt="" width={36} height={36} densities={[1, 2, 3]} loading="eager" />
       <span>{site.name}</span>
     </a>
     <nav aria-label="Main">
@@ -21,7 +23,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
         {
           nav.map((item) => (
             <li>
-              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined} title={'title' in item ? item.title : undefined}>
+              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
                 {item.label}
               </a>
             </li>
@@ -30,21 +32,23 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
       </ul>
     </nav>
     <ThemeToggle />
+    {/* One click to the document a recruiter came for. On a phone the "(PDF)" is dropped to save room. */}
+    <a class="resume" href={site.resumePdf}>Resume<span class="pdf"> (PDF)</span></a>
   </div>
 </header>
 
 <style>
   .site-header {
-    border-bottom: 1px solid transparent;
+    border-bottom: 1px solid var(--rule);
   }
 
   .bar {
     display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas: 'name toggle' 'nav nav';
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas: 'name toggle resume' 'nav nav nav';
     align-items: center;
-    gap: var(--space-1) var(--space-5);
-    padding-block: var(--space-3);
+    gap: 0 var(--space-2);
+    padding-block: var(--space-2) 0;
   }
 
   .site-name {
@@ -52,24 +56,21 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
     display: inline-flex;
     align-items: center;
     gap: var(--space-3);
-    font-size: 1.0625rem;
+    min-height: 3rem;
+    min-width: 0;
+    font-size: 1rem;
     font-weight: 600;
     letter-spacing: -0.02em;
     text-decoration: none;
   }
 
-  /* The same mark as the tab icon: initials on the accent. */
-  .mark {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 0.6rem;
-    background: var(--grad);
-    color: var(--accent-ink);
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  .portrait {
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--paper-sunk);
   }
 
   nav {
@@ -78,30 +79,29 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
 
   ul {
     display: flex;
-    flex-wrap: wrap;
-    /* Four links fit one line at 360 px. */
-    gap: 0 var(--space-4);
+    /* Four links share one line, down to 360 px wide. */
+    justify-content: space-between;
   }
 
   nav a {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-    font-size: 0.9375rem;
-    font-weight: 500;
+    padding-inline: var(--space-2);
+    font-size: 0.875rem;
     text-decoration: none;
     color: var(--ink-soft);
-    border-radius: 999px;
-    transition:
-      color 120ms ease,
-      background-color 120ms ease;
+    /* The current page is marked by a rule under its link, drawn inside the link's own box. */
+    box-shadow: inset 0 -2px 0 transparent;
+    transition: color 120ms ease;
   }
 
-  /* On a phone the four links share one line, down to 360 px wide. */
-  @media (max-width: 45.99rem) {
-    nav a {
-      font-size: 0.875rem;
-    }
+  li:first-child a {
+    padding-left: 0;
+  }
+
+  li:last-child a {
+    padding-right: 0;
   }
 
   nav a:hover {
@@ -111,10 +111,38 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
   nav a[aria-current='page'] {
     color: var(--ink);
     font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--accent);
   }
 
   :global(.theme-toggle) {
     grid-area: toggle;
+  }
+
+  .resume {
+    grid-area: resume;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-inline: var(--space-3);
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 140ms ease,
+      color 140ms ease;
+  }
+
+  .resume:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .pdf {
+    display: none;
   }
 
   @media (min-width: 46rem) {
@@ -126,13 +154,13 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
       background: var(--header-bg);
       -webkit-backdrop-filter: saturate(1.4) blur(14px);
       backdrop-filter: saturate(1.4) blur(14px);
-      border-bottom-color: var(--rule);
     }
 
     .bar {
-      grid-template-columns: 1fr auto auto;
-      grid-template-areas: 'name nav toggle';
-      padding-block: var(--space-3);
+      grid-template-columns: 1fr auto auto auto;
+      grid-template-areas: 'name nav toggle resume';
+      gap: 0 var(--space-3);
+      padding-block: var(--space-2);
     }
 
     ul {
@@ -140,16 +168,25 @@ const isCurrent = (href: string) => path === href || path.startsWith(`${href}/`)
     }
 
     nav a {
-      min-height: 2.5rem;
-      padding: 0 var(--space-4);
+      padding-inline: var(--space-3);
+      font-size: 0.9375rem;
     }
 
-    nav a:hover {
-      background: var(--paper-sunk);
+    li:first-child a {
+      padding-left: var(--space-3);
     }
 
-    nav a[aria-current='page'] {
-      background: var(--paper-sunk);
+    li:last-child a {
+      padding-right: var(--space-3);
+    }
+
+    .resume {
+      padding-inline: var(--space-4);
+    }
+
+    .pdf {
+      display: inline;
+      white-space: pre;
     }
   }
 </style>

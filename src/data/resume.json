@@ -80,7 +80,7 @@
         "pytest"
       ],
       "bullets": [
-        "Replaced a manual on-call recovery that took ~1.5 hours per storage failure, an outage for 40,000–60,000 subscribers about every two weeks on the newest satellite system, with automated failover inside one 3-minute cycle, across 24 storage nodes in 8 clusters. Failover gated by a four-verdict standby-capacity assessment so it never moves into a worse node, outcomes verified against the cluster log to distinguish a real failover from a same-node reclaim. Sole author (6,586 lines, 61 tests)"
+        "Replaced a manual on-call recovery that took ~1.5 hours per storage failure, an outage for 40,000–60,000 subscribers about every two weeks on the newest satellite system, with a zero-touch monitor on a 3-minute cron that fails over before service is affected, across 24 storage nodes in 8 clusters. Failover gated by a four-verdict standby-capacity assessment so it never moves into a worse node, outcomes verified against the cluster log to distinguish a real failover from a same-node reclaim. Sole author (6,586 lines, 61 tests)"
       ]
     },
     {

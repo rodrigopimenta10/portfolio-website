@@ -1,16 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 const pages = [
-  { path: '/', heading: /I’m Rodrigo Pimenta/ },
+  { path: '/', heading: /I build systems that keep themselves running/ },
+  { path: '/on-call', heading: /Every outage I was called in for twice/ },
+  { path: '/tools', heading: /One command that checks every device at once/ },
+  { path: '/self-healing', heading: /Issues that now fix themselves/ },
+  { path: '/self-healing/storage', heading: /A storage failure took 90 minutes/ },
+  { path: '/self-healing/config-drift', heading: /Two racks disagreed/ },
   { path: '/projects', heading: /Three you can open and check/ },
   { path: '/projects/sightline', heading: 'Sightline' },
   { path: '/projects/aws-platform-terraform', heading: 'aws-platform-terraform' },
   { path: '/projects/orbital-watch', heading: 'Orbital Watch' },
-  { path: '/projects/ceph-storage-self-healing-monitor', heading: 'Ceph Storage Self-Healing Monitor' },
-  { path: '/projects/config-integrity-self-heal', heading: 'Config Integrity Self-Heal' },
-  { path: '/experience', heading: /keeping systems running/ },
   { path: '/how-this-site-runs', heading: /Files on a CDN/ },
-  { path: '/resume', heading: 'Rodrigo Pimenta' },
 ];
 
 for (const { path, heading } of pages) {
@@ -31,7 +32,9 @@ for (const { path, heading } of pages) {
     await expect(page.getByRole('banner')).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible();
     await expect(page.getByRole('main')).toBeVisible();
-    await expect(page.getByRole('contentinfo')).toContainText('RodrigoPimenta102@gmail.com');
+    // Every page ends on the same ways to reach him.
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Email me' })).toHaveAttribute('href', /^mailto:/);
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Book a 30-minute call' })).toBeVisible();
 
     // Every image says what it is (or is marked decorative) and reserves its space.
     for (const image of await page.locator('img').all()) {
@@ -61,7 +64,7 @@ test('an unknown address answers 404 with the not-found page', async ({ page }) 
 
   expect(response?.status()).toBe(404);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('There is no page at this address');
-  await expect(page.getByRole('link', { name: 'Home', exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('link', { name: 'Home', exact: true })).toBeVisible();
 });
 
 test('the resume PDF is at its old address and is a PDF', async ({ request }) => {
@@ -73,7 +76,7 @@ test('the resume PDF is at its old address and is a PDF', async ({ request }) =>
 });
 
 // A visitor who opens a project, GitHub or the resume keeps the portfolio in the tab they came from.
-for (const path of ['/', '/projects', '/projects/sightline', '/projects/orbital-watch', '/resume', '/how-this-site-runs']) {
+for (const path of ['/', '/on-call', '/self-healing', '/projects', '/projects/sightline', '/projects/orbital-watch', '/how-this-site-runs']) {
   test(`${path}: every link that leaves the site opens in a new tab, and no other link does`, async ({ page }) => {
     await page.goto(path);
     const links = await page.locator('a[href]').evaluateAll((anchors) =>
@@ -92,14 +95,37 @@ for (const path of ['/', '/projects', '/projects/sightline', '/projects/orbital-
   });
 }
 
-test('the resume button opens the PDF in a new tab and the site stays where it was', async ({ page, context }) => {
-  await page.goto('/resume');
-  await Promise.all([context.waitForEvent('page'), page.getByRole('link', { name: 'Download the PDF' }).click()]);
+test('the resume button in the header opens the PDF in a new tab and the site stays where it was', async ({ page, context }) => {
+  await page.goto('/on-call');
+  // "Resume (PDF)" on a wide screen, "Resume" on a phone.
+  await Promise.all([context.waitForEvent('page'), page.getByRole('banner').getByRole('link', { name: /^Resume/ }).click()]);
 
-  // The headless browser has no PDF viewer, so the new tab reports no address; what matters is
+  // The headless browser has no PDF viewer, so the new tab reports no address. What matters is
   // that a second tab opened and the first one did not move.
   expect(context.pages()).toHaveLength(2);
-  expect(page.url()).toMatch(/\/resume$/);
+  expect(page.url()).toMatch(/\/on-call$/);
+});
+
+// Addresses that are in messages already sent. The pages are gone. Their content is not.
+for (const [from, to] of [
+  ['/resume', '/rodrigo_pimenta_resume.pdf'],
+  ['/experience', '/rodrigo_pimenta_resume.pdf'],
+  ['/projects/ceph-storage-self-healing-monitor', '/self-healing/storage'],
+  ['/projects/config-integrity-self-heal', '/self-healing/config-drift'],
+] as const) {
+  test(`${from} sends the visitor on to ${to}`, async ({ request }) => {
+    const response = await request.get(from, { maxRedirects: 0 });
+    expect([301, 302]).toContain(response.status());
+    expect(response.headers()['location']).toBe(to);
+    expect((await request.get(to)).status()).toBe(200);
+  });
+}
+
+test('the four tabs are in the order of the story, and the current one is marked', async ({ page }) => {
+  await page.goto('/self-healing/storage');
+  const tabs = page.getByRole('navigation', { name: 'Main' }).getByRole('link');
+  await expect(tabs).toHaveText(['On call', 'Tools', 'Self-healing', 'Side projects']);
+  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Self-healing' })).toHaveAttribute('aria-current', 'page');
 });
 
 test('fingerprinted assets are cached for a year', async ({ page, request }) => {

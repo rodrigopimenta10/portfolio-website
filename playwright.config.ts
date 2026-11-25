@@ -2,12 +2,14 @@
 // service behind it answering from recorded responses. Nothing here touches the network.
 //
 // Locally: PW_CHANNEL=chrome npm run test:e2e   (uses the installed Google Chrome, no download)
-// In CI:   npx playwright install --with-deps chromium && npm run test:e2e
+// In CI:   npx playwright install --with-deps chromium firefox webkit && npm run test:e2e
 import { defineConfig } from '@playwright/test';
 
 const sitePort = Number(process.env['SITE_PORT'] ?? 4321);
 const statusPort = Number(process.env['STATUS_PORT'] ?? 8080);
+// An installed Google Chrome in place of the downloaded Chromium, for the two Chromium projects only.
 const channel = process.env['PW_CHANNEL'];
+const chrome = channel ? { channel } : {};
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -17,13 +19,15 @@ export default defineConfig({
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://127.0.0.1:${sitePort}`,
-    ...(channel ? { channel } : {}),
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
+    { name: 'desktop', use: { viewport: { width: 1440, height: 900 }, ...chrome } },
     // The narrowest screen the site promises to read well on.
-    { name: 'phone', use: { viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true } },
+    { name: 'phone', use: { viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true, ...chrome } },
+    // The same tests in the other two engines, one size each: Firefox on a laptop, Safari's engine on a phone.
+    { name: 'firefox', use: { browserName: 'firefox', viewport: { width: 1280, height: 800 } } },
+    { name: 'safari', use: { browserName: 'webkit', viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true } },
   ],
   webServer: [
     {
