@@ -125,20 +125,45 @@ const areas: Area[] = [
   },
 ];
 
-// Drawn in the same units as the boxes, from the edge of one to the edge of another. Moving a box
-// means moving the ends of its arrows here too.
-const arrows = [
-  { kind: 'lookup', d: 'M144 124 V139' }, // browser to DNS
-  { kind: 'request', d: 'M14 84 H5 V284 H13' }, // browser to Hosting, around DNS
-  { kind: 'request', d: 'M144 332 V347' }, // Hosting to the static files
-  { kind: 'request', d: 'M274 270 C296 270 296 124 317 124' }, // Hosting to portfolio-status
-  { kind: 'request', d: 'M508 84 H521' }, // portfolio-status to Sightline
-  { kind: 'request', d: 'M508 124 C515 124 515 174 521 174' }, // portfolio-status to Orbital Watch
-  { kind: 'request', d: 'M508 164 C515 164 515 264 521 264' }, // portfolio-status to the GitHub API
-  { kind: 'request', d: 'M876 124 V139' }, // GitHub to GitHub Actions
-  { kind: 'request', d: 'M876 256 V271' }, // GitHub Actions to Artifact Registry
-  { kind: 'deploy', d: 'M742 304 H723 V318 H413 V201' }, // Artifact Registry to portfolio-status
-  { kind: 'deploy', d: 'M742 198 H717 V474 H296 V300 H275' }, // GitHub Actions to Hosting
+// Drawn in the same units as the boxes, from the edge of one to the edge of another. Every arrow is
+// straight or turns at right angles, each long run has a lane of its own in the gap between two
+// areas, and no two arrows cross. Moving a box means moving the ends of its arrows here too.
+/** x, y and, for a turn that should stay square, a radius of 0. */
+type Point = [number, number, number?];
+
+/** A path through the points, with each turn rounded off. */
+function route(points: Point[], radius = 8): string {
+  const [first, ...rest] = points;
+  let d = `M${first![0]} ${first![1]}`;
+  rest.forEach(([x, y], index) => {
+    const next = rest[index + 1];
+    if (!next) {
+      d += ` L${x} ${y}`;
+      return;
+    }
+    const [px, py] = index === 0 ? first! : rest[index - 1]!;
+    const r = rest[index]![2] ?? radius;
+    const before: Point = [x - Math.sign(x - px) * r, y - Math.sign(y - py) * r];
+    const after: Point = [x + Math.sign(next[0] - x) * r, y + Math.sign(next[1] - y) * r];
+    d += ` L${before[0]} ${before[1]} Q${x} ${y} ${after[0]} ${after[1]}`;
+  });
+  return d;
+}
+
+const arrows: { kind: 'request' | 'lookup' | 'deploy'; points: Point[] }[] = [
+  { kind: 'lookup', points: [[171, 140], [171, 163]] }, // browser to DNS
+  { kind: 'request', points: [[55, 140], [55, 283]] }, // browser to Hosting, straight down beside DNS
+  { kind: 'request', points: [[130, 380], [130, 403]] }, // Hosting to the static files
+  { kind: 'request', points: [[246, 332], [278, 332], [278, 92], [309, 92]] }, // Hosting to portfolio-status
+  { kind: 'request', points: [[374, 140], [374, 175]] }, // portfolio-status to Sightline
+  { kind: 'request', points: [[512, 140], [512, 175]] }, // portfolio-status to Orbital Watch
+  { kind: 'request', points: [[650, 140], [650, 175]] }, // portfolio-status to the GitHub API
+  { kind: 'request', points: [[894, 124], [894, 147]] }, // GitHub to GitHub Actions
+  { kind: 'request', points: [[894, 260], [894, 283]] }, // GitHub Actions to Artifact Registry
+  // The two deploys leave GitHub Actions as one line and part in the lane, at a square T: up to
+  // the service, down and around to the files.
+  { kind: 'deploy', points: [[778, 204], [746, 204, 0], [746, 92], [715, 92]] },
+  { kind: 'deploy', points: [[746, 204], [746, 548], [278, 548], [278, 460], [247, 460]] },
 ];
 ---
 
@@ -148,9 +173,9 @@ const arrows = [
     The visitor’s browser asks Cloudflare DNS where rodrigopimenta.com is, then sends its requests to Firebase Hosting, a
     CDN. Firebase Hosting serves the static files that Astro built and passes /api requests to portfolio-status, one
     service on Cloud Run in us-east4, which asks three public sources: Sightline, Orbital Watch and the GitHub API. On
-    the deploy side, every change goes from GitHub to GitHub Actions. GitHub Actions deploys the files to Firebase
-    Hosting and puts the service’s image in Artifact Registry, and from there the image is deployed to portfolio-status.
-    Terraform declares the hosting, the registry, the service and the keyless sign-in.
+    the deploy side, every change goes from GitHub to GitHub Actions. GitHub Actions puts the service’s image in
+    Artifact Registry, deploys portfolio-status and deploys the static files. Terraform declares the hosting, the
+    registry, the service and the keyless sign-in.
   </p>
   <p class="eyebrow scroll-hint">Scroll sideways for all of it <span aria-hidden="true">→</span></p>
   <div class="frame diagram-scroll" tabindex="0" role="group" aria-label="The diagram. It scrolls sideways on a small screen.">
@@ -173,14 +198,13 @@ const arrows = [
           </div>
         ))
       }
-      <svg class="arrows" viewBox="0 0 1024 662" aria-hidden="true">
+      <svg class="arrows" viewBox="0 0 1024 742" aria-hidden="true">
         <defs>
           <marker id="site-diagram-tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path class="tip" d="M0 0 L10 5 L0 10 z"></path>
           </marker>
         </defs>
-        {arrows.map((arrow) => <path class:list={['arrow', arrow.kind]} d={arrow.d} marker-end="url(#site-diagram-tip)" />)}
-        <text class="path-name" x="282" y="200">/api</text>
+        {arrows.map((arrow) => <path class:list={['arrow', arrow.kind]} d={route(arrow.points)} marker-end="url(#site-diagram-tip)" />)}
       </svg>
     </div>
   </div>
@@ -210,13 +234,13 @@ const arrows = [
     }
   }
 
-  /* The board is drawn on a grid of 1024 by 662 units, and everything on it is placed in those
+  /* The board is drawn on a grid of 1024 by 742 units, and everything on it is placed in those
      units. A unit is a pixel at the usual text size and grows with the reader's. */
   .board {
     --unit: 0.0625rem;
     position: relative;
     width: calc(1024 * var(--unit));
-    height: calc(662 * var(--unit));
+    height: calc(742 * var(--unit));
     margin-inline: auto;
     font-size: 0.78125rem;
     line-height: 1.4;
@@ -296,45 +320,39 @@ const arrows = [
     stroke-dasharray: 2 4;
   }
 
-  .tip,
-  .path-name {
+  .tip {
     fill: var(--ink-soft);
   }
 
-  /* Inside the drawing a pixel is a board unit, so this is the size of the area names. */
-  .path-name {
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
+  /* Where each piece sits: x and y of its top left corner, then width and height, in board units.
+     The gaps between areas are 36 wide, and the long arrows run down the middle of them. */
+  [data-area='edge'] { --x: 0; --y: 0; --w: 260; --h: 530; }
+  [data-area='request'] { --x: 296; --y: 0; --w: 432; --h: 530; }
+  [data-area='deploy'] { --x: 764; --y: 0; --w: 260; --h: 530; }
+  [data-area='key'] { --x: 0; --y: 566; --w: 260; --h: 176; }
+  [data-area='checks'] { --x: 296; --y: 566; --w: 432; --h: 176; }
+  [data-area='infrastructure'] { --x: 764; --y: 566; --w: 260; --h: 176; }
 
-  /* Where each piece sits: x and y of its top left corner, then width and height, in board units. */
-  [data-area='edge'] { --x: 0; --y: 0; --w: 288; --h: 466; }
-  [data-area='request'] { --x: 304; --y: 0; --w: 408; --h: 466; }
-  [data-area='deploy'] { --x: 728; --y: 0; --w: 296; --h: 466; }
-  [data-area='key'] { --x: 0; --y: 486; --w: 288; --h: 176; }
-  [data-area='checks'] { --x: 304; --y: 486; --w: 408; --h: 176; }
-  [data-area='infrastructure'] { --x: 728; --y: 486; --w: 296; --h: 176; }
+  [data-box='browser'] { --x: 14; --y: 44; --w: 232; --h: 96; }
+  [data-box='dns'] { --x: 96; --y: 164; --w: 150; --h: 96; }
+  [data-box='hosting'] { --x: 14; --y: 284; --w: 232; --h: 96; }
+  [data-box='files'] { --x: 14; --y: 404; --w: 232; --h: 112; }
 
-  [data-box='browser'] { --x: 14; --y: 44; --w: 260; --h: 80; }
-  [data-box='dns'] { --x: 14; --y: 140; --w: 260; --h: 80; }
-  [data-box='hosting'] { --x: 14; --y: 236; --w: 260; --h: 96; }
-  [data-box='files'] { --x: 14; --y: 348; --w: 260; --h: 104; }
+  [data-box='status'] { --x: 310; --y: 44; --w: 404; --h: 96; }
+  [data-box='sightline'] { --x: 310; --y: 176; --w: 128; --h: 96; }
+  [data-box='orbital-watch'] { --x: 448; --y: 176; --w: 128; --h: 96; }
+  [data-box='github-api'] { --x: 586; --y: 176; --w: 128; --h: 96; }
+  [data-box='failed-check'] { --x: 310; --y: 420; --w: 404; --h: 96; }
 
-  [data-box='status'] { --x: 318; --y: 44; --w: 190; --h: 156; }
-  [data-box='sightline'] { --x: 522; --y: 44; --w: 176; --h: 80; }
-  [data-box='orbital-watch'] { --x: 522; --y: 134; --w: 176; --h: 80; }
-  [data-box='github-api'] { --x: 522; --y: 224; --w: 176; --h: 80; }
-  [data-box='failed-check'] { --x: 318; --y: 348; --w: 380; --h: 104; }
+  [data-box='github'] { --x: 778; --y: 44; --w: 232; --h: 80; }
+  [data-box='actions'] { --x: 778; --y: 148; --w: 232; --h: 112; }
+  [data-box='registry'] { --x: 778; --y: 284; --w: 232; --h: 64; }
+  [data-box='previews'] { --x: 778; --y: 436; --w: 232; --h: 80; }
 
-  [data-box='github'] { --x: 742; --y: 44; --w: 268; --h: 80; }
-  [data-box='actions'] { --x: 742; --y: 140; --w: 268; --h: 116; }
-  [data-box='registry'] { --x: 742; --y: 272; --w: 268; --h: 64; }
-  [data-box='previews'] { --x: 742; --y: 352; --w: 268; --h: 80; }
+  [data-box='key-ours'] { --x: 14; --y: 606; --w: 232; --h: 38; }
+  [data-box='key-managed'] { --x: 14; --y: 652; --w: 232; --h: 38; }
+  .note { --x: 14; --y: 698; --w: 232; }
 
-  [data-box='key-ours'] { --x: 14; --y: 526; --w: 260; --h: 38; }
-  [data-box='key-managed'] { --x: 14; --y: 572; --w: 260; --h: 38; }
-  .note { --x: 14; --y: 620; --w: 260; }
-
-  [data-box='pull-request-checks'] { --x: 318; --y: 526; --w: 380; --h: 104; }
-  [data-box='terraform'] { --x: 742; --y: 526; --w: 268; --h: 104; }
+  [data-box='pull-request-checks'] { --x: 310; --y: 606; --w: 404; --h: 80; }
+  [data-box='terraform'] { --x: 778; --y: 606; --w: 232; --h: 112; }
 </style>
