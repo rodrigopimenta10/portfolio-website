@@ -9,7 +9,7 @@
     every run and Celestrak element sets at most once every two hours per group, keeping what it
     fetched and when it last asked in a private Cloud Storage bucket. It computes passes, judges
     the health of each source and publishes one document to a public bucket. The page is static
-    files on Firebase Hosting; the browser reads the published document and never calls an
+    files on Firebase Hosting. The browser reads the published document and never calls an
     upstream API. Cloud Monitoring alerts if a run fails or if none succeeds for thirty minutes.
   </desc>
   <defs>

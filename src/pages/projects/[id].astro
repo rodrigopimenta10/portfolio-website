@@ -1,330 +1,219 @@
 ---
-import FailoverSim from '../../components/FailoverSim.astro';
+// One side project's case study. The page is the same for all three: the facts and the pictures
+// come from the project's frontmatter, the text from its Markdown, and the architecture figure
+// goes where the Markdown says.
 import { Image } from 'astro:assets';
-import { render } from 'astro:content';
-import StatusPanel from '../../components/StatusPanel.astro';
+import Onward from '../../components/Onward.astro';
 import AwsPlatformDiagram from '../../components/diagrams/AwsPlatformDiagram.astro';
 import OrbitalWatchDiagram from '../../components/diagrams/OrbitalWatchDiagram.astro';
-import SightlineDiagram from '../../components/diagrams/SightlineDiagram.astro';
 import Base from '../../layouts/Base.astro';
-import { allProjects, isPersonal, isWork, resumeWords, type Project } from '../../lib/projects';
+import { allProjects, bodyAroundArchitecture, type Project } from '../../lib/projects';
 
 export async function getStaticPaths() {
   const projects = await allProjects();
-  return projects.map((project, index) => ({
+  return projects.map((project) => ({
     params: { id: project.id },
-    props: { project, number: index + 1, next: projects[(index + 1) % projects.length] },
+    props: { project, others: projects.filter((other) => other.id !== project.id) },
   }));
 }
 
 interface Props {
   project: Project;
-  number: number;
-  next: Project;
+  others: Project[];
 }
 
-const { project, number, next } = Astro.props;
-const diagrams = {
-  sightline: SightlineDiagram,
-  'aws-platform-terraform': AwsPlatformDiagram,
-  'orbital-watch': OrbitalWatchDiagram,
-};
-const personal = isPersonal(project) ? project : null;
-const work = isWork(project) ? project : null;
-const words = work ? resumeWords(work) : null;
-const { Content } = await render(project);
-const Diagram = personal ? diagrams[personal.data.diagram.name] : null;
-const description = personal ? personal.data.summary : (words?.sentences.slice(0, 1).join(' ') ?? '');
+const { project, others } = Astro.props;
+const { data } = project;
+const { architecture } = data;
+const diagrams = { 'orbital-watch': OrbitalWatchDiagram, 'aws-platform-terraform': AwsPlatformDiagram };
+const Diagram = architecture.diagram ? diagrams[architecture.diagram] : null;
+const body = bodyAroundArchitecture(project);
 ---
 
 <Base
-  title={project.data.title}
+  title={data.title}
   path={`/projects/${project.id}`}
-  description={description}
-  image={personal ? { src: `/og-${personal.id}.png`, alt: `${personal.data.title}, a project by Rodrigo Pimenta. ${personal.data.screenshot.alt}` } : undefined}
+  description={data.summary}
+  image={{ src: `/og-${project.id}.png`, alt: `${data.title}, a project by Rodrigo Pimenta. ${data.screenshot.alt}` }}
 >
   <article class="wrap">
+    <nav class="back" aria-label="Breadcrumb">
+      <a href="/projects"><span aria-hidden="true">←&nbsp;</span>Side projects</a>
+    </nav>
+
     <header class="page-head">
-      <p class="eyebrow">
-        <a href="/projects">Projects</a> · {String(number).padStart(2, '0')}{work && ' · Hughes Network Systems'}
-      </p>
-      <h1>{project.data.title}</h1>
-      {personal && <p class="lede">{personal.data.summary}</p>}
-      {
-        personal && (
-          <p class="doors">
-            {personal.data.live && (
-              <a class="button" href={personal.data.live}>
-                Open the live site
-              </a>
-            )}
-            <a class:list={['button', { quiet: Boolean(personal.data.live) }]} href={personal.data.code}>
-              Read the code
+      <p class="eyebrow">Outside work · {data.live ? 'live' : 'public code'}</p>
+      <h1>{data.title}</h1>
+      <p class="lede">{data.summary}</p>
+      <p class="doors">
+        {
+          data.live && (
+            <a class="button" href={data.live}>
+              Open the live site
             </a>
-          </p>
-        )
-      }
-      {
-        work && (
-          <p class="lede">
-            In production at Hughes Network Systems. The code belongs to my employer and is not
-            public, so this page keeps to what my resume says and the general ideas behind it.
-          </p>
-        )
-      }
+          )
+        }
+        <a class:list={['button', { quiet: Boolean(data.live) }]} href={data.code}>Read the code</a>
+        {
+          data.video && (
+            <a class="button quiet" href={data.video}>
+              Watch the demo video
+            </a>
+          )
+        }
+      </p>
+      <dl class="facts">
+        <div class="good">
+          <dt>My part</dt>
+          <dd>{data.role}</dd>
+        </div>
+        <div class="good">
+          <dt>Result</dt>
+          <dd><strong>{data.result}</strong></dd>
+        </div>
+        <div>
+          <dt>Built with</dt>
+          <dd>{data.stack.join(', ')}.</dd>
+        </div>
+      </dl>
     </header>
 
-    {
-      personal && (
-        <>
-          {personal.data.statusId && (
-            <div class="now">
-              <StatusPanel only={personal.data.statusId} heading="Right now" />
-            </div>
-          )}
-
-          <dl class="facts">
-            <div>
-              <dt class="eyebrow">My part</dt>
-              <dd>{personal.data.role}</dd>
-            </div>
-            <div>
-              <dt class="eyebrow">Result</dt>
-              <dd>{personal.data.result}</dd>
-            </div>
-            <div>
-              <dt class="eyebrow">Stack</dt>
-              <dd>
-                <ul class="stack mono">
-                  {personal.data.stack.map((item) => (
-                    <li>{item}</li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          </dl>
-
-          <figure class="shot">
-            <div class="frame">
-              <Image
-                src={personal.data.screenshot.src}
-                alt={personal.data.screenshot.alt}
-                widths={[480, 720, 960, 1440, 1920, 2880]}
-                sizes="(min-width: 78rem) 74rem, calc(100vw - 2.25rem)"
-                loading="eager"
-              />
-            </div>
-            <figcaption>{personal.data.screenshot.caption}</figcaption>
-          </figure>
-
-          <div class="columns">
-            <div class="prose">
-              <Content />
-            </div>
-          </div>
-
-          <figure class="architecture">
-            <p class="eyebrow">Architecture <span class="scroll-hint">· scroll sideways for all of it →</span></p>
-            <div class="frame diagram-scroll" tabindex="0" role="group" aria-label="Architecture diagram; scrolls sideways on a small screen">
-              {Diagram && <Diagram />}
-            </div>
-            <figcaption>
-              {personal.data.diagram.caption} Drawn from{' '}
-              <a href={personal.data.diagram.sourceHref}>{personal.data.diagram.sourceLabel}</a> in the repository.
-            </figcaption>
-          </figure>
-
-          <section class="sources" aria-labelledby="sources-title">
-            <h2 id="sources-title">Where these claims come from</h2>
-            <ul>
-              {personal.data.sources.map((source) => (
-                <li>
-                  <p>{source.claim}</p>
-                  <p class="mono soft">{source.href ? <a href={source.href}>{source.where}</a> : source.where}</p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )
-    }
-
-    {
-      work && words && (
-        <>
-          <section class="resume-words" aria-labelledby="words-title">
-            <p class="eyebrow" id="words-title">
-              From my resume
-            </p>
-            <ul>
-              {words.sentences.map((sentence) => (
-                <li>{sentence}</li>
-              ))}
-            </ul>
-            <p class="eyebrow stack-label">Stack</p>
-            <ul class="stack mono">
-              {words.stack.map((item) => (
-                <li>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <div class="prose after-words">
-            <Content />
-            <p class="soft">
-              There is no screenshot, architecture sketch, name or threshold here: those are my
-              employer’s. <a href="/resume">The full resume</a> · <a href="/experience">Experience</a>
-            </p>
-          </div>
-
-          {project.id.startsWith('ceph') && (
-            <section class="section sim-here">
-              <FailoverSim />
-            </section>
-          )}
-        </>
-      )
-    }
-
-    <nav class="next" aria-label="More projects">
-      <a href={`/projects/${next.id}`}>
-        <span class="eyebrow">Next project</span>
-        <span class="next-title">{next.data.title}</span>
+    <figure class="shot">
+      <a class="frame" href={data.live ?? data.code}>
+        <Image
+          src={data.screenshot.src}
+          alt={data.screenshot.alt}
+          widths={[480, 720, 960, 1440, 1920, 2880]}
+          sizes="(min-width: 78rem) 76rem, calc(100vw - 2.25rem)"
+          loading="eager"
+        />
       </a>
-    </nav>
+      <figcaption>{data.screenshot.caption}</figcaption>
+    </figure>
+
+    <section class="section study" aria-label="The case study">
+      <div class="prose" set:html={body.before} />
+
+      <figure class="architecture">
+        <p class="eyebrow">Architecture</p>
+        <div class="frame scroller" tabindex="0" role="group" aria-label="Architecture diagram. Scrolls sideways on a small screen.">
+          {
+            architecture.image && (
+              <Image
+                class="picture"
+                src={architecture.image.src}
+                alt={architecture.image.alt}
+                widths={[900, 1216, 1800, 2428]}
+                sizes="(min-width: 78rem) 76rem, max(56.25rem, calc(100vw - 2.25rem))"
+                loading="lazy"
+              />
+            )
+          }
+          {
+            Diagram && (
+              <div class="drawn">
+                <Diagram />
+              </div>
+            )
+          }
+        </div>
+        <figcaption>{architecture.caption}</figcaption>
+      </figure>
+
+      <div class="prose" set:html={body.after} />
+    </section>
+
+    <Onward
+      links={[
+        ...others.map((other) => ({ label: 'Next project', text: other.data.title, href: `/projects/${other.id}` })),
+        { label: 'At work', text: 'Issues that now fix themselves', href: '/self-healing' },
+      ]}
+    />
   </article>
 </Base>
 
 <style>
-  .page-head .eyebrow a {
-    text-decoration-color: var(--rule-strong);
+  .back {
+    padding-top: var(--space-4);
+  }
+
+  .back a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .back a:hover {
+    color: var(--accent);
+  }
+
+  /* The way back sits above the heading, so the heading needs less air than on a tab's own page. */
+  .page-head {
+    padding-top: var(--space-4);
+  }
+
+  /* A project's name is one word or two, and "aws-platform-terraform" may break at its hyphens. */
+  .page-head h1 {
+    max-width: none;
+    overflow-wrap: anywhere;
   }
 
   .doors {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
+  }
+
+  .page-head .facts {
+    grid-template-columns: repeat(auto-fit, minmax(min(16.25rem, 100%), 1fr));
     margin-top: var(--space-2);
   }
 
-  .now {
-    max-width: 44rem;
-    margin-bottom: var(--space-7);
-  }
-
-  .facts {
-    display: grid;
-    gap: var(--space-5);
-    padding-block: var(--space-6);
-    border-block: 1px solid var(--rule);
-  }
-
-  .facts > div {
-    display: grid;
-    gap: var(--space-2);
-    align-content: start;
-  }
-
-  .facts dd {
-    margin: 0;
-  }
-
-  .stack {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .stack li {
-    padding: 0.15rem 0.6rem;
-    border: 1px solid var(--rule-strong);
-    border-radius: 999px;
-    line-height: 1.6;
-  }
-
-  .shot {
-    margin-block: var(--space-7);
+  .shot .frame {
+    display: block;
+    background: var(--paper-sunk);
   }
 
   .shot :global(img) {
     width: 100%;
   }
 
-  .architecture {
-    margin-block: var(--space-8) var(--space-7);
-  }
-
-  .architecture .frame {
-    margin-top: var(--space-3);
-  }
-
-  .sources {
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--rule);
-  }
-
-  .sources h2 {
-    font-size: var(--text-lg);
-  }
-
-  .sources ul {
-    display: grid;
-    gap: var(--space-4);
-    margin-top: var(--space-4);
-    max-width: 52rem;
-  }
-
-  .sources li {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .resume-words {
-    padding-block: var(--space-6);
-    border-block: 1px solid var(--rule);
-  }
-
-  .resume-words > ul:first-of-type {
-    display: grid;
-    gap: var(--space-3);
-    margin-top: var(--space-4);
-    max-width: 46rem;
-    font-size: var(--text-lg);
-    line-height: 1.45;
-  }
-
-  .stack-label {
-    margin-block: var(--space-6) var(--space-3);
-  }
-
-  .after-words {
+  .study {
     margin-top: var(--space-6);
-  }
-
-  .next {
-    margin-top: var(--space-8);
-    padding-top: var(--space-5);
     border-top: 1px solid var(--rule);
   }
 
-  .next a {
-    display: inline-grid;
-    gap: var(--space-1);
-    text-decoration: none;
+  /* The body is Markdown turned into HTML, which a scoped rule reaches only through :global. */
+  .prose :global(p) {
+    color: var(--ink-soft);
   }
 
-  .next-title {
-    font-size: var(--text-xl);
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-decoration-thickness: 0.06em;
-    text-underline-offset: 0.2em;
+  .architecture {
+    margin-block: var(--space-7);
   }
 
-  @media (min-width: 52rem) {
-    .facts {
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: var(--space-7);
-    }
+  /* Wider than a phone: the frame scrolls sideways, the page does not. */
+  .scroller {
+    margin-top: var(--space-3);
+    overflow-x: auto;
+  }
+
+  .scroller :global(.picture) {
+    width: 100%;
+    min-width: 56.25rem;
+    max-width: none;
+  }
+
+  .drawn {
+    min-width: 43rem;
+    padding: var(--space-5);
+  }
+
+  .architecture figcaption {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
   }
 </style>

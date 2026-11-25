@@ -128,7 +128,7 @@ def test_github_rate_limit_is_could_not_check_with_the_reset_time(client_for):
 
     assert systems["aws-platform"]["state"] == "unknown"
     assert systems["aws-platform"]["reason"] == (
-        "GitHub's hourly limit on anonymous API calls is used up; it resets at 20:05 UTC."
+        "GitHub's hourly limit on anonymous API calls is used up, and it resets at 20:05 UTC."
     )
 
 

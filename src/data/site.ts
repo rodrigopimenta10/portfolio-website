@@ -18,15 +18,17 @@ export const site = {
   bookCall: 'https://calendly.com/rodrigopimenta102/30min',
   repo: 'https://github.com/rodrigopimenta10/portfolio-website',
   /**
-   * Whether the hosting described on "How this site runs" is live. While false, that page and the
-   * footer say plainly that it is built and tested but not deployed. Flip it on the day it goes live.
+   * Whether the hosting described on "How this site runs" is live. While false, that page says
+   * plainly that it is built and tested but not deployed. Flip it on the day it goes live.
    */
   hosting: { live: true, asOf: '2026-11-18' },
 } as const;
 
+// The tabs read as one story, in order: the calls, the scripts I wrote to answer them faster, the
+// automation that made the calls stop, and what I build outside work.
 export const nav = [
-  { href: '/projects', label: 'Projects' },
-  { href: '/experience', label: 'Experience' },
-  { href: '/how-this-site-runs', label: 'How it runs', title: 'How this site runs' },
-  { href: '/resume', label: 'Resume' },
+  { href: '/on-call', label: 'On call' },
+  { href: '/tools', label: 'Tools' },
+  { href: '/self-healing', label: 'Self-healing' },
+  { href: '/projects', label: 'Side projects' },
 ] as const;

@@ -1,0 +1,183 @@
+---
+// The first chapter of the story: one night on call told step by step, then the four failures that
+// kept coming back. Each of those became something on the Tools and Self-healing pages.
+import Onward from '../components/Onward.astro';
+import Base from '../layouts/Base.astro';
+
+// The time is red for the call, amber while the fault is being found, green when customers are
+// back, and quiet for the follow-up, which happened in daylight with nobody waiting.
+const timeline = [
+  {
+    when: '2:00 AM',
+    tone: null,
+    title: 'The call.',
+    text: 'The network monitoring center, staffed 24/7, phones the on-call engineer: internet traffic (CIR, in Gbps) has dropped sharply and thousands of customers are calling about no internet.',
+  },
+  {
+    when: '2:11 AM',
+    tone: 'warn',
+    title: 'Confirmed it, and ruled out weather.',
+    text: 'Confirmed the drop in traffic and in terminals online. There was no severe weather, and weather would not explain losing every user on the IPGW components with almost all traffic in both directions.',
+  },
+  {
+    when: '2:24 AM',
+    tone: 'warn',
+    title: 'Found the crashed VM and failed it over.',
+    text: 'Mapped the affected beams to the VMs that serve them and found one had crashed. I failed it over to the spare VM on a different HPE blade, so service would return whether the fault was software or hardware.',
+  },
+  {
+    when: '2:26 AM',
+    tone: 'good',
+    title: 'Service restored.',
+    text: 'The failover took two minutes to go through fully. Customers were back online 26 minutes after the call.',
+  },
+] as const;
+
+const failures = [
+  {
+    what: 'A storage failure, about every two weeks',
+    cost: 'About an hour and a half of manual recovery each time.',
+  },
+  {
+    what: 'A modem failover while two racks disagreed, about once a month',
+    cost: 'Two hours to find and fix by hand each time.',
+  },
+  {
+    what: 'Heavy weather forcing a failover to the spare RF gateway',
+    cost: 'Around an hour to find the modems and reboot them one by one.',
+  },
+  {
+    what: 'Logs filling the storage, then log messages going missing',
+    cost: 'A slow investigation, and a first fix that made it worse.',
+  },
+];
+---
+
+<Base
+  title="On call: one incident, and four outages I removed"
+  path="/on-call"
+  description="I am the lead analyst on infrastructure failure investigations at Hughes. One night on call in full, then the four failures that kept calling."
+>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">On call, 24/7 against a 99.9% SLA</p>
+      <h1>Every outage I was called in for twice became something I built.</h1>
+      <p class="lede">
+        I am the lead analyst on infrastructure failure investigations at Hughes. Here is one night
+        in full, then the four failures that kept calling.
+      </p>
+      <nav class="on-this-page" aria-label="On this page">
+        <span class="eyebrow">On this page</span>
+        <a href="#incident">One incident, step by step</a>
+        <a href="#outages">Four failures that kept calling</a>
+      </nav>
+    </header>
+
+    <section class="section" id="incident" aria-labelledby="incident-title">
+      <div class="section-head">
+        <p class="eyebrow">One incident · names made up</p>
+        <h2 id="incident-title">2:00 AM: thousands of customers have no internet</h2>
+      </div>
+      <dl class="facts">
+        <div class="bad">
+          <dt>What happened</dt>
+          <dd>One VM crashed, and the customers it served lost their internet.</dd>
+        </div>
+        <div class="warn">
+          <dt>Impact</dt>
+          <dd>
+            A near-total loss of traffic in both directions on the affected beams, and thousands of
+            calls to the call center.
+          </dd>
+        </div>
+        <div class="good">
+          <dt>How it ended</dt>
+          <dd>
+            Service restored 26 minutes after the call, by failing over to a spare VM on different
+            hardware. Root cause traced the next day and sent to the vendor with a stack trace.
+          </dd>
+        </div>
+      </dl>
+      <ol class="timeline">
+        {
+          timeline.map((event) => (
+            <li>
+              <p class:list={['when', event.tone]}>{event.when}</p>
+              <div class="what">
+                <strong>{event.title}</strong>
+                <p>{event.text}</p>
+              </div>
+            </li>
+          ))
+        }
+        <li>
+          <p class="when later">Next day</p>
+          <div class="what">
+            <strong>Root cause found, and handed to the vendor.</strong>
+            <p>
+              The HPE console and iLO logs ruled out hardware. <code>/var/log/messages</code> and the
+              component’s own logs on the VM pointed to a core dump. I pulled the stack trace from it
+              with gdb, which pointed to the specific branch of that component’s code where it
+              failed, and raised an SPR with the trace attached: a request to the component’s vendor
+              to fix its software.
+            </p>
+          </div>
+        </li>
+      </ol>
+      <a class="go" href="/tools">
+        <span>The checks I run on a night like this, as one command <span aria-hidden="true">→</span></span>
+      </a>
+    </section>
+
+    <section class="section" id="outages" aria-labelledby="outages-title">
+      <div class="section-head">
+        <p class="eyebrow">The calls that kept coming</p>
+        <h2 id="outages-title">Four failures that used to cost a person hours</h2>
+        <p class="soft measure">
+          A one-off incident gets fixed and written up. These four came back, so each one became
+          something I built.
+        </p>
+      </div>
+      <ul class="pairs">
+        {
+          failures.map((failure) => (
+            <li>
+              <span>{failure.what}</span>
+              <span>{failure.cost}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="button" href="/self-healing">See them fix themselves <span aria-hidden="true">→</span></a>
+    </section>
+
+    <Onward
+      links={[
+        { label: 'Next', text: 'The scripts I reach for on a night like this', href: '/tools' },
+        { label: 'Then', text: 'Issues that now fix themselves, with simulations', href: '/self-healing' },
+        { label: 'Outside work', text: 'Three side projects you can open and check', href: '/projects' },
+      ]}
+    />
+  </div>
+</Base>
+
+<style>
+  /* The heading is a whole sentence, so it gets a wider line than a page title of a few words. */
+  .page-head h1 {
+    max-width: 26ch;
+  }
+
+  /* The blocks of a section sit one step apart under its heading. */
+  .section > :not(.section-head) + * {
+    margin-top: var(--space-5);
+  }
+
+  /* The outcome is the cell to read if you read only one. */
+  .facts .good dd {
+    font-weight: 600;
+  }
+
+  .timeline + .go {
+    margin-top: var(--space-2);
+  }
+</style>

@@ -8,7 +8,7 @@ import httpx
 
 from portfolio_status.errors import CheckFailed
 from portfolio_status.models import Finding
-from portfolio_status.sources import parse_json_object, parse_time
+from portfolio_status.sources import join_words, parse_json_object, parse_time
 
 # Its job runs every ten minutes and publishes each time. Three missed runs in a row means the
 # schedule has stopped, whatever the document says about its sources. These are the job's own
@@ -66,6 +66,6 @@ class OrbitalWatch:
                 f"{int(PUBLISHES_EVERY.total_seconds() // 60)} minutes"
             )
         if problems:
-            reason = "The page is up and says so itself: " + "; ".join(problems) + "."
+            reason = "The page is up and says so itself: " + join_words(problems) + "."
             return Finding("degraded", fact, reason, since=published_at, since_label="data published")
         return Finding("up", fact, since=published_at, since_label="data published")

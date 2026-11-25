@@ -92,6 +92,12 @@ async function proxy(request, response, pathname) {
 
 const server = http.createServer(async (request, response) => {
   const { pathname } = new URL(request.url, 'http://localhost');
+  // Redirects come first, as on Firebase Hosting: an old address answers with the new one.
+  const redirect = (config.redirects ?? []).find((rule) => matches(rule.source, pathname));
+  if (redirect) {
+    response.writeHead(redirect.type ?? 301, { Location: redirect.destination }).end();
+    return;
+  }
   if ((config.rewrites ?? []).some((rewrite) => rewrite.run && matches(rewrite.source, pathname))) {
     return proxy(request, response, pathname);
   }

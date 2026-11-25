@@ -1,5 +1,5 @@
-// Words for the status panel: state labels, ages, the one-line summary. No DOM.
-import type { State, StatusResponse, SystemStatus } from './types';
+// Words for the status panel: state labels, ages, what one row says, the one-line summary. No DOM.
+import { SYSTEMS, type State, type StatusResponse, type SystemStatus } from './types';
 
 export const STATE_LABEL: Record<State, string> = {
   up: 'up',
@@ -38,8 +38,30 @@ export function utcTime(iso: string): string {
   return `${new Date(iso).toISOString().slice(11, 19)} UTC`;
 }
 
+/**
+ * One entry for each row of the panel, in the panel's order. A system the service reports and the
+ * panel does not list is ignored. A listed system the service did not mention is "could not check":
+ * nothing is up by omission.
+ */
+export function listedSystems(response: StatusResponse): SystemStatus[] {
+  return SYSTEMS.map(
+    (listed): SystemStatus =>
+      response.systems.find((system) => system.id === listed.id) ?? {
+        ...listed,
+        state: 'unknown',
+        checked_at: response.generated_at,
+        reason: 'The status service did not report on this system.',
+      },
+  );
+}
+
 /** The line under a row's fact: when it was checked, and the age that goes with the fact. */
 export function metaLine(system: SystemStatus, response: StatusResponse, receivedAtMs: number, nowMs: number): string {
+  // A check that failed has nothing new to date. What it can say is how old the last good answer is.
+  if (system.state === 'unknown' && system.last_known) {
+    const { state, checked_at } = system.last_known;
+    return `last known answer: ${STATE_LABEL[state]}, ${ageOf(checked_at, response, receivedAtMs, nowMs)}`;
+  }
   const parts = [`checked ${ageOf(system.checked_at, response, receivedAtMs, nowMs)}`];
   if (system.since && system.since_label) {
     parts.push(`${system.since_label} ${ageOf(system.since, response, receivedAtMs, nowMs)}`);
@@ -47,22 +69,37 @@ export function metaLine(system: SystemStatus, response: StatusResponse, receive
   return parts.join(' · ');
 }
 
-/** What a row says when its check failed but an earlier one had worked. */
-export function lastKnownLine(system: SystemStatus, response: StatusResponse, receivedAtMs: number, nowMs: number): string | null {
-  const last = system.last_known;
-  if (!last) return null;
-  const when = ageOf(last.checked_at, response, receivedAtMs, nowMs);
-  return `Last known, ${when}: ${STATE_LABEL[last.state]}. ${last.fact}`;
+/** What one row of the panel shows. */
+export interface RowView {
+  id: string;
+  /** "loading" is the row before any answer: the same row, saying "checking". */
+  state: State | 'loading';
+  label: string;
+  /** The row's main line. `null` leaves the placeholder that is in the HTML from the start. */
+  fact: string | null;
+  /** A second line under the fact: why a system that answered is degraded or down. */
+  reason: string | null;
+  meta: string;
 }
 
-/** "All 4 up", "3 of 4 up, 1 could not check", "2 of 4 up, 1 degraded, 1 down". */
+export function rowView(system: SystemStatus, response: StatusResponse, receivedAtMs: number, nowMs: number): RowView {
+  return {
+    id: system.id,
+    state: system.state,
+    label: STATE_LABEL[system.state],
+    // A failed check has no fact, so its reason takes the main line.
+    fact: system.fact ?? system.reason ?? (system.state === 'unknown' ? 'The check failed.' : ''),
+    reason: system.fact ? (system.reason ?? null) : null,
+    meta: metaLine(system, response, receivedAtMs, nowMs),
+  };
+}
+
+/** "All 3 up", "2 up · 1 could not check", "1 up · 1 degraded · 1 down". */
 export function summary(systems: readonly SystemStatus[]): string {
   const count = (state: State) => systems.filter((system) => system.state === state).length;
-  const total = systems.length;
-  const up = count('up');
-  if (up === total) return `All ${total} up`;
-  const rest = (['degraded', 'down', 'unknown'] as const)
-    .filter((state) => count(state) > 0)
-    .map((state) => `${count(state)} ${STATE_LABEL[state]}`);
-  return [`${up} of ${total} up`, ...rest].join(', ');
+  if (count('up') === systems.length) return `All ${systems.length} up`;
+  return (['up', 'degraded', 'down', 'unknown'] as const)
+    .filter((state) => state === 'up' || count(state) > 0)
+    .map((state) => `${count(state)} ${STATE_LABEL[state]}`)
+    .join(' · ');
 }

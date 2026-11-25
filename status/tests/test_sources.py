@@ -106,7 +106,7 @@ def test_orbital_watch_reads_a_document_as_the_job_really_publishes_it():
     assert finding.state == "degraded"
     assert finding.fact == "4 of 7 data sources fresh"
     assert finding.reason == (
-        "The page is up and says so itself: 1 of its 7 sources failed; 2 of its 7 sources are stale."
+        "The page is up and says so itself: 1 of its 7 sources failed and 2 of its 7 sources are stale."
     )
 
 
@@ -199,7 +199,7 @@ def test_drill_that_failed_is_degraded_and_names_the_stacks():
 
     assert finding.state == "degraded"
     assert finding.fact == "Last live drill failed (run 17)"
-    assert finding.reason == "In the drill of m2, vpc and m1, m2 and m1 failed; vpc passed."
+    assert finding.reason == "In the drill of m2, vpc and m1, m2 and m1 failed, and vpc passed."
 
 
 def test_drill_in_progress_is_mentioned_beside_the_last_finished_one():
@@ -214,7 +214,7 @@ def test_drill_in_progress_is_mentioned_beside_the_last_finished_one():
     finding, _ = run_check(AwsDrill(), answers)
 
     assert finding.state == "up"
-    assert finding.fact.endswith("(run 25); another is running now")
+    assert finding.fact.endswith("(run 25), and another is running now")
 
 
 def test_drill_when_no_recent_run_drilled_reports_the_latest_run():
@@ -228,7 +228,7 @@ def test_drill_when_no_recent_run_drilled_reports_the_latest_run():
     finding, _ = run_check(AwsDrill(), answers)
 
     assert finding.state == "up"
-    assert finding.fact == "Latest run after CI passed; no stack needed a drill (run 23)"
+    assert finding.fact == "Latest run after CI passed, and no stack needed a drill (run 23)"
 
 
 def test_drill_asks_for_a_finished_runs_jobs_only_once():

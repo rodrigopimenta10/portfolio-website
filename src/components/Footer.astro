@@ -1,91 +1,151 @@
 ---
-import { site } from '../data/site';
+import { nav, site } from '../data/site';
 import { buildInfo } from '../lib/build-info';
 
 const built = buildInfo.builtAt.slice(0, 16).replace('T', ' ');
+const links = [{ href: '/', label: 'Home' }, ...nav, { href: '/how-this-site-runs', label: 'How this site runs' }];
 ---
 
 <footer class="site-footer">
-  <div class="wrap inner">
-    <div class="contact">
-      <p class="eyebrow">Contact</p>
-      <p class="seeking">{site.seeking}</p>
-      <ul>
-        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
-        <li><a href={site.linkedin} rel="me">LinkedIn</a></li>
-        <li><a href={site.github} rel="me">GitHub</a></li>
-        <li><a href={site.resumePdf}>Resume (PDF)</a></li>
-        <li><a href={site.bookCall}>Book a 30-minute call</a></li>
+  <section class="contact" aria-labelledby="contact-title">
+    <div class="wrap band">
+      <p class="eyebrow available"><span class="dot" aria-hidden="true"></span>Available now</p>
+      <h2 id="contact-title">{site.seeking}</h2>
+      <ul class="ways">
+        <li>
+          <a class="button" href={site.resumePdf}>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4-4-4M4 16.5h12" /></svg>
+            Resume (PDF)
+          </a>
+        </li>
+        <li><a class="button quiet" href={`mailto:${site.email}`}>Email me</a></li>
+        <li><a class="button quiet" href={site.bookCall}>Book a 30-minute call</a></li>
+        <li><a class="plain" href={site.linkedin} rel="me">LinkedIn</a></li>
+        <li><a class="plain" href={site.github} rel="me">GitHub</a></li>
       </ul>
     </div>
-    <div class="colophon mono">
-      <p>
-        Static pages built with Astro. The status panel is the only live data, served by one small
-        service. <a href="/how-this-site-runs">How this site runs</a>.
-      </p>
-      <p>
-        {buildInfo.commit ? (
-          <>
-            Built {built} UTC from commit{' '}
-            {buildInfo.commitIsPublic ? <a href={`${site.repo}/commit/${buildInfo.commit}`}>{buildInfo.commit}</a> : buildInfo.commit}.
-          </>
-        ) : (
-          <>Built {built} UTC.</>
-        )}{' '}
-        <a href={site.repo}>Source</a>.
-      </p>
-    </div>
+  </section>
+
+  <div class="wrap small">
+    <nav aria-label="Footer">
+      <ul>
+        {
+          links.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <p class="colophon mono">
+      {buildInfo.commit ? (
+        <>
+          Built {built} UTC from commit{' '}
+          {buildInfo.commitIsPublic ? <a href={`${site.repo}/commit/${buildInfo.commit}`}>{buildInfo.commit}</a> : buildInfo.commit}.
+        </>
+      ) : (
+        <>Built {built} UTC.</>
+      )}{' '}
+      <a href={site.repo}>Source</a>.
+    </p>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    margin-top: var(--space-9);
+    margin-top: var(--space-8);
     border-top: 1px solid var(--rule);
-    background: var(--paper-sunk);
   }
 
-  .inner {
+  .contact {
+    background: var(--paper-raised);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .band {
     display: grid;
-    gap: var(--space-6);
-    padding-block: var(--space-7);
+    gap: var(--space-4);
+    padding-block: var(--space-8);
   }
 
-  .seeking {
-    margin-top: var(--space-2);
-    font-size: var(--text-lg);
+  .available {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--accent);
   }
 
-  .contact ul {
+  .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  h2 {
+    max-width: 22ch;
+    font-size: var(--text-2xl);
+    letter-spacing: -0.03em;
+  }
+
+  .ways {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-5);
-    margin-top: var(--space-3);
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
   }
 
-  .contact a {
-    display: inline-block;
-    padding-block: var(--space-1);
-    overflow-wrap: anywhere;
+  .plain {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.875rem;
+    padding-inline: var(--space-3);
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .plain:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+
+  .small {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-5);
+    padding-block: var(--space-4) var(--space-5);
+  }
+
+  .small ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+
+  .small nav a {
+    display: inline-flex;
+    align-items: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    font-size: var(--text-sm);
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .small nav a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
   }
 
   .colophon {
-    display: grid;
-    gap: var(--space-2);
-    align-content: start;
-    color: var(--ink-soft);
+    font-size: var(--text-xs);
     line-height: 1.6;
-    max-width: 34rem;
-  }
-
-  @media (min-width: 52rem) {
-    .inner {
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-8);
-    }
-
-    .colophon {
-      justify-self: end;
-    }
+    color: var(--ink-soft);
   }
 </style>

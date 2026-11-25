@@ -1,0 +1,570 @@
+---
+// The second chapter: the scripts and the dashboard I built so a night on call takes one command
+// and one screen. The scripts are walked through a step per press. Every step and every row is
+// rendered here, so the page reads in full without JavaScript, and the script (tools-ui.ts) then
+// takes over to step and filter.
+import Onward from '../components/Onward.astro';
+import Base from '../layouts/Base.astro';
+import { countFor, filters, fleet, toRow } from '../lib/tools/fleet';
+import { beforeItRuns, runLabel, walkthroughs } from '../lib/tools/walkthrough';
+
+const rows = fleet.map(toRow);
+const firstLabel = walkthroughs[0] ? runLabel(walkthroughs[0], 0) : '';
+---
+
+<Base
+  title="Tools: three scripts and a dashboard"
+  path="/tools"
+  description="Tools I built for the team at Hughes: one command that checks every device at once, and one screen that says what each component needs."
+>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">Tools I built for the team at Hughes</p>
+      <h1>One command that checks every device at once. One screen that says what each component needs.</h1>
+      <p class="lede">
+        On a bad night an engineer logs in to one device at a time. These check every device at
+        once. A person still runs them and makes the repair, which is what the next tab removes.
+      </p>
+      <nav class="on-this-page" aria-label="On this page">
+        <span class="eyebrow">On this page</span>
+        <a href="#scripts">Three scripts, step by step</a>
+        <a href="#dashboard">The dashboard</a>
+      </nav>
+    </header>
+
+    <section class="section" id="scripts" aria-labelledby="run-title">
+      <div class="section-head">
+        <p class="eyebrow">Scripts · run by hand</p>
+        <h2 id="run-title">One command to see what an engineer would check by hand</h2>
+        <p class="soft measure">
+          Pick a script and step through it. Each press runs the next step and says why it is there.
+        </p>
+      </div>
+
+      <div class="walk" data-walkthroughs>
+        <div class="picker" role="group" aria-label="Choose a script">
+          {
+            walkthroughs.map((walkthrough, index) => (
+              <button class="button quiet" type="button" data-pick aria-pressed={index === 0 ? 'true' : 'false'}>
+                {walkthrough.name}
+              </button>
+            ))
+          }
+        </div>
+
+        <div class="stage">
+          <div class="scripts">
+            {
+              walkthroughs.map((walkthrough) => (
+                <section class="script" data-script={walkthrough.id} aria-labelledby={`script-${walkthrough.id}`}>
+                  <h3 id={`script-${walkthrough.id}`} data-script-name>
+                    {walkthrough.name}
+                  </h3>
+                  <div class="terminal surface">
+                    <div class="terminal-head">
+                      <code class="command">
+                        <span class="prompt" aria-hidden="true">$</span>
+                        {walkthrough.command.split(' ').map((word) => (
+                          <>
+                            <span class="word">{word}</span>{' '}
+                          </>
+                        ))}
+                      </code>
+                      <button class="button run" type="button" data-run>
+                        {firstLabel}
+                      </button>
+                    </div>
+                    <div class="output mono" role="log" aria-label={`Output of ${walkthrough.name}`}>
+                      <ol>
+                        {walkthrough.steps.map((step) => (
+                          <li data-line>
+                            <span class="verb">{step.verb}</span>
+                            <span class="said">{step.text}</span>
+                            <div class="because">
+                              <strong>{step.title}</strong>
+                              <p>{step.why}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                </section>
+              ))
+            }
+          </div>
+
+          <div class="why surface">
+            <div class="why-text" role="status">
+              <p class="eyebrow" data-why-label>{beforeItRuns.label}</p>
+              <p class="why-title" data-why-title>{beforeItRuns.title}</p>
+              <p class="soft" data-why-text>{beforeItRuns.text}</p>
+            </div>
+            <div class="controls">
+              <button class="button quiet" type="button" data-back aria-disabled="true">Back</button>
+              <button class="button" type="button" data-run>{firstLabel}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="soft note">Names and readings are examples.</p>
+    </section>
+
+    <section class="section" id="dashboard" aria-labelledby="fleet-title" data-fleet>
+      <div class="section-head">
+        <p class="eyebrow">The dashboard I built · <span class="together">made-up</span> components</p>
+        <h2 id="fleet-title">One screen that says what each component needs</h2>
+        <p class="soft measure">Software, configuration and hardware health side by side. Press a count to filter.</p>
+      </div>
+
+      <div class="filters" role="group" aria-label="Filter the components">
+        {
+          filters.map((filter) => (
+            <button type="button" class:list={['filter', filter.tone]} data-filter={filter.key} aria-pressed={filter.key === 'all' ? 'true' : 'false'} disabled>
+              <span class="count">{countFor(filter.key)}</span>
+              <span class="label">{filter.label}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="fleet surface" tabindex="0" role="group" aria-label="Components table. Scrolls sideways on a small screen.">
+        <table aria-labelledby="fleet-title">
+          <thead>
+            <tr>
+              <th scope="col">Component</th>
+              <th scope="col">Rack</th>
+              <th scope="col">Software</th>
+              <th scope="col">Configuration</th>
+              <th scope="col">Hardware</th>
+              <th scope="col">What it needs</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              rows.map((row) => (
+                <tr data-component={row.name}>
+                  <th scope="row">{row.name}</th>
+                  <td class="soft">{row.rack}</td>
+                  <td class:list={['version', row.software.tone ?? 'soft']}>{row.software.text}</td>
+                  <td class={row.config.tone ?? 'soft'}>{row.config.text}</td>
+                  <td class={row.hardware.tone ?? 'soft'}>{row.hardware.text}</td>
+                  <td class:list={['need', row.need.tone]}>{row.need.text}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="soft note">
+        “Drifted” means an update has not reached the component. “Change needed” means the network
+        changed and the configuration has to follow.
+      </p>
+    </section>
+
+    <section class="section" aria-label="What came next">
+      <a class="handoff" href="/self-healing">
+        <span class="eyebrow">What came next</span>
+        <span class="handoff-text">
+          Running these was still a person’s job, and so was the repair. So the two worst failures
+          learned to fix themselves.
+        </span>
+        <span class="handoff-go">Break one and watch it heal <span aria-hidden="true">→</span></span>
+      </a>
+    </section>
+
+    <Onward
+      links={[
+        { label: 'Next', text: 'Issues that now fix themselves, with simulations', href: '/self-healing' },
+        { label: 'Where it started', text: 'One 2 AM incident, step by step', href: '/on-call' },
+        { label: 'Outside work', text: 'Three side projects you can open and check', href: '/projects' },
+      ]}
+    />
+  </div>
+</Base>
+
+<script>
+  import { mountFleet, mountWalkthroughs } from '../scripts/tools-ui';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-walkthroughs]')) mountWalkthroughs(root);
+  for (const root of document.querySelectorAll<HTMLElement>('[data-fleet]')) mountFleet(root);
+</script>
+
+<style>
+  /* The heading is two whole sentences, so it gets a wider line than a page title of a few words. */
+  .page-head h1 {
+    max-width: 30ch;
+  }
+
+  /* The blocks of a section sit one step apart under its heading. */
+  .section > :not(.section-head) + * {
+    margin-top: var(--space-5);
+  }
+
+  .note {
+    max-width: var(--measure);
+    font-size: var(--text-sm);
+  }
+
+  /* ---------- The scripts ---------- */
+
+  /* Without the script every step of all three is on the page, one script under another, each line
+     followed by its reason. The picker, the run buttons and the side card would do nothing there. */
+  .picker,
+  .why,
+  .run {
+    display: none;
+  }
+
+  .walk[data-live] .picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .walk[data-live] .why {
+    display: flex;
+  }
+
+  .walk[data-live] .run {
+    display: inline-flex;
+  }
+
+  .picker button {
+    border-radius: var(--radius-sm);
+    color: var(--ink-soft);
+  }
+
+  .picker button[aria-pressed='true'] {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    color: var(--ink);
+  }
+
+  .stage,
+  .scripts {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+
+  .scripts {
+    gap: var(--space-6);
+  }
+
+  .script {
+    display: grid;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .script[hidden] {
+    display: none;
+  }
+
+  .terminal {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .terminal-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0.875rem 1.125rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .command {
+    flex: 1 1 23.75rem;
+    min-width: 0;
+    padding: 0;
+    background: none;
+    font-size: var(--text-sm);
+    line-height: 1.6;
+  }
+
+  .prompt {
+    color: var(--accent);
+  }
+
+  /* A long command wraps between its words, never inside "--satellite" or "health-checks". */
+  .word {
+    white-space: nowrap;
+  }
+
+  .output {
+    padding: var(--space-4) 1.125rem;
+  }
+
+  .output ol {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .output li {
+    display: grid;
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .verb {
+    color: var(--accent);
+  }
+
+  .because {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--space-1);
+    max-width: var(--measure);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  .because strong {
+    color: var(--ink);
+  }
+
+  /* With the script: one line per step, and the reason moves to a card of its own. */
+  .walk[data-live] .because,
+  .walk[data-live] li[data-state='waiting'] {
+    display: none;
+  }
+
+  .walk[data-live] .output {
+    min-height: 8rem;
+  }
+
+  .walk[data-live] .output ol {
+    gap: 0.125rem;
+  }
+
+  .walk[data-live] .output li {
+    padding: 0.4375rem 0.625rem;
+    border-radius: var(--radius-sm);
+    color: var(--ink-soft);
+  }
+
+  .walk[data-live] .verb {
+    color: inherit;
+  }
+
+  .walk[data-live] .output li[data-state='latest'] {
+    background: var(--paper-sunk);
+    color: var(--ink);
+  }
+
+  .walk[data-live] li[data-state='latest'] .verb {
+    color: var(--accent);
+  }
+
+  .why {
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: 1.25rem;
+  }
+
+  .why-text {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .why-title {
+    font-size: var(--text-lg);
+    line-height: 1.3;
+    font-weight: 600;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: auto;
+  }
+
+  .button[aria-disabled='true'] {
+    color: var(--ink-soft);
+    cursor: default;
+  }
+
+  .button[aria-disabled='true']:hover {
+    border-color: var(--rule-strong);
+    transform: none;
+  }
+
+  /* With room, the card sits beside the output, and lines not printed yet keep their place there,
+     so the output does not grow as you step. On a phone the card follows the newest line instead. */
+  @media (min-width: 60rem) {
+    .walk[data-live] .stage {
+      grid-template-columns: minmax(0, 1fr) 21rem;
+    }
+
+    .walk[data-live] li[data-state='waiting'] {
+      display: grid;
+      visibility: hidden;
+    }
+  }
+
+  /* ---------- The dashboard ---------- */
+
+  /* Keeps the label from breaking at the hyphen on a phone. */
+  .together {
+    white-space: nowrap;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .filter {
+    flex: 1 1 8.75rem;
+    min-width: 0;
+    min-height: 4rem;
+    display: grid;
+    gap: 0.125rem;
+    align-content: center;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 0.75rem;
+    background: var(--paper-raised);
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 140ms ease;
+  }
+
+  .filter:disabled {
+    cursor: default;
+  }
+
+  .filter:enabled:hover {
+    border-color: var(--ink-soft);
+  }
+
+  /* The pressed filter is ringed in the colour of its own count. */
+  .filter[aria-pressed='true'],
+  .filter[aria-pressed='true']:hover {
+    border-color: currentColor;
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+
+  .count {
+    font-size: 1.5rem;
+    line-height: 1.1;
+    font-weight: 600;
+  }
+
+  .label {
+    font-size: var(--text-xs);
+    color: var(--ink-soft);
+  }
+
+  /* How a count or a cell reads at a glance: wants attention, is broken, is fine. */
+  .warn {
+    color: var(--state-degraded);
+  }
+
+  .bad {
+    color: var(--state-down);
+  }
+
+  .good {
+    color: var(--accent);
+  }
+
+  .fleet {
+    overflow-x: auto;
+  }
+
+  /* Separate borders, because a collapsed border does not travel with a cell that stays in place. */
+  table {
+    width: 100%;
+    min-width: 45rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+    font-size: var(--text-sm);
+  }
+
+  th,
+  td {
+    padding: var(--space-3);
+    border-top: 1px solid var(--rule);
+    font-weight: 400;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  thead th {
+    border-top: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* The component's name stays in place while the rest of its row scrolls under it on a phone. */
+  th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    padding-left: 1.125rem;
+    border-right: 1px solid var(--rule);
+    background: var(--paper-raised);
+  }
+
+  td:last-child,
+  th:last-child {
+    padding-right: 1.125rem;
+  }
+
+  tbody th,
+  .version {
+    font-family: var(--font-mono);
+  }
+
+  .need {
+    font-weight: 600;
+  }
+
+  /* ---------- What came next ---------- */
+
+  .handoff {
+    display: grid;
+    gap: var(--space-2);
+    padding: 1.5rem 1.75rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background-color 140ms ease;
+  }
+
+  .handoff:hover {
+    background: var(--accent-wash);
+  }
+
+  .handoff-text {
+    max-width: 47.5rem;
+    font-size: var(--text-lg);
+    line-height: 1.3;
+    font-weight: 600;
+  }
+
+  .handoff-go {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+</style>

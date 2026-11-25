@@ -1,0 +1,255 @@
+---
+// The config drift checker in detail: how it finds two racks that disagree, what an engineer used
+// to do by hand, and what I took from building it. The simulation of it is on the Self-healing tab.
+import Onward from '../../components/Onward.astro';
+import Base from '../../layouts/Base.astro';
+
+const lede =
+  'An update reaches the SNC rack before the RF gateway rack, and the two disagree in silence until a modem fails over onto the mismatch. A checker now compares them every ten minutes.';
+
+const rules = [
+  {
+    title: 'It compares on a cycle.',
+    text: 'Every ten minutes it reads each gateway’s configuration over SFTP and compares it with what it should be.',
+  },
+  {
+    title: 'It fixes the thing that is wrong.',
+    text: 'When it finds drift it restarts the affected service.',
+  },
+  {
+    title: 'Many slow conversations at once.',
+    text: 'The work is almost all waiting on the network, so it runs on asyncio with a semaphore that caps how many connections are open at a time. That replaced a version built on blocking calls, without reaching for process pools.',
+  },
+  {
+    title: 'It measures whether it helped.',
+    text: 'Drift is counted in episodes, and 89% of them close inside one ten-minute cycle.',
+  },
+];
+
+const byHand = [
+  'Work out which rack has the newer configuration file.',
+  'Log in to that SNC rack’s imaging server.',
+  'From there, log in to the rack’s SCS VM.',
+  'Run the configuration push script, which copies the configuration from the SNC rack to the RF gateway rack so the two agree again.',
+];
+
+const taken = [
+  'For work that waits on the network, concurrency is a number you choose, not a pool of processes you feed.',
+  'A fix that runs by itself should come with a measured time to close, or nobody can tell whether it is helping.',
+  'The dull remediation is the right one to automate first: it is the one people stop doing carefully.',
+];
+
+const builtWith = ['Python', 'asyncio', 'SFTP', 'PostgreSQL'];
+---
+
+<Base title="Case study: config drift between two racks" path="/self-healing/config-drift" description={lede}>
+  <div class="wrap">
+    <nav class="back" aria-label="Breadcrumb">
+      <a href="/self-healing"><span aria-hidden="true">←&nbsp;</span>Self-healing</a>
+    </nav>
+
+    <header class="page-head">
+      <p class="eyebrow">How it works, in detail · Hughes Network Systems · in production</p>
+      <h1>Two racks disagreed, and nothing looked wrong until 20,000 to 30,000 customers went offline.</h1>
+      <p class="lede">{lede}</p>
+      <dl class="facts">
+        <div class="bad">
+          <dt>Before</dt>
+          <dd>About once a month, residential customers lost their internet. Two hours to find and fix by hand.</dd>
+        </div>
+        <div class="good">
+          <dt>After</dt>
+          <dd><strong>89% of drift episodes close inside one 10-minute cycle.</strong></dd>
+        </div>
+        <div>
+          <dt>Scale</dt>
+          <dd>18 gateways at 8 sites.</dd>
+        </div>
+        <div>
+          <dt>Built with</dt>
+          <dd>Python, asyncio, SFTP, PostgreSQL.</dd>
+        </div>
+      </dl>
+    </header>
+
+    <p class="replay">
+      {/* One inner span, so that on a phone the arrow wraps with the words instead of sitting apart. */}
+      <a class="go" href="/self-healing#drift">
+        <span>Play the simulation of this on the Self-healing tab<span aria-hidden="true">&nbsp;→</span></span>
+      </a>
+    </p>
+
+    <section class="section" aria-labelledby="how-title">
+      <div class="section-head">
+        <p class="eyebrow">How it works</p>
+        <h2 id="how-title">Found by looking, not by waiting for a symptom</h2>
+      </div>
+      <ol class="rules">
+        {
+          rules.map((rule, index) => (
+            <li>
+              <span class="number" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <h3>{rule.title}</h3>
+              <p>{rule.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="section before-after" aria-label="Before and after">
+      <div>
+        <p class="eyebrow">Before</p>
+        <h2>What an engineer did by hand</h2>
+        <p class="soft">
+          Nothing fails loudly when two racks disagree, so the first sign was customers offline. Then a person had to
+          work out why, and:
+        </p>
+        <ol class="steps">
+          {byHand.map((step) => <li>{step}</li>)}
+        </ol>
+        <p class="soft">
+          Two hours each time, most of it spent finding the cause. The checker finds the mismatch before a failover can
+          land on it.
+        </p>
+      </div>
+      <div>
+        <p class="eyebrow">After</p>
+        <h2>What I took from building it</h2>
+        <ul class="taken">
+          {taken.map((line) => <li>{line}</li>)}
+        </ul>
+        <ul class="chips">
+          {builtWith.map((name) => <li class="tag">{name}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <Onward
+      links={[
+        { label: 'Also in detail', text: 'A 90-minute storage recovery, now zero touch', href: '/self-healing/storage' },
+        { label: 'On call', text: 'One 2 AM incident, step by step', href: '/on-call' },
+        { label: 'Tools', text: 'The drift check, as one command you can step through', href: '/tools' },
+      ]}
+    />
+  </div>
+</Base>
+
+<style>
+  .back {
+    padding-top: var(--space-4);
+  }
+
+  .back a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .back a:hover {
+    color: var(--accent);
+  }
+
+  /* The way back sits above the heading, so the heading needs less air than on a tab's own page. */
+  .page-head {
+    padding-top: var(--space-4);
+  }
+
+  /* The heading here is a full sentence, not a title: it gets a longer line than the shared 20ch. */
+  .page-head h1 {
+    max-width: 32ch;
+  }
+
+  .page-head .facts {
+    margin-top: var(--space-2);
+  }
+
+  .replay {
+    padding-block: var(--space-2);
+    border-block: 1px solid var(--rule);
+  }
+
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    gap: var(--space-6);
+  }
+
+  .rules li {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+  }
+
+  .rules .number {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+
+  .rules h3 {
+    font-size: 1.125rem;
+    line-height: 1.3;
+  }
+
+  .rules p {
+    color: var(--ink-soft);
+  }
+
+  .before-after {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-7) 3.5rem;
+  }
+
+  .before-after > div {
+    flex: 1 1 23.75rem;
+    min-width: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  /* Each step carries its number in a ring, drawn from the list's own count. */
+  .steps {
+    display: grid;
+    gap: var(--space-3);
+    counter-reset: step;
+  }
+
+  .steps li {
+    display: grid;
+    grid-template-columns: 1.625rem 1fr;
+    gap: 0.875rem;
+    align-items: start;
+    counter-increment: step;
+  }
+
+  .steps li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    height: 1.625rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-soft);
+  }
+
+  .taken {
+    border-top: 1px solid var(--rule);
+  }
+
+  .taken li {
+    padding-block: 0.875rem;
+    border-bottom: 1px solid var(--rule);
+  }
+</style>

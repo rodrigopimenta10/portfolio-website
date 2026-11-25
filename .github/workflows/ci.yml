@@ -79,11 +79,12 @@ jobs:
       - name: Nothing in the build that should not be public
         run: node scripts/check-output.mjs
 
-      - name: Install the browser
-        run: npx playwright install --with-deps chromium
+      - name: Install the browsers
+        run: npx playwright install --with-deps chromium firefox webkit
 
       # Starts the status service on recorded sources and the built site in front of it
-      # (playwright.config.ts), then drives a browser at 1440 and 360 pixels wide.
+      # (playwright.config.ts), then drives Chromium at 1440 and 360 pixels wide, Firefox on a
+      # laptop-sized screen and Safari's engine on a phone-sized one.
       - name: Smoke test in a browser
         run: npm run test:e2e
 

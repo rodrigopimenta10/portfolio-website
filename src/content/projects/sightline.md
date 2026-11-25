@@ -1,106 +1,71 @@
 ---
-kind: personal
 title: Sightline
 order: 1
 summary: A lunar landing-site planner. It shows when the Sun and Earth are in view from a landing site at the Moon's south pole, every hour from 2026 to 2049, and whether a landing date fits a mission's limits.
 role: I led the six-person team behind it (NASA Space Apps 2026). I assigned the work, reviewed the team's pull requests, owned the architecture decisions and built all of the Google Cloud infrastructure. AI coding agents wrote most of the code, under my direction and review.
+result: Sun and Earth positions match JPL Horizons within 0.0071° over 5,469,984 hourly checks. Deploys go out as a canary and roll back automatically. 2,020 tests run in CI.
 stack:
   - Python
   - TypeScript and React
   - Google Cloud Run
   - Terraform
   - Firestore
-  - Redis (optional, off since Nov 2026)
+  - Redis
   - Pub/Sub and BigQuery
   - GitHub Actions
-result: Sun and Earth positions match JPL Horizons within 0.0071° over 5,469,984 hourly checks. Deploys go out as a canary and roll back automatically. 2,020 tests run in CI.
 live: https://lunarsightline.com
 code: https://github.com/shackleton-station/sightline
-statusId: sightline
+video: https://youtu.be/YJMlGcogtI0
 screenshot:
   src: ../../assets/screens/sightline.webp
   alt: Sightline's front page. The Moon seen from above its south pole, half lit, with marked landing sites, a time bar set to 27 November 2026 and the Scout co-pilot open on the right.
-  caption: lunarsightline.com on 18 November 2026, after closing the welcome card. Taken with headless Chrome at 1440 by 900, at twice the pixel density.
-diagram:
-  name: sightline
-  caption: Four Cloud Run services behind one load balancer. No service calls another to answer a visitor; the load balancer sends each path to the service that owns it.
-  sourceHref: https://github.com/shackleton-station/sightline/blob/main/docs/SYSTEM_DESIGN.md
-  sourceLabel: docs/SYSTEM_DESIGN.md
-facts:
-  - Led a team of six
-  - Four Cloud Run services, all in Terraform
-  - 0.0071° from JPL Horizons over 5,469,984 checks
-  - 2,020 tests in CI; canary deploys that roll back
-sources:
-  - claim: Led the six-person team, assigned work and reviewed pull requests, owned the architecture decisions, built all the Google Cloud infrastructure, directed AI coding agents that wrote most of the code.
-    where: Resume, Systems Built; the repository README names the team of six and its captain.
-    href: https://github.com/shackleton-station/sightline#readme
-  - claim: Matches JPL Horizons within 0.0071° over 5,469,984 hourly checks; 2,020 tests in CI; canary deploys with automatic rollback.
-    where: Resume, Systems Built. The repository README carries the 5,469,984 figure.
-    href: https://github.com/shackleton-station/sightline#readme
-  - claim: Four Cloud Run services behind a load balancer, CDN and Cloud Armor; Firestore, Redis, Pub/Sub into BigQuery; Terraform applied from GitHub Actions with no stored keys.
-    where: Resume and the repository's docs/SYSTEM_DESIGN.md.
-    href: https://github.com/shackleton-station/sightline/blob/main/docs/SYSTEM_DESIGN.md
-  - claim: 13 sites, every hour from 2026 to 2049; 1.04 trillion Sun and Earth answers computed.
-    where: Repository README, "By the numbers".
-    href: https://github.com/shackleton-station/sightline#readme
-  - claim: The event's settings, the two scale-downs, about $105 and about $43 a month at list price, and the measured cold starts.
-    where: The repository's docs/DEPLOY.md, "Settings after the event", and docs/PROGRESS.md.
-    href: https://github.com/shackleton-station/sightline/blob/main/docs/DEPLOY.md#settings-after-the-event
+  caption: lunarsightline.com on 18 November 2026.
+architecture:
+  caption: The architecture as it ran for the hackathon weekend. On a phone, scroll sideways for all of it.
+  image:
+    src: ../../assets/screens/sightline-architecture-hackathon.webp
+    alt: "Sightline’s architecture for the hackathon weekend, in six areas: edge (browser, load balancer and CDN, Cloud Armor, NASA Moon Trek, backend buckets), the request path on Cloud Run (web, plans, the Scout co-pilot, Firestore, Cloud Storage, Redis, Text-to-Speech, the Anthropic API and JPL Horizons), async events (Pub/Sub, an events worker, BigQuery, a dead-letter queue), build and deploy (GitHub Actions, Terraform, Artifact Registry, canary deploys), and observability."
+card:
+  summary: A lunar landing-site planner. It shows when the Sun and Earth are in view from a site at the Moon’s south pole, every hour from 2026 to 2049.
+  alt: "Sightline: the Moon seen from above its south pole, with marked landing sites and a time bar"
+  claim: 0.0071° from JPL Horizons
+  detail: over 5,469,984 hourly checks. I led the team of six and built all of the Google Cloud infrastructure.
+  tags:
+    - Python
+    - Cloud Run ×4
+    - Terraform
+    - 2,020 tests in CI
+    - canary deploys
 ---
 
 ## What it does
 
 A lander at the Moon's south pole needs the Sun for power and Earth for a direct radio link, and
 there both only skim the horizon, so the hills decide when each is in view. Sightline computes
-that from NASA's terrain and ephemeris data for 13 sites, every hour from 2026 to 2049.
+that for 13 sites, every hour from 2026 to 2049.
 
-You pick a site, a landing date and a mission: how long it lasts, how much darkness and radio
-silence it can take. Sightline answers in words. It fits, it fits with little margin, or it does
-not and why, with the next landing that does.
+You pick a site, a landing date and a mission. Sightline answers in words: it fits, it fits with
+little margin, or it does not and why, with the next landing that does.
 
-## How it is built
+## How it was built for the hackathon
 
 A Python pipeline reads NASA's LOLA terrain models and SPICE kernels and computes the horizon and
 the Sun's and Earth's positions for each site. The front end is React and TypeScript.
 
-It runs on Google Cloud as four Cloud Run services, each with its own image, identity and deploy:
-the web server, saved plans, the co-pilot, and a private worker that counts questions. A global
-load balancer with a CDN and an edge firewall sends each path to its service. Every piece of it is
-declared in Terraform and applied from GitHub Actions, which signs in to Google Cloud with no
-stored keys.
+It ran on Google Cloud as four Cloud Run services behind one load balancer, each with its own
+image, identity and deploy. Everything is declared in Terraform and applied from GitHub Actions
+with no stored keys.
 
-Merging to `main` deploys one service at a time. Each new version starts with no visitors, is
+Merging to main deploys one service at a time. Each new version starts with no visitors, is
 tested, then takes a share of traffic, and rolls back by itself if its checks fail.
 
-## From the hackathon to now
-
-For the event weekend, 13 to 17 November 2026, it was sized for a room full of people arriving at
-once:
-
-- two warm copies of each of the three services a visitor reaches, up to ten each, with CPU always on;
-- a 5 GB Redis store with a replica, shared by all three for rate limits, kept answers and
-  presenters' rooms.
-
-After the event it had few visitors, so I brought it down in two steps. Each was a settings change
-in a pull request that showed its Terraform plan before anything was applied.
-
-- **17 November:** one warm copy of each service, at most three, CPU only while a request is open,
-  and Redis down to a single 1 GB node.
-- **18 November:** Redis off, with each service keeping its limits in its own memory. Saved plans
-  and the co-pilot sleep when nobody is using them. The web server keeps one warm copy, so the
-  first screen never waits.
-
-At list prices the second step alone took it from about $105 a month to about $43, and the
-event's size cost several times that. What it gave up is measured, not guessed: the first saved plan after a quiet spell opens in under two seconds, and the first
-co-pilot answer takes about seven. Going back is one setting for Redis and one for the copies.
+<!-- architecture -->
 
 ## Who wrote the code
 
 AI coding agents wrote most of it: nearly all the code, tests, Terraform and docs. I set the
-direction, reviewed the work and made the calls, and I led the six people on the team. The
-repository says the same in its `AI_USAGE.md`.
+direction, reviewed the work and made the calls, and I led the six people on the team.
 
-The architecture decisions were mine to make. Three of them: one server split into four services
-with separate identities, the rule that the co-pilot never types a number (the server fills in
-every figure from computed data), and deploys that prove themselves before visitors reach them.
+The architecture decisions were mine. Three of them: one server split into four services with
+separate identities, the rule that the co-pilot never types a number, and deploys that prove
+themselves before visitors reach them.

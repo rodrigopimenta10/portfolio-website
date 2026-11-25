@@ -19,8 +19,9 @@ describe('the glob matcher', () => {
     ['/', '/projects', false],
     ['/projects/**', '/projects/sightline', true],
     ['/projects/**', '/projects', false],
-    ['/@(projects|resume)', '/resume', true],
-    ['/@(projects|resume)', '/resume/extra', false],
+    ['/@(projects|tools)', '/tools', true],
+    ['/@(projects|tools)', '/tools/extra', false],
+    ['/@(projects|self-healing)/**', '/self-healing/storage', true],
     ['/@(projects|404.html)', '/404xhtml', false],
     ['/api/**', '/api/status', true],
     ['/api/**', '/apix/status', false],
@@ -41,7 +42,7 @@ describe('firebase.json', () => {
   });
 
   it('caches pages briefly and fingerprinted assets for a year', () => {
-    for (const page of ['/', '/projects', '/projects/sightline', '/experience', '/how-this-site-runs', '/resume', '/404.html']) {
+    for (const page of ['/', '/on-call', '/tools', '/self-healing', '/self-healing/storage', '/projects', '/projects/sightline', '/how-this-site-runs', '/404.html']) {
       expect(header(page, 'Cache-Control'), page).toBe('public, max-age=300');
     }
     expect(header('/_astro/index.abc123.css', 'Cache-Control')).toBe('public, max-age=31536000, immutable');
@@ -50,6 +51,15 @@ describe('firebase.json', () => {
   it('sets no cache rule on /api, so the status service decides how long its answer may be held', () => {
     expect(header('/api/status', 'Cache-Control')).toBeUndefined();
     expect(header('/api/healthz', 'Cache-Control')).toBeUndefined();
+  });
+
+  it('sends the addresses of pages that are gone to where their content went', () => {
+    const to = (source: string) => hosting.redirects.find((rule: { source: string }) => rule.source === source)?.destination;
+    // The resume is one document now, the PDF: the two pages that repeated it open it.
+    expect(to('/resume')).toBe('/rodrigo_pimenta_resume.pdf');
+    expect(to('/experience')).toBe('/rodrigo_pimenta_resume.pdf');
+    expect(to('/projects/ceph-storage-self-healing-monitor')).toBe('/self-healing/storage');
+    expect(to('/projects/config-integrity-self-heal')).toBe('/self-healing/config-drift');
   });
 
   it('serves the resume as a PDF at its old address', () => {
